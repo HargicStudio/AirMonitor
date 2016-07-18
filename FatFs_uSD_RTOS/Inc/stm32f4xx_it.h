@@ -38,6 +38,7 @@
 #include "407VE_sd.h"
 #include "print_com.h"
 #include "gps_dev.h"
+#include "gsm_dev.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -60,6 +61,7 @@ void SDIO_IRQHandler(void);
 void USART_DBG_DMA_TX_IRQHandler(void);
 void USART_DBG_IRQHandler(void);
 void USART_GPS_IRQHandler(void);
+void USART_GSM_IRQHandler(void);
 
 
 

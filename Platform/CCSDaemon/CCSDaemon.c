@@ -15,6 +15,7 @@ History:
 #include "print_com.h"
 #include "led.h"
 #include "gps.h"
+#include "gsm.h"
 
 
 
@@ -81,6 +82,7 @@ u8 CCSDeamonCEInit()
     // start application task
     StartRunLedTask();
     StartGpsTask();
+    StartGsmTask();
 
     // create global tag
     AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);

@@ -38,6 +38,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "print_com.h"
 #include "gps_dev.h"
+#include "gsm_dev.h"
 
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
@@ -74,6 +75,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
         HAL_UART_DBG_MspInit(huart);
     } else if(huart->Instance == USART_GPS) {
         HAL_UART_GPS_MspInit(huart);
+    } else if (huart->Instance == USART_GSM) {
+        HAL_UART_GSM_MspInit(huart);
     }
 }
 
@@ -91,6 +94,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
         HAL_UART_DBG_MspDeInit(huart);
     } else if(huart->Instance == USART_GPS) {
         HAL_UART_GPS_MspDeInit(huart);
+    } else if (huart->Instance == USART_GSM) {
+        HAL_UART_GSM_MspDeInit(huart);
     }
 }
 
@@ -107,6 +112,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
         HAL_UART_DBG_TxCpltCallback(huart);
     } else if(huart->Instance == USART_GPS) {
         HAL_UART_GPS_TxCpltCallback(huart);
+    } else if (huart->Instance == USART_GSM) {
+        HAL_UART_GSM_TxCpltCallback(huart);
     }
 }
 
@@ -123,6 +130,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         HAL_UART_DBG_RxCpltCallback(huart);
     } else if(huart->Instance == USART_GPS) {
         HAL_UART_GPS_RxCpltCallback(huart);
+    } else if(huart->Instance == USART_GSM) {
+        HAL_UART_GSM_RxCpltCallback(huart);
     }
 }
 
@@ -139,6 +148,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
         HAL_UART_DBG_ErrorCallback(huart);
     } else if(huart->Instance == USART_GPS) {
         HAL_UART_GPS_ErrorCallback(huart);
+    } else if(huart->Instance == USART_GSM) {
+        HAL_UART_GSM_ErrorCallback(huart);
     }
 }
 

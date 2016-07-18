@@ -154,6 +154,9 @@
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\gps_dev.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\gsm_dev.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\led_dev.c</name>
       </file>
       <file>
@@ -285,6 +288,9 @@
     <name>User</name>
     <file>
       <name>$PROJ_DIR$\..\..\User\gps.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\gsm.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\led.c</name>
