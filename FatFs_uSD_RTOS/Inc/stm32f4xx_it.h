@@ -39,6 +39,7 @@
 #include "print_com.h"
 #include "gps_dev.h"
 #include "gsm_dev.h"
+#include "cp15_dev.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -62,6 +63,7 @@ void USART_DBG_DMA_TX_IRQHandler(void);
 void USART_DBG_IRQHandler(void);
 void USART_GPS_IRQHandler(void);
 void USART_GSM_IRQHandler(void);
+void UART_CP15_IRQHandler(void);
 
 
 

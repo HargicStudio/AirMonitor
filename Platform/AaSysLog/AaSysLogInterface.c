@@ -16,8 +16,11 @@ History:
 /** Description of the macro */  
 #define PRINT_STRING_MAX_LENGTH             250
 
+/** Description of the macro */  
 #define PRINT_FEATURE_STRING_MAX_LENGTH     8
 
+/** Description of the macro */  
+#define PRINT_MEMORY_NUMBER_PER_LINE        8
 
 
 /** syslog index, will increase for every package log */
@@ -137,6 +140,9 @@ void AaSysLogPrintF(ELogLevel level, char* feature_id, const char* fmt, ...)
     }
 
     char* str = AaMemMalloc(PRINT_STRING_MAX_LENGTH);
+    if(str == NULL) {
+        return ;
+    }
 
     if(strlen(feature_id) > PRINT_FEATURE_STRING_MAX_LENGTH) {
         memcpy(feature_str, feature_id, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
@@ -167,6 +173,64 @@ void AaSysLogPrintF(ELogLevel level, char* feature_id, const char* fmt, ...)
     AaMemFree(str);
 }
 
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-07-19 Huang Shengda
+ */  
+void AaSysLogPrintM(char* feature_id, const char* data, u32 data_len)
+{
+    u32 len = 0;
+    char feature_str[PRINT_FEATURE_STRING_MAX_LENGTH] = {0};
+    char thread_str[PRINT_FEATURE_STRING_MAX_LENGTH] = {0};
+    u8 idx = _aasyslog_index++;
+    u32 data_idx = 0;
+
+    char* str = AaMemMalloc((PRINT_STRING_MAX_LENGTH/5 + PRINT_MEMORY_NUMBER_PER_LINE*3)*(data_len/PRINT_MEMORY_NUMBER_PER_LINE + 1));
+    if(str == NULL) {
+        return ;
+    }
+
+    if(strlen(feature_id) > PRINT_FEATURE_STRING_MAX_LENGTH) {
+        memcpy(feature_str, feature_id, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
+        feature_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
+    } else {
+        memcpy(feature_str, feature_id, strlen(feature_id));
+    }
+
+    char* trd = AaThreadGetName(osThreadGetId());
+
+    if (strlen(trd) > PRINT_FEATURE_STRING_MAX_LENGTH) {
+        memcpy(thread_str, trd, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
+        thread_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
+    } else {
+        memcpy(thread_str, trd, strlen(trd));
+    }
+
+    do {
+        len += sprintf(str + len, "%02x %dT %s/%s/%s Address 0x%p: ", idx, osKernelSysTick(), AaSysLogGetLevelString(LOGLEVEL_DBG), feature_str, thread_str, data + data_idx);
+        do {
+            len += sprintf(str + len, "%02x ", *(data + data_idx));
+            if(++data_idx >= data_len) {
+                break;
+            }
+        } while((data_idx % PRINT_MEMORY_NUMBER_PER_LINE) != 0);
+        len += sprintf(str + len, "\r\n");
+    } while(data_idx < data_len);
+
+    _aasyslog_mng.processPrint_callback(str, len);    
+
+    AaMemFree(str);
+}
 
 
 // end of file

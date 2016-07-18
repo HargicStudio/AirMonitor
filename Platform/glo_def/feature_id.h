@@ -32,6 +32,7 @@ History:
 // application
 #define FeatureGps      "AppGps"
 #define FeatureGsm      "AppGsm"
+#define FeatureCP15     "AppCP15"
 
 
 #ifdef __cplusplus

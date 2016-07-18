@@ -98,6 +98,21 @@ void AaSysLogPrintD(const char* fmt, ...);
  */  
 void AaSysLogPrintF(ELogLevel level, char* feature_id, const char* fmt, ...);
 
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-07-19 Huang Shengda
+ */  
+void AaSysLogPrintM(char* feature_id, const char* data, u32 data_len);
 
 
 #ifdef __cplusplus

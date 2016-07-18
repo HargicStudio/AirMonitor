@@ -37,6 +37,7 @@
 extern UART_HandleTypeDef UartHandle_dbg;
 extern UART_HandleTypeDef UartHandle_gps;
 extern UART_HandleTypeDef UartHandle_gsm;
+extern UART_HandleTypeDef UartHandle_cp15;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -211,6 +212,16 @@ void USART_GPS_IRQHandler(void)
 void USART_GSM_IRQHandler(void)
 {
   HAL_UART_IRQHandler(&UartHandle_gsm);
+}
+
+/**
+  * @brief  This function handles USARTx interrupt request.
+  * @param  None
+  * @retval None
+  */
+void UART_CP15_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&UartHandle_cp15);
 }
 
 

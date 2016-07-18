@@ -16,7 +16,7 @@ extern "C" {
    resources */
 /* Definition for USARTx clock resources */
 #define USART_GPS                           USART1
-#define USART_GPS_CLK_ENABLE()              __HAL_RCC_USART1_CLK_ENABLE();
+#define USART_GPS_CLK_ENABLE()              __HAL_RCC_USART1_CLK_ENABLE()
 #define USART_GPS_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
 #define USART_GPS_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE() 
     

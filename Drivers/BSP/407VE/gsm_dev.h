@@ -16,7 +16,7 @@ extern "C" {
    resources */
 /* Definition for USARTx clock resources */
 #define USART_GSM                           USART2
-#define USART_GSM_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
+#define USART_GSM_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE()
 #define USART_GSM_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
 #define USART_GSM_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE() 
     
