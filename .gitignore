@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+Obj/
 
 # bye-bye IAR generate file
 *.o
