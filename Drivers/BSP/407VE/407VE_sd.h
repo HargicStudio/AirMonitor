@@ -81,10 +81,10 @@
 /** @defgroup STM324xG_EVAL_SD_Exported_Constants STM324xG EVAL SD Exported Constants
   * @{
   */ 
-#define SD_DETECT_PIN                    GPIO_PIN_13
-#define SD_DETECT_GPIO_PORT              GPIOH
-#define __SD_DETECT_GPIO_CLK_ENABLE()    __GPIOH_CLK_ENABLE()
-#define SD_DETECT_IRQn                   EXTI15_10_IRQn
+#define SD_DETECT_PIN                    GPIO_PIN_8
+#define SD_DETECT_GPIO_PORT              GPIOA
+#define __SD_DETECT_GPIO_CLK_ENABLE()    __GPIOA_CLK_ENABLE()
+#define SD_DETECT_IRQn                   EXTI9_5_IRQn
 
 #define SD_DATATIMEOUT           ((uint32_t)100000000)
 

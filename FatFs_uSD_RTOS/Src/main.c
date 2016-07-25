@@ -30,14 +30,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "AaInclude.h"
+#include "osa_file.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-FATFS SDFatFs;  /* File system object for SD card logical drive */
-FIL MyFile;     /* File object */
-char SDPath[4]; /* SD card logical drive path */
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -85,95 +83,68 @@ int main(void)
   */
 static void StartThread(void const *argument)
 {
-  FRESULT res;                                          /* FatFs function common result code */
+//以前为FATFS文件系统封装各个接口的测试代码
+    
   uint32_t byteswritten, bytesread;                     /* File write/read counts */
-  uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
-  uint8_t rtext[100];                                   /* File read buffer */
+  uint8_t wtext[] = "This is AirMonitor working with FatFs"; /* File write buffer */
+  uint8_t rtext[36];                                   /* 注意读缓冲空间大小，大空间用malloc申请 */
+  SD_sizeInfo sdSizeInfo;
+  OSA_FileHandle hFile;
+
+  /* 文件系统初始化　*/
+  OSA_fileInit();
   
-  /*##-1- Link the micro SD disk I/O driver ##################################*/
-  if(FATFS_LinkDriver(&SD_Driver, SDPath) == 0)
-  { 
-    /*##-2- Register the file system object to the FatFs module ##############*/
-    if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK)
-    {
-      /* FatFs Initialization Error */
+  /* 获取SD卡容量信息 */
+  if (OSA_getSdSize(&sdSizeInfo) == OSA_OK)
+  {
+      AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "SD totalSize=%dM availableSize=%dM\n\r",
+                     sdSizeInfo.totalSize, sdSizeInfo.availableSize);
+  }
+  
+  if (OSA_fileOpen("AirMonitor.txt", OSA_FILEMODE_RDWR, &hFile) != OSA_OK)
+  {
       Error_Handler();
-    }
-    else
-    {
-      /*##-3- Create a FAT file system (format) on the logical drive #########*/
-      /* WARNING: Formatting the uSD card will delete all content on the device */
-      if(f_mkfs((TCHAR const*)SDPath, 0, 0) != FR_OK)
+  }
+  
+  byteswritten = OSA_fileWrite(hFile, wtext, sizeof(wtext));
+  if (byteswritten <= 0)
+  {
+      Error_Handler();
+  }
+  else
+  {
+      OSA_fileSync(hFile);
+      OSA_fileClose(hFile);
+      
+      if (OSA_fileOpen("AirMonitor.txt", OSA_FILEMODE_RDONLY, &hFile) != OSA_OK)
       {
-        /* FatFs Format Error */
-        Error_Handler();
+          Error_Handler();
       }
       else
-      { 
-        /*##-4- Create and Open a new text file object with write access #####*/
-        if(f_open(&MyFile, "STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-        {
-          /* 'STM32.TXT' file Open for write Error */
-          Error_Handler();
-        }
-        else
-        {
-          /*##-5- Write data to the text file ################################*/
-          res = f_write(&MyFile, wtext, sizeof(wtext), (void *)&byteswritten);
-          
-          if((byteswritten == 0) || (res != FR_OK))
+      {
+          /* 跳转４个字节读写 */
+          OSA_fileSeek (hFile, 4);
+
+          bytesread = OSA_fileRead (hFile, rtext, sizeof(rtext));
+          if (bytesread <= 0)
           {
-            /* 'STM32.TXT' file Write or EOF Error */
-            Error_Handler();
+              Error_Handler();
           }
           else
           {
-            /*##-6- Close the open text file #################################*/
-            f_close(&MyFile);
-            
-            /*##-7- Open the text file object with read access ###############*/
-            if(f_open(&MyFile, "STM32.TXT", FA_READ) != FR_OK)
-            {
-              /* 'STM32.TXT' file Open for read Error */
-              Error_Handler();
-            }
-            else
-            {
-              /*##-8- Read data from the text file ###########################*/
-              res = f_read(&MyFile, rtext, sizeof(rtext), (UINT*)&bytesread);
-              
-              if((bytesread == 0) || (res != FR_OK))
-              {
-                /* 'STM32.TXT' file Read or EOF Error */
-                Error_Handler();
-              }
-              else
-              {
-                /*##-9- Close the open text file #############################*/
-                f_close(&MyFile);
-                
-                /*##-10- Compare read data with the expected data ############*/
-                if((bytesread != byteswritten))
-                {                
-                  /* Read data is different from the expected data */
-                  Error_Handler();
-                }
-                else
-                {
-                  /* Success of the demo: no error occurrence */
-                  
-                }
-              }
-            }
+              //printf("fatfs read: %s, len = %d\n\r",rtext, bytesread);
+              AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "fatfs read: %s, len = %d\n\r",rtext, bytesread);
           }
-        }
+
+          OSA_fileClose(hFile);
       }
-    }
   }
+  /* 删除文件 */
+  OSA_removeFile("STM32.TXT");
   
-  /*##-11- Unlink the RAM disk I/O driver ####################################*/
-  FATFS_UnLinkDriver(SDPath);
-  
+  /* 文件系统反初始化　*/
+  OSA_fileDeInit();
+
   /* Infinite Loop */
   for( ;; )
   {
@@ -251,6 +222,8 @@ static void Error_Handler(void)
   /* Turn LED3 on */
   while(1)
   {
+      printf("Error_Handler!!!\n\r");
+      osDelay(1000);
   }
 }
 

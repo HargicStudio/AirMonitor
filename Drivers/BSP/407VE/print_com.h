@@ -19,18 +19,18 @@ extern "C" {
 #define USART_DBG                           USART3
 #define USART_DBG_CLK_ENABLE()              __HAL_RCC_USART3_CLK_ENABLE()
 #define DMA_DBG_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
-#define USART_DBG_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
-#define USART_DBG_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE() 
+#define USART_DBG_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
+#define USART_DBG_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE() 
     
 #define USART_DBG_FORCE_RESET()             __HAL_RCC_USART3_FORCE_RESET()
 #define USART_DBG_RELEASE_RESET()           __HAL_RCC_USART3_RELEASE_RESET()
     
 /* Definition for USART_DBG Pins */
-#define USART_DBG_TX_PIN                    GPIO_PIN_10
-#define USART_DBG_TX_GPIO_PORT              GPIOB
+#define USART_DBG_TX_PIN                    GPIO_PIN_8
+#define USART_DBG_TX_GPIO_PORT              GPIOD
 #define USART_DBG_TX_AF                     GPIO_AF7_USART3
-#define USART_DBG_RX_PIN                    GPIO_PIN_11
-#define USART_DBG_RX_GPIO_PORT              GPIOB
+#define USART_DBG_RX_PIN                    GPIO_PIN_9
+#define USART_DBG_RX_GPIO_PORT              GPIOD
 #define USART_DBG_RX_AF                     GPIO_AF7_USART3
     
 /* Definition for USART_DBG's DMA

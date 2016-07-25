@@ -1177,6 +1177,9 @@
     <file>
       <name>$PROJ_DIR$\..\..\User\led.c</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\osa_file.c</name>
+    </file>
   </group>
 </project>
 
