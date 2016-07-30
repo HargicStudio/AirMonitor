@@ -36,19 +36,6 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-#define GSM_SERIAL_RX_BUFFER_NUM        (2)
-#define GSM_SERIAL_RX_BUFFER_SIZE       (256)
-    
-typedef struct GSM_BUF_t
-{
-    u8 bufData[GSM_SERIAL_RX_BUFFER_NUM][GSM_SERIAL_RX_BUFFER_SIZE];
-    u8 *curWriteBuf;
-    u8 *curReadBuf;
-    u16 curWriteNum;
-    u16 curReadNum;
-    u8 switchFlag;
-    
-}GSM_BUF_t;
 
 u8 StartGsmTask();
 void GsmWaitForSendCplt();

@@ -10,39 +10,23 @@ s32 _at_status;
 /* GSM 的状态 */
 s32 _gsm_status;
 
-/* 控制发送后等待时间计数，时间单位 50ms */
-u16 _time_wait_close_gsm;
-/* 发送后置1，开始准备关机计时 */
+/* 发送后置1，开始准备关机 */
 u8 _time_wait_close_flag;
 
 
-void GsmWaitCloseFlagSet()
+void GsmWaitCloseFlagSet(void)
 {
     _time_wait_close_flag = 1;
 }
 
-void GsmWaitCloseFlagClear()
+void GsmWaitCloseFlagClear(void)
 {
     _time_wait_close_flag = 0;
 }
 
-void GsmWaitCloseCountAdd(void)
+bool IsGsmWaitCloseFlag(void)
 {
-    if (_time_wait_close_flag)
-    {
-        _time_wait_close_gsm++;
-    }
-}
-
-void GsmWaitCloseCountReset(void)
-{
-    _time_wait_close_flag = 0;
-    _time_wait_close_gsm = 0;
-}
-
-bool IsGsmWaitCloseCountReach(void)
-{
-    return _time_wait_close_gsm >= MAX_WAIT_CLOSE_GSM;
+    return (_time_wait_close_flag == 1);
 }
 
 void GsmStatusSet(u32 stu)
@@ -160,11 +144,11 @@ bool IsGsmRunning(void)
 
 void GsmPowerUpDownOpt(u8 type)
 {
-    int tiemLen = type == GSM_POWER_UP ? 1000 : 2000;
+    int tiemLen = type == GSM_POWER_UP ? 1500 : 3000;
     GsmStatusSet(GSM_FREE);
-    GsmPowerUp();
-    osDelay(tiemLen);
     GsmPowerDown();
+    osDelay(tiemLen);
+    GsmPowerUp();
 }
 
 /**
@@ -281,21 +265,36 @@ bool GsmStartAndconect(void)
     return true;   
 }
 
-bool GsmSendData(u8 *data, u16 len)
+bool GsmSendData(u8 *data, u16 len, u8 respFlag)
 {
-    u8 send[20] = {0};
-    
-    sprintf(send, "AT+CIPSEND=%d\r\n", len);
-    /* 透传模式发送数据 */
+    /* 测试，直接发送 */ 
     GsmDataSendByIT(data, len);
-    
-    /* 透传模式下，等待服务器的响应, 出错则断开链接 */
     /*
-    if (false == AtCmdRun(data, len+2, MAX_WAIT_TIMES + 300, AT_WAIT_SEND_OK))
+    if (!respFlag)
     {
-        GsmStatusSet(GSM_FREE);
+        // 透传模式发送数据 /
+        GsmDataSendByIT(data, len);
+    }
+    else
+    {
+        // 需要服务器响应 
+        if (false == AtCmdRun(data, len, MAX_WAIT_TIMES + 300, AT_WAIT_SEND_OK))
+        {
+            GsmPowerUpDownOpt(GSM_POWER_DOWN);
+            return false;
+        }
+    }*/
+    
+    
+    /* 透传模式下，等待服务器的响应, 出错则关闭GSM */
+    /*
+    if (false == AtCmdRun(data, len, MAX_WAIT_TIMES + 300, AT_WAIT_SEND_OK))
+    {
+        GsmPowerUpDownOpt(GSM_POWER_DOWN);
         return false;
     }*/
+    
+    
     
     /*
     //GsmDataSendByIT(send, strlen(send));
@@ -314,10 +313,10 @@ bool GsmSendData(u8 *data, u16 len)
     return true;
 }
 
-bool SendData(u8 *str, int len)
+bool SendData(u8 *str, u16 len, u8 respflag)
 {
     if (GSM_TCP_CONNECTED == GsmStatusGet())
-        return GsmSendData(str, len);
+        return GsmSendData(str, len, respflag);
       
     if (!IsTcpConnected())
     {
@@ -331,7 +330,7 @@ bool SendData(u8 *str, int len)
         }
     }
     
-    return GsmSendData(str, len);
+    return GsmSendData(str, len, respflag);
 }
 
 

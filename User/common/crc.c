@@ -56,7 +56,7 @@ u16 usMBCRC16( u8 *pucFrame, u16 usLen )
 {
     u8 ucCRCHi = 0xFF;
     u8 ucCRCLo = 0xFF;
-    u8 thekey[13]="waming2016abc";
+    u8 thekey[]="waming2016abc";
     s32 iIndex;
     u8 i;
     while( usLen-- )
@@ -65,7 +65,7 @@ u16 usMBCRC16( u8 *pucFrame, u16 usLen )
         ucCRCLo = ( u8 )( ucCRCHi ^ aucCRCHi[iIndex] );
         ucCRCHi = aucCRCLo[iIndex];
     }
-    for(i=0;i<sizeof(thekey);i++)
+    for(i=0;i<14;i++)
     {
         iIndex = ucCRCLo ^ *( thekey + i);
         ucCRCLo = ( u8 )( ucCRCHi ^ aucCRCHi[iIndex] );

@@ -57,7 +57,7 @@ void testFillData(void)
 /* 存储温度湿度 */
 s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag)
 {
-    if (!IsValidWet(wet) | !IsValidTemp(temp))
+    if (!IsValidWet(wet) || !IsValidTemp(temp))
     {
         return NOK_1;
     }
@@ -311,12 +311,14 @@ void ContructDataUp()
     offset += Format32(GetAllModuleStu(), SEND_BUF_OFFSET(offset));
 
     /* GPS 模块 */
+    /*
     ret = GetModuleStu(MDU_GPS);
     if (STU_NORMAL == ret)
     {
         offset += Format32(GetCoordLong(), SEND_BUF_OFFSET(offset));
         offset += Format32(GetCoordLati(), SEND_BUF_OFFSET(offset));  
     }
+    */
     
     ret = GetModuleStu(MDU_IN_TEMP_WET);
     if (STU_NORMAL == ret)
@@ -390,6 +392,8 @@ void ContructDataUp()
                  GetCo(), GetSo2(), GetO3(), GetNo2());
     
     SEND_BUF_FLAG_SET();
+    
+    SEND_BUF_RESP_FALG_SET(1);
     GSM_LOG_P1("Send Buf ready: %s\r\n", g_sendBuf.buf);
     
 

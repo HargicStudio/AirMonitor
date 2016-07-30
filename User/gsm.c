@@ -83,7 +83,7 @@ static void GsmThread(void const *argument)
         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM Recived: LEN: %d: %s \r\n", len, _gsm_rx_buf);
         
         if (GetAtStatus() == AT_WAIT_RSP || GetAtStatus() == AT_WAIT_CONNECT_RSP
-            || GetAtStatus() == AT_WAIT_CONNECT_STU || GetAtStatus() == AT_WAIT_SEND_OK
+            || GetAtStatus() == AT_WAIT_CONNECT_STU
             || GetAtStatus() == AT_WAIT_REG || GetAtStatus() == AT_WAIT_TO_SEND)
         {
             if (true == ProcessAtResponse(_gsm_rx_buf, len))
@@ -142,7 +142,6 @@ static void GsmSendTestThread(void const *argument)
             if (IsSendBufReady())
             {
                 SEND_BUF_FLAG_CLEAR();
-                GsmWaitCloseFlagClear();
                 SendDataToServer();
                 
             }
@@ -150,12 +149,17 @@ static void GsmSendTestThread(void const *argument)
 
         if (IsSendResponseReady())
         {
-            SEND_REPORT_FLAG_CLEAR();
-            GsmWaitCloseFlagClear();
+            SEND_RESPONSE_FLAG_CLEAR();
             SendResponseToServer();
             
         }
         
+        if (IsGsmWaitCloseFlag())
+        {
+            GsmWaitCloseFlagClear();
+            GsmPowerUpDownOpt(GSM_POWER_DOWN);
+            GsmStatusSet(GSM_CLOSED);
+        }
         /*
         GsmWaitCloseCountAdd();
         if (IsGsmWaitCloseCountReach() && GsmStatusGet() != GSM_CLOSED)
@@ -294,9 +298,6 @@ bool ProcessAtResponse(u8 *buf, u16 len)
     case AT_WAIT_CONNECT_STU:
       IsAtSuss(buf, "CONNECT OK");
       break;
-    case AT_WAIT_SEND_OK:
-      IsAtSuss(buf, "SEND OK");
-      break;
     default:
       IsAtSuss(buf, "OK");
       break;
@@ -329,7 +330,7 @@ extern SEND_BUF_t g_sendBuf;
 bool SendDataToServer(void)
 {
    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
-    if ( !SendData(g_sendBuf.buf, g_sendBuf.useLen) )
+    if ( !SendData(g_sendBuf.buf, g_sendBuf.useLen, g_sendBuf.respFlag) )
     {
         GSM_LOG_P0("Send fail!");
         return false;
@@ -343,7 +344,7 @@ extern SEND_BUF_t g_sendResponse;
 bool SendResponseToServer(void)
 {
    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
-    if ( !SendData(g_sendResponse.buf, g_sendResponse.useLen) )
+    if ( !SendData(g_sendResponse.buf, g_sendResponse.useLen, g_sendResponse.respFlag) )
     {
         GSM_LOG_P0("Send Response fail!");
         return false;

@@ -48,7 +48,8 @@ bool IsGsmRunning(void);
 void GsmPowerUpDownOpt(u8 type);
 bool GsmStartup(void);
 bool GsmStartAndconect(void);
-bool SendData(u8 *str, int len);
+bool SendData(u8 *str, u16 len, u8 respflag);
+bool GsmSendData(u8 *data, u16 len, u8 respFlag);
 
 bool GsmWaitForReg(void);
 
@@ -63,9 +64,9 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType);
 void IsAtSuss(u8 *buf, u8 *key);
 
 /* ¿ØÖÆ¹Ø±ÕGSMÄ£¿é */
-void GsmWaitCloseCountReset(void);
-void GsmWaitCloseCountAdd(void);
-bool IsGsmWaitCloseCountReach(void);
+bool IsGsmWaitCloseFlag(void);
+void GsmWaitCloseFlagClear(void);
+void GsmWaitCloseFlagSet(void);
 
 #ifdef __cplusplus
 }
