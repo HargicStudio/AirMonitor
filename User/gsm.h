@@ -36,9 +36,14 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
+
 u8 StartGsmTask();
 void GsmWaitForSendCplt();
 void GsmRecvDataFromISR(UART_HandleTypeDef *huart);
+    
+bool ProcessAtResponse(u8 *buf, u16 len);
+bool SendDataToServer(void);
+bool SendResponseToServer(void);
 
 
 

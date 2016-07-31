@@ -1,9 +1,12 @@
 
 /* Includes ------------------------------------------------------------------*/
+#include "gpsAnalyser.h"
 #include "gps.h"
+#include "dataHandler.h"
 #include "gps_dev.h"
 #include "RingBufferUtils.h"
 #include <string.h>
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -11,8 +14,6 @@
 
 /** wait for send complete by serial with timeout 1 sec */  
 #define GPS_SENDCMPL_TIMEOUT        (1000 * 1)
-
-#define GPS_SERIAL_RX_RINGBUFFER_SIZE       (256)
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -29,11 +30,17 @@ static osSemaphoreDef(gps_recvcplt_sem);
 osSemaphoreId _gps_recvcplt_sem_id;
 
 /** Description of the macro */  
-ring_buffer_t _gps_rx_ringbuf;
-u8 _gps_rx_ringbuf_data[GPS_SERIAL_RX_RINGBUFFER_SIZE];
+GPS_BUF_t _gps_buf;
+
+/* 控制GPS接收频率，会从配置读取。最好是能通过直接设置GPS模块控制 */
+u8 _gps_freq = 10;
 
 /** Description of the macro */  
 static char recv_char;
+
+/* 用于计算和保存信息 */
+gps_process_data gps;
+
 
 
 extern UART_HandleTypeDef UartHandle_gps;
@@ -43,6 +50,7 @@ extern UART_HandleTypeDef UartHandle_gps;
 static void GpsThread(void const *argument);
 static void GpsDeviceInit();
 static u8 GpsSendSerialData(u8* data, u32 len);
+static void GpsBufInit(void);
 
 /** 
  * This is a brief description. 
@@ -61,8 +69,6 @@ static u8 GpsSendSerialData(u8* data, u32 len);
 static void GpsThread(void const *argument)
 {
     (void) argument;
-    u32 used;
-    u32 free;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "GpsThread started");
 
@@ -71,23 +77,12 @@ static void GpsThread(void const *argument)
         osSemaphoreWait(_gps_recvcplt_sem_id, osWaitForever);
 
         // receive one data
-        used = ring_buffer_used_space(&_gps_rx_ringbuf);
-        free = ring_buffer_free_space(&_gps_rx_ringbuf);
-        AaSysLogPrintF(LOGLEVEL_DBG, FeatureGps, "%s %d: used %d, free %d", 
-                    __FUNCTION__, __LINE__, used, free);
+        AaSysLogPrintF(LOGLEVEL_DBG, FeatureGps, "Receved GPS: %s %d : %s \n",
+                    __FUNCTION__, __LINE__, _gps_buf.curReadBuf);
 
-        // Grab data from the buffer
-        // do {
-        //     uint8_t* available_data;
-        //     uint32_t bytes_available;
+        GPS_Analysis(&gps, (u8*)_gps_buf.curReadBuf);
 
-        //     ring_buffer_get_data( &_gps_rx_ringbuf, &available_data, (u32*)&bytes_available );
-        //     bytes_available = MIN( bytes_available, used );
-        //     memcpy( recv_data, available_data, bytes_available );
-        //     used -= bytes_available;
-        //     recv_data = (recv_data + bytes_available);
-        //     ring_buffer_consume(&_gps_rx_ringbuf, bytes_available);
-        // } while ( used != 0 );
+        StoreCoordInfo(gps.latitude, gps.longitude, &g_coord);
     }
 }
 
@@ -114,9 +109,8 @@ u8 StartGpsTask()
 {
     GpsDeviceInit();
 
-
-    ring_buffer_init(&_gps_rx_ringbuf, _gps_rx_ringbuf_data, GPS_SERIAL_RX_RINGBUFFER_SIZE);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "create gps serial rx ringbuffer success");
+    // ring_buffer_init(&_gps_rx_ringbuf, _gps_rx_ringbuf_data, GPS_SERIAL_RX_RINGBUFFER_SIZE);
+    // AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "create gps serial rx ringbuffer success");
 
 
     _gps_sendcplt_sem_id = osSemaphoreCreate(osSemaphore(gps_sendcplt_sem), 1);
@@ -161,9 +155,20 @@ u8 StartGpsTask()
 
 static void GpsDeviceInit()
 {
+    GpsBufInit();
     GpsUsartInit();
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "gps device initialize success");
+}
+
+static void GpsBufInit(void)
+{
+    memset(_gps_buf.bufData, 0, GPS_SERIAL_RX_BUFFER_NUM * GPS_SERIAL_RX_BUFFER_SIZE);
+    _gps_buf.curWriteBuf = _gps_buf.bufData[0];
+    _gps_buf.curReadBuf = _gps_buf.bufData[0];
+    _gps_buf.curWriteNum = 0;
+    _gps_buf.curReadNum = 0;
+    _gps_buf.switchFlag  = 0;
 }
 
 /** 
@@ -194,13 +199,42 @@ void GpsWaitForSendCplt()
 }
 
 
+/*  */
 void GpsRecvDataFromISR(UART_HandleTypeDef *huart)
 {
-    ring_buffer_write(&_gps_rx_ringbuf, (u8*)&recv_char, 1);
+    static u8 recv_flag = 0;
+    static u8 recv_times = 0;           /* 用于控制处理GPS数据的频率 */
 
+    if (recv_char == '$')
+    {
+        _gps_buf.curWriteNum = 0;
+        recv_flag = 1;
+    }
+
+    if (recv_flag)
+    {
+        _gps_buf.curWriteBuf[_gps_buf.curWriteNum] = recv_char;
+        _gps_buf.curWriteNum++;
+        if (recv_char == '\n')
+        {
+            recv_flag = 0;
+            recv_times++;
+        }
+    }
+    
     HAL_UART_Receive_IT(&UartHandle_gps, (u8*)&recv_char, 1);
 
-    osSemaphoreRelease(_gps_recvcplt_sem_id);
+    if (recv_times == _gps_freq)
+    {
+        recv_times = 0;
+        /* 交换缓存 */
+        _gps_buf.curReadBuf = _gps_buf.curWriteBuf;
+        _gps_buf.curReadNum = _gps_buf.curWriteNum;
+        _gps_buf.switchFlag = _gps_buf.switchFlag == 0 ? 1 : 0;
+        _gps_buf.curWriteBuf = _gps_buf.bufData[_gps_buf.switchFlag];
+        _gps_buf.curWriteNum = 0;
+        osSemaphoreRelease(_gps_recvcplt_sem_id);
+    }
 }
 
 

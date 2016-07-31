@@ -22,6 +22,7 @@ History:
 #include "AaTag.h"
 #include "AaShell.h"
 #include "feature_id.h"
+#include "stdbool.h"
 
 
 

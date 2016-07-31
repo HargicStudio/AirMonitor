@@ -35,11 +35,24 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+    
+#define GPS_SERIAL_RX_BUFFER_NUM        (2)
+#define GPS_SERIAL_RX_BUFFER_SIZE       (256)
+
+typedef struct GPS_BUF_t
+{
+    u8 bufData[GPS_SERIAL_RX_BUFFER_NUM][GPS_SERIAL_RX_BUFFER_SIZE];
+    u8 *curWriteBuf;
+    u8 *curReadBuf;
+    u16 curWriteNum;
+    u16 curReadNum;
+    u8 switchFlag;
+    
+}GPS_BUF_t;
 
 u8 StartGpsTask();
 void GpsWaitForSendCplt();
 void GpsRecvDataFromISR(UART_HandleTypeDef *huart);
-
 
 
 #endif /* __GPS_H */

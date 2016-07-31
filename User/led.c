@@ -39,7 +39,7 @@ static void RunLedThread(void const *argument)
   {
       LedToggle();
       osDelay(1000);
-      AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "System running");
+      //AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "System running");
   }
 }
 
