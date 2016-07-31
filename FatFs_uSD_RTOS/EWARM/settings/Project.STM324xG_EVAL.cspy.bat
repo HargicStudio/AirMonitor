@@ -21,11 +21,11 @@
 
 @echo off 
 
-if not "%~1" == "" goto debugFile 
+if not "%1" == "" goto debugFile 
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3_2\common\bin\cspybat" -f "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.general.xcl" --backend -f "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.general.xcl" --backend -f "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3_2\common\bin\cspybat" -f "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.general.xcl" "--debug_file=%~1" --backend -f "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.general.xcl" "--debug_file=%1" --backend -f "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\EWARM\settings\Project.STM324xG_EVAL.driver.xcl" 
 
 @echo off 
 :end

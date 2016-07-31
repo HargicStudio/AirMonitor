@@ -1173,6 +1173,12 @@
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</name>
       </file>
       <file>
@@ -1276,7 +1282,13 @@
       </file>
     </group>
     <file>
+      <name>$PROJ_DIR$\..\..\User\am2302.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\User\cp15.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\fan.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\gps.c</name>

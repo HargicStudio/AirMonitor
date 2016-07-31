@@ -17,8 +17,8 @@ History:
 #include "gps.h"
 #include "gsm.h"
 #include "cp15.h"
-
-
+#include "am2302.h"
+#include "fan.h"
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
@@ -75,9 +75,9 @@ u8 CCSDeamonCEInit()
 
     // alternative CCS service initialization
     AaTagCEInit();
-    AaShellCEInit();
+    //AaShellCEInit();
 
-    CCSDaemonCreateThread();
+    //CCSDaemonCreateThread();
     AaSysLogCreateDeamon();
     AaTagCreateDeamon();
     // start application task
@@ -85,6 +85,8 @@ u8 CCSDeamonCEInit()
     StartGpsTask();
     StartGsmTask();
     StartCP15Task();
+    
+    StartRunAm2302Task();
 
     // create global tag
     AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
