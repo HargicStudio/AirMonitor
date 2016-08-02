@@ -87,6 +87,9 @@ u8 CCSDeamonCEInit()
     StartCP15Task();
     
     StartRunAm2302Task();
+    
+    /* Init Fan */
+    FanStart();
 
     // create global tag
     AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
