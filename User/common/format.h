@@ -61,6 +61,7 @@ void FormatHead(u16 crc, u16 len, u8 *buf);
 u16 Format8(u8 val, u8 *buf);
 u16 Format16(u16 val, u8 *buf);
 u16 Format32(u32 val, u8 *buf);
+u16 FormatTime(u8 *strTime, u8 *buf);
 
 
 

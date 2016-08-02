@@ -62,7 +62,7 @@ typedef struct
 	uint8_t  temp_low8bit;	 	//原始数据：温度高8位
 	uint8_t  check_sum;	 	    //校验和
     uint16_t humidity;          //实际湿度乘以10，只保留小数点后一位
-    uint16_t temperature;       //实际湿度乘以10，只保留小数点后一位  
+    int16_t  temperature;       //实际湿度乘以10，只保留小数点后一位  
 } AM2302_Data_TypeDef;
 
 /* ========================================================================== */

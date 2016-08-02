@@ -153,6 +153,15 @@ uint8_t FAN_setSpeed(uint8_t channel, uint8_t speed)
 
 }
 
+void FanStart()
+{
+    FAN_deviceInit();
+    
+    FAN_setSpeed(FAN_CH0, 80);
+    
+    FAN_setSpeed(FAN_CH1, 80);
+}
+
 
 
 

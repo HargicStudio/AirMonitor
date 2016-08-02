@@ -130,13 +130,10 @@ bool IsGsmRunning(void)
 {
     int num = 0;
     
-    while (num++ < 1)
+    if (true == AtCmdRun((u8 *)"AT\r\n", 3, 20, AT_WAIT_RSP))
     {
-        if (true == AtCmdRun((u8 *)"AT\r\n", 3, 30, AT_WAIT_RSP))
-        {
-            return true;
-        }
-    }
+        return true;
+    } 
     
     GsmStatusSet(GSM_FREE);
     return false;
@@ -144,11 +141,12 @@ bool IsGsmRunning(void)
 
 void GsmPowerUpDownOpt(u8 type)
 {
-    int tiemLen = type == GSM_POWER_UP ? 1500 : 3000;
+    int tiemLen = type == GSM_POWER_UP ? 2000 : 3000;
     GsmStatusSet(GSM_FREE);
     GsmPowerDown();
     osDelay(tiemLen);
     GsmPowerUp();
+    osDelay(tiemLen);
 }
 
 /**
@@ -159,21 +157,29 @@ void GsmPowerUpDownOpt(u8 type)
 bool GsmStartup(void)
 {
     u8 testNum = 0;
+    u8 atTestTimes = 0;
     
-    while(!IsGsmRunning())
+    while(testNum < 10)
     {
-        GsmPowerUpDownOpt(GSM_POWER_UP);
-        
-        testNum++;
-        if (testNum == 10)
+        atTestTimes = 0;
+
+        while (atTestTimes < 10)
         {
-            return false;
+            atTestTimes++;
+            if (IsGsmRunning())
+            {
+                return true;
+            }
+            
         }
+        testNum++;
+        
+        GsmPowerUpDownOpt(GSM_POWER_UP);
         
         GSM_LOG_P1("GSM startup try again! %d", testNum);
     }
     
-    return true;
+    return false;
 }
 
 bool GsmWaitForReg(void)
@@ -187,10 +193,11 @@ bool GsmStartAndconect(void)
     u8 cmd[50] = {0};
     
     /* 关闭链接 */
+    /*
     if (false == AtCmdRun((u8 *)"AT+CIPCLOSE=1\r\n", 15, MAX_WAIT_TIMES, AT_WAIT_RSP))
     {
         //return false;
-    }
+    }*/
 
     if (!GsmStartup())
     {
@@ -201,10 +208,11 @@ bool GsmStartAndconect(void)
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM boot sucess!");
 
     /* 关闭链接 */
+    /*
     if (false == AtCmdRun((u8 *)"AT+CIPCLOSE=1\r\n", 15, MAX_WAIT_TIMES, AT_WAIT_RSP))
     {
         //return false;
-    }
+    }*/
     
     if (!GsmWaitForReg())
     {

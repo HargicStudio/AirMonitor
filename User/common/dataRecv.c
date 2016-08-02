@@ -198,7 +198,8 @@ void ProcessGetSoftVersion(u8 *buf)
     
     /* version */
     ver = ConfigGetSoftVer();
-    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &nhtons(ver), 2);
+    ver = nhtons(ver);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &ver, 2);
     offset += 2;
     
     /* HEAD */
@@ -239,7 +240,8 @@ void ProcessGetHardVersion(u8 *buf)
     
     /* version */
     ver = ConfigGetHardVer();
-    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &nhtons(ver), 2);
+    ver = nhtons(ver);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &ver, 2);
     offset += 2;
     
     /* HEAD */

@@ -31,6 +31,7 @@
 #include "cmsis_os.h"
 #include "AaInclude.h"
 #include "main.h"
+#include "dataHandler.h"
 
 /* ========================================================================== */
 /*                           宏和类型定义区                                   */
@@ -418,6 +419,7 @@ uint8_t AM2302_Read_TempAndHumidity(uint8_t channel, AM2302_Data_TypeDef * AM230
 static void RunAm2302Thread(void const *argument)
 {
   (void) argument;
+  
   AM2302_Data_TypeDef AM2302_Data;
   
   AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "============AM2302_Init============\n\r");
@@ -435,6 +437,8 @@ static void RunAm2302Thread(void const *argument)
       {
         AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
           AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
+        
+        StoreWetTempInfo(AM2302_Data.humidity, AM2302_Data.temperature, &g_tempWetIn);
       }
       else
       {

@@ -1,6 +1,7 @@
 #include "dataHandler.h"
 #include "moduleStatus.h"
 #include "crc.h"
+#include "gpsAnalyser.h"
 
 /* 站号 */
 /* 出厂唯一编号 */
@@ -55,7 +56,7 @@ void testFillData(void)
 
 
 /* 存储温度湿度 */
-s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag)
+s8 StoreWetTempInfo(u16 wet, s16 temp, TEMP_WET_t *bag)
 {
     if (!IsValidWet(wet) || !IsValidTemp(temp))
     {
@@ -70,7 +71,7 @@ s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag)
         bag->dataTemp[bag->curPos] = temp;
         bag->curTemp = temp;
 			
-			  bag->totalWet += wet;
+        bag->totalWet += wet;
         bag->dataWet[bag->curPos] = wet;
         bag->curWet = wet;
 			
@@ -86,7 +87,7 @@ s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag)
     /* 存储采样值 */
     bag->dataTemp[bag->curPos] = temp;
 		
-		/* 更新总数 */
+    /* 更新总数 */
     bag->totalWet = bag->totalWet - bag->dataWet[bag->curPos] + wet;
     /* 计算平均值 */
     bag->curWet = bag->totalWet / bag->validNum;
@@ -220,7 +221,7 @@ s16 GetTempOut()
 }
 
 /* 获取箱外湿度 */
-s8 GetWetOut()
+u16 GetWetOut()
 {
     return g_tempWetOut.curWet;
 }
@@ -232,7 +233,7 @@ s16 GetTempIn()
 }
 
 /* 获取箱内湿度 */
-s8 GetWetIn()
+u16 GetWetIn()
 {
     return g_tempWetIn.curWet;
 }
@@ -287,7 +288,8 @@ u32 GetCoordLati()
 /* 风的信息 */
 WIND_t g_wind;
 
-
+/* 用于计算和保存信息 */
+extern gps_process_data gps;
 
 /* 构造发送的数据 */
 void ContructDataUp()
@@ -319,19 +321,21 @@ void ContructDataUp()
         offset += Format32(GetCoordLati(), SEND_BUF_OFFSET(offset));  
     }
     */
+    /* date*/
+    offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
     
     ret = GetModuleStu(MDU_IN_TEMP_WET);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetTempIn(), SEND_BUF_OFFSET(offset));
-        offset += Format8(GetWetIn(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetWetIn(), SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_OUT_TEMP_WET);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetTempOut(), SEND_BUF_OFFSET(offset));
-        offset += Format8(GetWetOut(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetWetOut(), SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_PM25);
@@ -349,31 +353,33 @@ void ContructDataUp()
     ret = GetModuleStu(MDU_CO);
     if (STU_NORMAL == ret)
     {
-        offset += Format32(GetCo(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetCo(), SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_SO2);
     if (STU_NORMAL == ret)
     {
-        offset += Format32(GetSo2(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetSo2(), SEND_BUF_OFFSET(offset));
 
     }
     
     ret = GetModuleStu(MDU_NO2);
     if (STU_NORMAL == ret)
     {
-        offset += Format32(GetNo2(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetNo2(), SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_O3);
     if (STU_NORMAL == ret)
     {
-        offset += Format32(GetO3(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetO3(), SEND_BUF_OFFSET(offset));
     }
     
     
     /* 计算CRC */
     crc = usMBCRC16( SEND_BUF_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
+    
+    //GSM_LOG_P2("CRC####: %d : %d\r\n", crc, offset - LEN_HEAD);
     
     /* 赋值头部 */
     FormatHead(crc, offset - LEN_HEAD, SEND_BUF_OFFSET(0));
@@ -384,6 +390,9 @@ void ContructDataUp()
     /* 数据总长度 */
     SEND_BUF_SET_LEN(offset + 2);
 
+    GSM_LOG_P1("Date: %s\r\n", gps.utc.strTime);
+    GSM_LOG_P3("YYMMSS: %04d%02d%02d\r\n", gps.utc.year, gps.utc.month, gps.utc.date);
+    GSM_LOG_P3("HHMMSS: %02d%02d%02d\r\n", gps.utc.hour, gps.utc.min, gps.utc.sec);
     GSM_LOG_P4("Long:Lati %d : %d, TmpO:WetO %d:%d", 
                  GetCoordLong(), GetCoordLati(), GetTempOut(), GetWetOut());
     GSM_LOG_P4("TmpI:WetI %d:%d, pm25:%d, pm10:%d", 

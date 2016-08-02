@@ -22,11 +22,11 @@ typedef struct TEMP_WET_t
     u8      validNum;                       /* 当前保存了几个有效的数据 */
     u8      curPos;                         /* 当前已更新的数据位置 */
     s16     curTemp;                         /* 最近的温度平均值结果 */
-    s8      curWet;													/* 最近的湿度平均值结果 */
+    u16     curWet;													/* 最近的湿度平均值结果 */
     s16     totalTemp;                      /* 温度采样数据之和 */
     u16     totalWet;                       /* 湿度采样数据之和 */
     s16     dataTemp[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
-    s8      dataWet[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
+    u16     dataWet[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
 
 }TEMP_WET_t;
 
@@ -83,7 +83,7 @@ typedef struct WIND_t
 }WIND_t;
 
 /* 存储温度湿度 */
-s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag);
+s8 StoreWetTempInfo(u16 wet, s16 temp, TEMP_WET_t *bag);
 /* 存储气体浓度 */
 s8 StoreGasInfo(u32 val, GAS_t *bag);
 /* 存储颗粒物浓度 */

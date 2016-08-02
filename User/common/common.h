@@ -12,7 +12,7 @@ extern "C" {
 #include "AaInclude.h"
 #include "config.h"
 
-// #define LOCAL_BIG_ENDIAN 在编译器中定义
+#define LOCAL_BIG_ENDIAN 在编译器中定义
 #ifdef LOCAL_BIG_ENDIAN
 #define nhtons(s)  ((((s) & 0xff00)>>8) | (((s) & 0xff)<<8))
 #define nhtonl(l)  (((l) & 0xff)<<24 | ((l) & 0xff000000)>>24 | ((l) & 0x00ff0000)>>8 | ((l) & 0x0000ff00)<<8)
@@ -74,11 +74,11 @@ typedef struct MSG_HEAD_t
 }MSG_HEAD_t;
 
 
-#define VALUE_TEMP_LOW      -100
-#define VALUE_TEMP_HIGH     100
+#define VALUE_TEMP_LOW      -1000
+#define VALUE_TEMP_HIGH     1000
 
 #define VALUE_WET_LOW       0
-#define VALUE_WET_HIGH      100
+#define VALUE_WET_HIGH      1000
 
 #define VALUE_PM25_LOW      0
 #define VALUE_PM25_HIGH     1000
@@ -109,7 +109,7 @@ typedef struct MSG_HEAD_t
 
 
 /* 是否达到采样个数 */
-#define IsReachSamples(n, target)       ((n) == (target) ? 1 : 0)
+#define IsReachSamples(n, target)       ((n) >= (target) ? 1 : 0)
 
 
 #ifdef __cplusplus

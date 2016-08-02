@@ -20,11 +20,13 @@ CONFIG_t g_config;
 
 void ConfigInit(void)
 {
-    ConfigSetAddr(60000);
-    ConfigSetStrAddr("60000");
-    ConfigSetServerIp("39.191.114.217", 15);
-    ConfigSetServerPort(8090);
-    ConfigSetSoftVer(0);
+    ConfigSetAddr(80001);
+    ConfigSetStrAddr("80001");
+    //ConfigSetServerIp("39.184.130.115", 15);
+    ConfigSetServerIp("120.27.26.208", 13);
+    //ConfigSetServerPort(8090);
+    ConfigSetServerPort(21006);
+    ConfigSetSoftVer(201);
     ConfigSetSimpleInterval(5);
     ConfigSetReportInterval(5);
 }

@@ -35,12 +35,19 @@ osSemaphoreId _gsm_recvcplt_sem_id;
 
 ring_buffer_t _gsm_rx_ringbuf;
 u8 _gsm_rx_ringbuf_data[GSM_SERIAL_RX_RINGBUFFER_SIZE];
-
-/* ���ڻ����յ������� */ 
 u8 _gsm_rx_buf[GSM_SERIAL_RX_RINGBUFFER_SIZE];
 
 /** Description of the macro */  
 static char recv_char;
+
+/* 发送 ringbuf */
+/*
+#define GSM_TX_RINGBUFFER_SIZE       (1024)
+
+ring_buffer_t _gsm_tx_ringbuf;
+u8 _gsm_tx_ringbuf_data[GSM_TX_RINGBUFFER_SIZE];
+u8 _gsm_tx_buf[GSM_TX_RINGBUFFER_SIZE];
+*/
 
 
 extern UART_HandleTypeDef UartHandle_gsm;
@@ -131,7 +138,7 @@ static void GsmSendTestThread(void const *argument)
             RepInt = ConfigGetReportInterval();
             // Interval = 20 * 60 * RepInt;
             // for test is 2 s
-            Interval = 20 * 2;
+            Interval = 20 * 5;
         }
 
         /* 间隔时间到 */
@@ -181,9 +188,13 @@ u8 StartGsmTask()
     GsmDeviceInit();
     ConfigInit();
 
+    /* 初始化接收ringbuf */
     ring_buffer_init(&_gsm_rx_ringbuf, _gsm_rx_ringbuf_data, GSM_SERIAL_RX_RINGBUFFER_SIZE);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create gsm serial rx ringbuffer success");
+    
+    /* 初始化发送ringbuf */
+    //ring_buffer_init(&_gsm_tx_ringbuf, _gsm_tx_ringbuf_data, GSM_TX_RINGBUFFER_SIZE);
 
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create gsm serial rx/tx ringbuffer success");
 
     _gsm_sendcplt_sem_id = osSemaphoreCreate(osSemaphore(gsm_sendcplt_sem), 1);
     if(_gsm_sendcplt_sem_id == NULL) {
@@ -216,7 +227,7 @@ u8 StartGsmTask()
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmThread success");
 
 
-    osThreadDef(GsmTest, GsmSendTestThread, osPriorityAboveNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(GsmTest, GsmSendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _gsm_send_test_id = AaThreadCreateStartup(osThread(GsmTest), NULL);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmSendTestThread success");
 
@@ -290,7 +301,14 @@ bool ProcessAtResponse(u8 *buf, u16 len)
     case AT_WAIT_CONNECT_RSP:
       IsAtSuss(buf, "CONNECT OK");
       IsAtSuss(buf, "ALREADY CONNECT");
-      IsAtSuss(buf, "CONNECT");    /* 透传模式 */
+      if (strstr((const char *)buf, "CONNECT FAIL"))
+      {
+          SetAtStatus(AT_ERROR);
+      }
+      else
+      {
+          IsAtSuss(buf, "CONNECT");    /* 透传模式 */
+      }
       break;
     case AT_WAIT_REG:
       IsAtSuss(buf, "CHINA");

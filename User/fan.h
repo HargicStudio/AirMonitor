@@ -57,6 +57,8 @@ uint8_t FAN_setSpeed(uint8_t channel, uint8_t speed);
 
 //void StartFanTask();
 
+void FanStart();
+
 
 
 #ifdef __cplusplus
