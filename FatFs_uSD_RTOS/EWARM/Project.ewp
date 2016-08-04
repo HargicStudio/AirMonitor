@@ -12,7 +12,7 @@
       <name>General</name>
       <archiveVersion>3</archiveVersion>
       <data>
-        <version>24</version>
+        <version>22</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
@@ -26,6 +26,11 @@
         <option>
           <name>ListPath</name>
           <state>AirMonitor\List</state>
+        </option>
+        <option>
+          <name>Variant</name>
+          <version>21</version>
+          <state>40</state>
         </option>
         <option>
           <name>GEndianMode</name>
@@ -54,6 +59,11 @@
           <state>0</state>
         </option>
         <option>
+          <name>FPU</name>
+          <version>2</version>
+          <state>5</state>
+        </option>
+        <option>
           <name>OGCoreOrChip</name>
           <state>1</state>
         </option>
@@ -73,11 +83,11 @@
         </option>
         <option>
           <name>OGProductVersion</name>
-          <state>4.41A</state>
+          <state>7.30.1.7765</state>
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>7.40.3.8937</state>
+          <state>7.30.1.7765</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -119,16 +129,21 @@
         <option>
           <name>GeneralMisraRules04</name>
           <version>0</version>
-          <state>011111111111111110111111111111011111111111111011110100111111111111111111111111111111111111111111101111111111111011111111111111111111111111111</state>
+          <state>111101110010111111111000110111111111111111111111111110010111101111010101111111111111111111111111101111111011111001111011111011111111111111111</state>
         </option>
         <option>
           <name>RTConfigPath2</name>
           <state>$TOOLKIT_DIR$\INC\c\DLib_Config_Full.h</state>
         </option>
         <option>
+          <name>GFPUCoreSlave</name>
+          <version>21</version>
+          <state>40</state>
+        </option>
+        <option>
           <name>GBECoreSlave</name>
-          <version>22</version>
-          <state>39</state>
+          <version>21</version>
+          <state>40</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -141,34 +156,6 @@
         <option>
           <name>GRuntimeLibThreads</name>
           <state>0</state>
-        </option>
-        <option>
-          <name>CoreVariant</name>
-          <version>22</version>
-          <state>39</state>
-        </option>
-        <option>
-          <name>GFPUDeviceSlave</name>
-          <state>STM32F407VE	ST STM32F407VE</state>
-        </option>
-        <option>
-          <name>FPU2</name>
-          <version>0</version>
-          <state>4</state>
-        </option>
-        <option>
-          <name>NrRegs</name>
-          <version>0</version>
-          <state>1</state>
-        </option>
-        <option>
-          <name>NEON</name>
-          <state>0</state>
-        </option>
-        <option>
-          <name>GFPUCoreSlave2</name>
-          <version>22</version>
-          <state>39</state>
         </option>
       </data>
     </settings>
@@ -226,7 +213,7 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state></state>
+          <state>Pa050</state>
         </option>
         <option>
           <name>CCDiagRemark</name>
@@ -617,8 +604,8 @@
         <debug>1</debug>
         <option>
           <name>OOCOutputFormat</name>
-          <version>3</version>
-          <state>3</state>
+          <version>2</version>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -644,7 +631,6 @@
       <data>
         <extensions></extensions>
         <cmdline></cmdline>
-        <hasPrio>0</hasPrio>
       </data>
     </settings>
     <settings>
