@@ -306,13 +306,14 @@ unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel)
                 
                 ADS1222_A_SCLK_HIGH();
                 ADS1222_DelayUs(2);
+                // sampling when low level
+                ADS1222_A_SCLK_LOW();
                 
                 if (ADS1222_A_DOUT_IN() == GPIO_PIN_SET)
                 {
                     adValue|=0x00000001;  //or adValue+=1;     
                 }
 
-                ADS1222_A_SCLK_LOW();
                 ADS1222_DelayUs(2);
             }
             /* 最后一个脉冲结束 */
@@ -340,13 +341,13 @@ unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel)
                 
                 ADS1222_B_SCLK_HIGH();
                 ADS1222_DelayUs(2);
+                ADS1222_B_SCLK_LOW();
                 
                 if (ADS1222_B_DOUT_IN() == GPIO_PIN_SET)
                 {
                     adValue|=0x00000001;  //or adValue+=1;     
                 }
 
-                ADS1222_B_SCLK_LOW();
                 ADS1222_DelayUs(2);
             }
             /* 最后一个脉冲结束 */
@@ -375,13 +376,13 @@ unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel)
                 
                 ADS1222_C_SCLK_HIGH();
                 ADS1222_DelayUs(2);
+                ADS1222_C_SCLK_LOW();
                 
                 if (ADS1222_C_DOUT_IN() == GPIO_PIN_SET)
                 {
                     adValue|=0x00000001;  //or adValue+=1;     
                 }
 
-                ADS1222_C_SCLK_LOW();
                 ADS1222_DelayUs(2);
             }
             /* 最后一个脉冲结束 */
@@ -410,13 +411,13 @@ unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel)
                 
                 ADS1222_D_SCLK_HIGH();
                 ADS1222_DelayUs(2);
+                ADS1222_D_SCLK_LOW();
                 
                 if (ADS1222_D_DOUT_IN() == GPIO_PIN_SET)
                 {
                     adValue|=0x00000001;  //or adValue+=1;     
                 }
 
-                ADS1222_D_SCLK_LOW();
                 ADS1222_DelayUs(2);
             }
             /* 最后一个脉冲结束 */

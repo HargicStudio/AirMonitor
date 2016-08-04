@@ -19,6 +19,7 @@ History:
 #include "cp15.h"
 #include "am2302.h"
 #include "fan.h"
+#include "osa_file.h"
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
@@ -77,19 +78,19 @@ u8 CCSDeamonCEInit()
     AaTagCEInit();
     //AaShellCEInit();
 
-    //CCSDaemonCreateThread();
+    CCSDaemonCreateThread();
     AaSysLogCreateDeamon();
     AaTagCreateDeamon();
     // start application task
+    StartTFCardTask();
     StartRunLedTask();
-    StartGpsTask();
-    StartGsmTask();
-    StartCP15Task();
-    
-    StartRunAm2302Task();
+    // StartGpsTask();
+    // StartGsmTask();
+    // StartCP15Task();
+    // StartRunAm2302Task();
     
     /* Init Fan */
-    FanStart();
+    // FanStart();
 
     // create global tag
     AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
