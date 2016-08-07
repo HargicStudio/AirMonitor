@@ -57,6 +57,9 @@ u32 ring_buffer_write_c(ring_buffer_t* ring_buffer, u8 data);
 /* 取一段以换行符为结束标志的串 */
 u8 ring_buffer_consume_enter( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len);
 
+/* 取一段以 ffffff 为结束标志的串 */
+u8 ring_buffer_consume_str( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len);
+
 #endif // __RingBufferUtils_h__
 
 

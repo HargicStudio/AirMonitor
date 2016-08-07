@@ -92,7 +92,7 @@ u32 ring_buffer_write( ring_buffer_t* ring_buffer, const u8* data, u32 data_leng
 u32 ring_buffer_write_c(ring_buffer_t* ring_buffer, u8 data)
 {
   ring_buffer->buffer[ring_buffer->tail] = data;
-  ring_buffer->tail = ring_buffer->tail == ring_buffer->size - 1 ? 0 : ring_buffer->tail + 1;
+  ring_buffer->tail = (ring_buffer->tail == ring_buffer->size - 1) ? 0 : ring_buffer->tail + 1;
   
   return 1;
 }
@@ -121,7 +121,6 @@ u8 ring_buffer_consume_enter( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len)
   }
   else
   {
-    u16 length2 = 0;
     while(count < ring_buffer->size)
     {
       length++;
@@ -146,6 +145,82 @@ u8 ring_buffer_consume_enter( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len)
         ring_buffer->head = count;
         return 0;
       }
+    }
+  }
+  
+  return 0;
+}
+
+/* 取一段以 ffffff 为结束标志的串 */
+u8 ring_buffer_consume_str( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len)
+{
+  u16 count = ring_buffer->head;
+  u16 length = 0;
+  
+  *len = 0;
+  
+  if (ring_buffer->head < ring_buffer->tail)
+  {
+    while(count < ring_buffer->tail)
+    {
+      length++;
+      if (ring_buffer->buffer[count] == 0xFF && 
+          ring_buffer->buffer[(count+1)%ring_buffer->size] == 0xFF &&
+          ring_buffer->buffer[(count+2)%ring_buffer->size] == 0xFF)
+      {
+        *len = length;
+        memcpy(buf, &ring_buffer->buffer[ring_buffer->head], length);
+        ring_buffer->head = (ring_buffer->head + length + 2) % ring_buffer->size;
+        return 0;
+      }
+      
+      count++;
+    }
+  }
+  else
+  {
+    while(count < ring_buffer->size)
+    {
+      length++;
+      if (ring_buffer->buffer[count] == 0xFF && 
+          ring_buffer->buffer[(count+1)%ring_buffer->size] == 0xFF &&
+          ring_buffer->buffer[(count+2)%ring_buffer->size] == 0xFF)
+      {
+        *len = length;
+        memcpy(buf, &ring_buffer->buffer[ring_buffer->head], length);
+        ring_buffer->head = (ring_buffer->head + length + 2) % ring_buffer->size;
+        return 0;
+      }
+      
+      count++;
+    }
+    count = 0;
+    while(count < ring_buffer->tail)
+    {
+      length++;
+      if (ring_buffer->buffer[count++] == '\n')
+      {
+        *len = length;
+        memcpy(buf, &ring_buffer->buffer[ring_buffer->head], ring_buffer->size - ring_buffer->head);
+        
+        memcpy(buf + ring_buffer->size - ring_buffer->head, ring_buffer->buffer, count);
+        ring_buffer->head = count;
+        return 0;
+      }
+      
+      if (ring_buffer->buffer[count] == 0xFF && 
+          ring_buffer->buffer[(count+1)%ring_buffer->size] == 0xFF &&
+          ring_buffer->buffer[(count+2)%ring_buffer->size] == 0xFF)
+      {
+        *len = length;
+        memcpy(buf, &ring_buffer->buffer[ring_buffer->head], ring_buffer->size - ring_buffer->head);
+        
+        memcpy(buf + ring_buffer->size - ring_buffer->head, ring_buffer->buffer, count);
+        ring_buffer->head = (count + 2) % ring_buffer->size;
+        return 0;
+      }
+      
+      count++;
     }
   }
   
