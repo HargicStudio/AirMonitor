@@ -112,10 +112,11 @@ static void CP15SendTestThread(void const *argument)
 
     for(;;)
     {
-        osDelay(10000);
-        //GSM_LOG_P0("**Hello, CP15**");
-        SetAutoInterval(10);
         OpenAutoOutput();
+        osDelay(5000);
+        SetAutoInterval(10);
+        osDelay(50000);
+        //GSM_LOG_P0("**Hello, CP15**");
         
         /* 设置完成退出线程 */
     }
