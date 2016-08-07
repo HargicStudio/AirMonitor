@@ -430,7 +430,7 @@ static void RunAm2302Thread(void const *argument)
   for (;;)
   {
       /* 每2s采集一次 */
-      osDelay(2000);
+      osDelay(50000);
       
        /* 通道0 */
       if(AM2302_Read_TempAndHumidity(AM2302_CH0, &AM2302_Data)==SUCCESS)
