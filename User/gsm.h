@@ -44,6 +44,8 @@ void GsmRecvDataFromISR(UART_HandleTypeDef *huart);
 bool ProcessAtResponse(u8 *buf, u16 len);
 bool SendDataToServer(void);
 bool SendResponseToServer(void);
+void ReceiveNormalData(u8 data);
+void ReceiveTransparentData(u8 data);
 
 
 

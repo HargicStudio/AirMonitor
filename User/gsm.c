@@ -84,7 +84,14 @@ static void GsmThread(void const *argument)
     {
         osSemaphoreWait(_gsm_recvcplt_sem_id, osWaitForever);
         
-        ring_buffer_consume_enter(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        if (GSM_TCP_CONNECTED == GsmStatusGet())
+        {
+            ring_buffer_consume_str(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        }
+        else
+        {
+            ring_buffer_consume_enter(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        }
         _gsm_rx_buf[len] = 0;
         
         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM Recived: LEN: %d: %s \r\n", len, _gsm_rx_buf);
@@ -129,7 +136,7 @@ static void GsmSendTestThread(void const *argument)
     */
     for(;;)
     {
-        osDelay(50);
+        osDelay(100);
         times++;
 
         // As the interval will change, cal every time.
@@ -138,7 +145,7 @@ static void GsmSendTestThread(void const *argument)
             RepInt = ConfigGetReportInterval();
             // Interval = 20 * 60 * RepInt;
             // for test is 2 s
-            Interval = 20 * 5;
+            Interval = 10 * 5;
         }
 
         /* 间隔时间到 */
@@ -267,25 +274,158 @@ void GsmWaitForSendCplt()
     osSemaphoreRelease(_gsm_sendcplt_sem_id);
 }
 
-
+/*
+* 接收模式
+* 1. 透传模式开启以前。接收以"\r\n"结尾的字符串
+* 2. 透传模式开启后， 接收以CCXXXXXXCC来识别
+*/
 void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
 {
     
     HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1);
-
-    ring_buffer_write_c(&_gsm_rx_ringbuf, recv_char);
     
-    if (recv_char == '>')
+    GSM_LOG_P1("*********** %c", recv_char);
+    
+    /* 透明传输模式开启 */
+    if (GSM_TCP_CONNECTED == GsmStatusGet())
+    {
+        ReceiveTransparentData(recv_char);
+    }
+    else
+    {
+        ReceiveNormalData(recv_char);
+    }
+    
+    return;
+}
+
+void ReceiveNormalData(u8 data)
+{
+    ring_buffer_write_c(&_gsm_rx_ringbuf, data);
+    
+    if (data == '>')
     {
         ring_buffer_write_c(&_gsm_rx_ringbuf, '\n');
         osSemaphoreRelease(_gsm_recvcplt_sem_id);
         return;
     }
       
-    if (recv_char == '\n')
+    if (data == '\n')
     {
         osSemaphoreRelease(_gsm_recvcplt_sem_id);
     }
+
+}
+
+void ReceiveTransparentData(u8 data)
+{
+    static u8 flag = 0xff;
+    static u8 recv[18] = {0};     /* LEN_HEAD + LEN_ADDR + LEN_CMD */
+    static u8 pos = 0;
+    static u8 more_len = 0;
+    u16 cmd = 0;
+    u16 dataLen = 0;
+    
+    if (data == 'C' && flag == 0xff)
+    {
+        pos = 0;
+        recv[pos] = data;
+        pos++;
+        flag = 1;
+        more_len = 0;
+        
+        return;
+    }
+    
+    if (data == 'C' && flag == 1)
+    {
+        recv[pos] = data;
+        pos++;
+        flag = 2;
+        
+        return;
+    }
+    
+    if (flag == 2 && pos < 18)
+    {
+        recv[pos] = data;
+        pos++;
+        
+        if (pos == 9 || pos == 10)
+        {
+            if (recv[pos - 1] != 'C')
+            {
+                /* 错误的格式，初始化 */
+                flag = 0xff;
+                pos = 0;
+                return;
+            }
+        }
+        
+        if (pos == 18)
+        {
+            cmd = (u16)stringToInt(recv + OFFSET_CMD, LEN_CMD);
+            more_len = (u16)GetCmdDataLen(cmd);
+            if (more_len == 0xff)
+            {
+                /* 不支持的命令，初始化 */
+                flag = 0xff;
+                pos = 0;
+                return;
+            }
+            else
+            {
+                dataLen = recv[OFFSET_LEN] << 8;
+                dataLen |= recv[OFFSET_LEN+1];
+                if (dataLen != (more_len + LEN_ADDR_CMD))
+                {
+                    /* 数据长度错误, 初始化*/
+                    flag = 0xff;
+                    pos = 0;
+                    return;
+                }
+                
+                /* cmd后不带数据的情况 */
+                if (more_len == 0)
+                {
+                    /* 添加结尾特殊数据 */
+                    ring_buffer_write(&_gsm_rx_ringbuf, recv, 18);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    /* 通知接收 */
+                    osSemaphoreRelease(_gsm_recvcplt_sem_id);
+                    flag = 0xff;
+                    pos = 0;
+                    return;
+                }
+                
+                /* 继续接收剩下的数据 */
+                flag = 3;
+            }
+        }
+        
+        return;
+    }
+    
+    if (flag == 3)
+    {
+        more_len--;
+        ring_buffer_write_c(&_gsm_rx_ringbuf, data);
+        if (more_len == 0)
+        {
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            /* 通知接收 */
+            osSemaphoreRelease(_gsm_recvcplt_sem_id);
+            flag = 0xff;
+            pos = 0;
+        }
+        
+        return;
+    }
+    
     return;
 }
 
