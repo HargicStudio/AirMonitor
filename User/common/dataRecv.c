@@ -40,7 +40,7 @@ void HandleGsmRecv(u8 *buf, u16 len)
     memcpy(&parmCrc, (u8 *)buf + OFFSET_CRC, LEN_CRC);
     parmCrc = nhtons(parmCrc);
     crc = usMBCRC16(buf + LEN_HEAD, parmLen);
-    if (parmCrc == crc)
+    if (parmCrc != crc)
     {
         GSM_LOG_P3("Invild Crc, parmCrc: %d:%d %s", parmCrc, crc, buf);
         return;
@@ -105,6 +105,21 @@ void ProcessRecvData(u8 *buf, int cmd)
     }
 }
 
+u32 myPow(u32 val, u32 times)
+{
+    u32 rst = 0;
+    if (times == 0)
+      return 1;
+    
+    rst = val;
+    while(--times)
+    {
+        rst *= val;  
+    }
+    
+    return rst;
+}
+
 u32 stringToInt(u8 *buf, u16 len)
 {
     u32 i = 0;
@@ -112,7 +127,7 @@ u32 stringToInt(u8 *buf, u16 len)
     
     for (i=0; i<len; i++)
     {
-        rst += (buf[len - 1 - i] - '0') * 10^i; 
+        rst += (buf[len - 1 - i] - '0') * myPow(10, i); 
     }
     
     return rst;

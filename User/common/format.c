@@ -9,6 +9,7 @@ void FormatHead(u16 crc, u16 len, u8 *buf)
     buf[1] = 'C';
     offset += 2;
     
+    ver = nhtons(ver);
     memcpy(buf + offset, (s8 *)&ver, 2);
     offset += 2;
     

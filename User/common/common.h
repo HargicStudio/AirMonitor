@@ -35,21 +35,35 @@ extern "C" {
 #define LEN_CRC                 2
 #define LEN_ADDR                5
 #define LEN_CMD                 3
+#define LEN_ADDR_CMD            8
 
 #define OFFSET_LEN              4
 #define OFFSET_CRC              6
 #define OFFSET_ADDR             10
 #define OFFSET_CMD              15
+#define OFFSET_DATA             18
 
 #define DEBUG_DEBUG_GSM
+//#define DEBUG_NO_DEBUG_GSM
+//#define DEBUG_STD_GSM
 
 #ifdef DEBUG_DEBUG_GSM
-#define GSM_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt,__FUNCTION__, __LINE__)
-#define GSM_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt,__FUNCTION__, __LINE__, p1)
-#define GSM_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt,__FUNCTION__, __LINE__, p1, p2)
-#define GSM_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt,__FUNCTION__, __LINE__, p1, p2, p3)
-#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt,__FUNCTION__, __LINE__, p1, p2, p3, p4)
-#else
+#define GSM_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+  
+#ifdef DEBUG_STD_GSM
+#define GSM_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+ 
+#ifdef DEBUG_NO_DEBUG_GSM
 #define GSM_LOG_P0(fmt)
 #define GSM_LOG_P1(fmt, p1)
 #define GSM_LOG_P2(fmt, p1, p2)

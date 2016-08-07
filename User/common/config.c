@@ -1,5 +1,6 @@
 #include "config.h"
 #include <string.h>
+#include "gpsAnalyser.h"
 
 /*
 typedef struct CONFIG_t
@@ -14,7 +15,8 @@ typedef struct CONFIG_t
 
 }CONFIG_t;
 */
-
+/* 用于计算和保存信息 */
+extern gps_process_data gps;
 
 CONFIG_t g_config;
 
@@ -23,12 +25,26 @@ void ConfigInit(void)
     ConfigSetAddr(80001);
     ConfigSetStrAddr("80001");
     //ConfigSetServerIp("39.184.130.115", 15);
-    ConfigSetServerIp("120.27.26.208", 13);
     //ConfigSetServerPort(8090);
+    ConfigSetServerIp("120.27.26.208", 13);
     ConfigSetServerPort(21006);
-    ConfigSetSoftVer(201);
+    ConfigSetSoftVer(301);
     ConfigSetSimpleInterval(5);
     ConfigSetReportInterval(5);
+    
+    /* 配置时间 */
+    ConfigSetTime();
+}
+
+void ConfigSetTime()
+{
+    gps.utc.year = 2016;
+    gps.utc.month = 8;
+    gps.utc.date = 7;
+    gps.utc.hour = 16;
+    gps.utc.min = 16;
+    gps.utc.sec = 16;
+    memcpy(gps.utc.strTime, "20160807161616", 15);
 }
 
 void ConfigSetAddr(u32 addr)

@@ -305,9 +305,12 @@ void ContructDataUp()
     memcpy(SEND_BUF_OFFSET(offset), ConfigGetStrAddr(), MAX_ADDR_LEN);
     offset += MAX_ADDR_LEN;
     /* cmd */
-    memcpy(SEND_BUF_OFFSET(offset), "203", 3);    
+    memcpy(SEND_BUF_OFFSET(offset), "503", 3);
     
     offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
+    
+    /* date*/
+    offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
     
     /* 写入模块状态 */ 
     offset += Format32(GetAllModuleStu(), SEND_BUF_OFFSET(offset));
@@ -321,8 +324,7 @@ void ContructDataUp()
         offset += Format32(GetCoordLati(), SEND_BUF_OFFSET(offset));  
     }
     */
-    /* date*/
-    offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
+    
     
     ret = GetModuleStu(MDU_IN_TEMP_WET);
     if (STU_NORMAL == ret)
@@ -375,6 +377,9 @@ void ContructDataUp()
         offset += Format16(GetO3(), SEND_BUF_OFFSET(offset));
     }
     
+    Format16(120, SEND_BUF_OFFSET(offset));
+    offset += 2;
+    
     
     /* 计算CRC */
     crc = usMBCRC16( SEND_BUF_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
@@ -403,8 +408,6 @@ void ContructDataUp()
     SEND_BUF_FLAG_SET();
     
     SEND_BUF_RESP_FALG_SET(1);
-    GSM_LOG_P1("Send Buf ready: %s\r\n", g_sendBuf.buf);
-    
 
 }
 
