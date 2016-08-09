@@ -304,9 +304,13 @@ int OSA_fileOpen(const char *fileName, OSA_FileMode mode,
         case OSA_FILEMODE_WRONLY:
             modeFlag = FA_WRITE;
             break;
-        case OSA_FILEMODE_RDWR:
-            modeFlag = FA_CREATE_ALWAYS | FA_WRITE;
+        case OSA_FILEMODE_RDWR_NEW:
+            modeFlag = FA_CREATE_ALWAYS | FA_WRITE | FA_READ;
             break;
+        case OSA_FILEMODE_RDWR:
+            modeFlag = FA_WRITE | FA_READ;
+            break;
+      
         default:
             printf("Invalid mode:%d\n", mode);
             return OSA_EFAIL;
@@ -432,7 +436,7 @@ int OSA_fileRead (OSA_FileHandle hFile, unsigned char *buffer, unsigned int size
 
     ret = f_read(&pFileObj->MyFile, buffer, size, (UINT*)&bytesread);
     
-    if((bytesread == 0) || (ret != FR_OK))
+    if(ret != FR_OK)
     {
         return OSA_EFAIL;
     }

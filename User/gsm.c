@@ -193,7 +193,6 @@ static void GsmSendTestThread(void const *argument)
 u8 StartGsmTask()
 {
     GsmDeviceInit();
-    ConfigInit();
 
     /* 初始化接收ringbuf */
     ring_buffer_init(&_gsm_rx_ringbuf, _gsm_rx_ringbuf_data, GSM_SERIAL_RX_RINGBUFFER_SIZE);
@@ -284,7 +283,7 @@ void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
     
     HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1);
     
-    GSM_LOG_P1("*********** %c", recv_char);
+    //GSM_LOG_P1("*********** %c", recv_char);
     
     /* 透明传输模式开启 */
     if (GSM_TCP_CONNECTED == GsmStatusGet())

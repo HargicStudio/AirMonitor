@@ -125,6 +125,8 @@ typedef struct MSG_HEAD_t
 /* 是否达到采样个数 */
 #define IsReachSamples(n, target)       ((n) >= (target) ? 1 : 0)
 
+u32 stringToInt(u8 *buf, u16 len);
+
 
 #ifdef __cplusplus
 }

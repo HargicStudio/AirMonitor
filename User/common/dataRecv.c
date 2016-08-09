@@ -120,19 +120,6 @@ u32 myPow(u32 val, u32 times)
     return rst;
 }
 
-u32 stringToInt(u8 *buf, u16 len)
-{
-    u32 i = 0;
-    u32 rst = 0;
-    
-    for (i=0; i<len; i++)
-    {
-        rst += (buf[len - 1 - i] - '0') * myPow(10, i); 
-    }
-    
-    return rst;
-}
-
 void ProcessServerCall(u8 *buf)
 {
     GSM_LOG_P0("Recv Server Call!");

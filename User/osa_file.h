@@ -53,7 +53,8 @@ typedef enum
 {
     OSA_FILEMODE_RDONLY  = 0, /* 只读, 若文件不存在将失败 */
     OSA_FILEMODE_WRONLY,      /* 只写*/
-    OSA_FILEMODE_RDWR,        /* 读写,从文件头开始写,原有数据将被清掉, 若文件不存在将创建*/
+    OSA_FILEMODE_RDWR,        
+    OSA_FILEMODE_RDWR_NEW,    /* 读写,从文件头开始写,原有数据将被清掉, 若文件不存在将创建*/
 } OSA_FileMode;
 
 /* 接口返回值定义 */

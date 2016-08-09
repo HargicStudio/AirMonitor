@@ -18,7 +18,11 @@ typedef enum MODULE_e
     MDU_CO = 6,
     MDU_SO2 = 7,
     MDU_NO2 = 8,
-    MDU_O3 = 9,     
+    MDU_O3 = 9,
+    MDU_FAN1 = 10,
+    MDU_FAN2 = 11,
+    MDU_CARD = 12,
+    
 
 }MODULE_e;
 

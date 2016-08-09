@@ -15,7 +15,7 @@ typedef enum ACK_TYPE_e
 }ACK_TYPE_e;
   
 void HandleGsmRecv(u8 *buf, u16 len);
-u32 stringToInt(u8 *buf, u16 len);
+
 void ProcessRecvData(u8 *buf, int cmd);
 
 void ProcessServerCall(u8 *buf);

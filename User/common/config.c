@@ -1,39 +1,144 @@
 #include "config.h"
 #include <string.h>
 #include "gpsAnalyser.h"
+#include "common.h"
+#include "cfg.h"
 
-/*
-typedef struct CONFIG_t
-{
-    u32 myAddr;
-    u8 strAddr[5];
-    u8 serverIp[MAX_IP_LEN];
-    u16 serverPort;
-    u16 version;
-    u8 simpleInterval;  
-    u8 reportInterval;  
 
-}CONFIG_t;
-*/
 /* 用于计算和保存信息 */
 extern gps_process_data gps;
 
 CONFIG_t g_config;
 
+u8 _cfgBuf[20];
+
+/*
+*  配置项
+*
+*/
 void ConfigInit(void)
 {
-    ConfigSetAddr(80001);
-    ConfigSetStrAddr("80001");
-    //ConfigSetServerIp("39.184.130.115", 15);
-    //ConfigSetServerPort(8090);
-    ConfigSetServerIp("120.27.26.208", 13);
-    ConfigSetServerPort(21006);
-    ConfigSetSoftVer(301);
-    ConfigSetSimpleInterval(5);
-    ConfigSetReportInterval(5);
+    s32 temp32 = 0;
     
-    /* 配置时间 */
+    if (-1 != ReadCfg(C_ADDR, _cfgBuf))
+    {
+        ConfigSetStrAddr(_cfgBuf);
+    }
+    
+    if (-1 != ReadCfgInt(C_ADDR, &temp32))
+    {
+        ConfigSetAddr(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_SOFTVER, &temp32))
+    {
+        ConfigSetSoftVer(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_HARDVER, &temp32))
+    {
+        ConfigSetHardVer(temp32);
+    }
+
+    if (-1 != ReadCfg(C_SERVERIP, _cfgBuf))
+    {
+        ConfigSetServerIp(_cfgBuf, strlen(_cfgBuf));
+    }
+
+    if (-1 != ReadCfgInt(C_SERVERPORT, &temp32))
+    {
+        ConfigSetServerPort(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_SIMPLEINT, &temp32))
+    {
+        ConfigSetSimpleInterval(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_REPORTINT, &temp32))
+    {
+        ConfigSetReportInterval(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_K25, &temp32))
+    {
+        ConfigSetpm25K(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_B25, &temp32))
+    {
+        ConfigSetpm25B(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_K10, &temp32))
+    {
+        ConfigSetpm10K(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_B10, &temp32))
+    {
+        ConfigSetpm10B(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_COVw, &temp32))
+    {
+        ConfigSetcoVw(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_COVa, &temp32))
+    {
+        ConfigSetcoVa(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_SO2Vw, &temp32))
+    {
+        ConfigSetso2Vw(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_SO2Va, &temp32))
+    {
+        ConfigSetso2Va(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_O3Vw, &temp32))
+    {
+        ConfigSeto3Vw(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_O3Va, &temp32))
+    {
+        ConfigSeto3Va(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_NO2Vw, &temp32))
+    {
+        ConfigSetno2Vw(temp32);
+    }
+    
+    if (-1 != ReadCfgInt(C_NO2Va, &temp32))
+    {
+        ConfigSetno2Va(temp32);
+    }
+    
+    /* 默认的时间 */
     ConfigSetTime();
+    
+    ConfigPrint();
+    
+}
+
+void ConfigPrint(void)
+{
+    printf("Config Addr: %d, SADDR: %s\r\n", g_config.myAddr, g_config.strAddr);
+    printf("SOFT VER: %d, HARD VER: %d\r\n", g_config.softVer, g_config.hardVer);
+    printf("Cloud: %s, PORT: %d\r\n", g_config.serverIp, g_config.serverPort);
+    printf("SIMPLE: %d, REPORT: %d\r\n", g_config.simpleInterval, g_config.reportInterval);
+    printf("2.5 K,B : %d,%d; 10K,B : %d,%d\r\n", g_config.pm25K, g_config.pm25B,
+               g_config.pm10K, g_config.pm10B);
+    printf("CO W,A : %d,%d; SO2 W,A : %d,%d\r\n", g_config.coVw, g_config.coVa,
+               g_config.so2Vw, g_config.so2Va);
+    printf("O3 W,A : %d,%d; NO2 W,A : %d,%d\r\n", g_config.o3Vw, g_config.o3Va,
+               g_config.no2Vw, g_config.no2Va);
 }
 
 void ConfigSetTime()

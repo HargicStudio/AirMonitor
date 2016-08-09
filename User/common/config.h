@@ -99,6 +99,8 @@ u16 ConfigGetpm25K(void);
 void ConfigSetpm25K(u16 val);
 
 void ConfigSetTime();
+
+void ConfigPrint();
   
   
 #ifdef __cplusplus
