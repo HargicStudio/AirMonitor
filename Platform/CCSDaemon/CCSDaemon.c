@@ -82,12 +82,13 @@ u8 CCSDeamonCEInit()
     AaSysLogCreateDeamon();
     AaTagCreateDeamon();
     // start application task
-    StartTFCardTask();
+    StartDataRecordTask();
+    //StartTFCardTask();
     StartRunLedTask();
-    // StartGpsTask();
-    // StartGsmTask();
-    // StartCP15Task();
-    // StartRunAm2302Task();
+    //StartGpsTask();
+    //StartGsmTask();
+    //StartCP15Task();
+    //StartRunAm2302Task();
     
     /* Init Fan */
     // FanStart();
