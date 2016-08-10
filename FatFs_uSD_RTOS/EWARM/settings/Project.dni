@@ -37,7 +37,7 @@ ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
 [DebugChecksum]
-Checksum=1854727023
+Checksum=-1271557800
 [CodeCoverage]
 Enabled=_ 0
 [CallStack]
@@ -55,8 +55,12 @@ Stop=1
 [Simulator]
 Freq=10000000
 MultiCoreRunAll=1
-[CallStackStripe]
-ShowTiming=1
+[Trace1]
+Enabled=0
+ShowSource=1
+[Trace2]
+Enabled=0
+ShowSource=0
 [SWOTraceWindow]
 PcSampling=0
 InterruptLogs=0
@@ -67,26 +71,20 @@ EventFOLD=0
 EventLSU=0
 EventSLEEP=0
 [PowerLog]
+Title_0=I0
+Symbol_0=0 4 0
 LogEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
-ShowTimeSum=0
-Title_0=I0
-Symbol_0=0 4 0
 LiveEnabled=0
 LiveFile=PowerLogLive.log
 [DataLog]
 LogEnabled=0
-SumEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
+SumEnabled=0
 ShowTimeSum=1
 [EventLog]
-LogEnabled=0
-SumEnabled=0
-GraphEnabled=0
-ShowTimeLog=1
-ShowTimeSum=1
 Title_0=Ch3
 Symbol_0=0 4 1
 Title_1=Ch2
@@ -95,12 +93,17 @@ Title_2=Ch1
 Symbol_2=0 4 1
 Title_3=Ch0
 Symbol_3=0 4 1
+LogEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+SumEnabled=0
+ShowTimeSum=1
 SumSortOrder=0
 [InterruptLog]
 LogEnabled=0
-SumEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
+SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
 [Log file]
@@ -110,22 +113,26 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[CallStackLog]
-Enabled=0
-[PowerProbe]
-Frequency=10000
-Probe0=I0
-ProbeSetup0=2 1 1 2 0 0
 [DriverProfiling]
 Enabled=0
 Mode=3
 Graph=0
 Symbiont=0
 Exclusions=
+[CallStackLog]
+Enabled=0
+[CallStackStripe]
+ShowTiming=1
+[PowerProbe]
+Frequency=10000
+Probe0=I0
+ProbeSetup0=2 1 1 2 0 0
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Count=0
+Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\Platform\CCSDaemon\CCSDaemon.c}.85.5" 0 0 1 "" 0 "" 0
+Count=1
 [Aliases]
-Count=0
-SuppressDialog=0
+A0=_ "F:\mcu\stm32\ÏîÄ¿\¿ÕÆø¼ì²â\code\trunk\FatFs_uSD_RTOS\Src\main.c" "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\Src\main.c"
+Count=1
+SuppressDialog=1
