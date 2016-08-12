@@ -32,6 +32,19 @@ typedef struct CONFIG_t
     u16 o3Va;
     u16 no2Vw;
     u16 no2Va;
+    /* 零点 及 灵敏度 */
+    s16 coVw0;
+    s16 coVa0;
+    s16 coS;
+    s16 so2Vw0;
+    s16 so2Va0;
+    s16 so2S;
+    s16 o3Vw0;
+    s16 o3Va0;
+    s16 o3S;
+    s16 no2Vw0;
+    s16 no2Va0;
+    s16 no2S;
 
 }CONFIG_t;
 
@@ -97,6 +110,11 @@ void ConfigSetpm25B(u16 val);
 
 u16 ConfigGetpm25K(void);
 void ConfigSetpm25K(u16 val);
+
+void Getno2Zero(s16 *Vw, s16 *Va, s16 *S);
+void Geto3Zero(s16 *Vw, s16 *Va, s16 *S);
+void GetSo2Zero(s16 *Vw, s16 *Va, s16 *S);
+void GetCoZero(s16 *Vw, s16 *Va, s16 *S);
 
 void ConfigSetTime();
 

@@ -8,6 +8,7 @@
 #include "dataRecv.h"
 #include "gsmCtrl.h"
 #include "format.h"
+#include "dataRecord.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -155,17 +156,30 @@ static void GsmSendTestThread(void const *argument)
             ContructDataUp();
             if (IsSendBufReady())
             {
-                SEND_BUF_FLAG_CLEAR();
                 SendDataToServer();
-                
+                SEND_BUF_FLAG_CLEAR();
             }
         }
 
+        /* 发送应答服务器的数据 */
         if (IsSendResponseReady())
         {
-            SEND_RESPONSE_FLAG_CLEAR();
             SendResponseToServer();
+            SEND_RESPONSE_FLAG_CLEAR();
+        }
+        
+        /* 发送回调数据 */
+        if (1 == g_sendRecallData.sendFlag)
+        {
+            SendRecallDataToServer();
             
+            /* 清除回调标志 */
+            if (g_recallInfo.continueFlag == 0)
+            {
+                ClearRecallFlag();
+            }
+            
+            g_sendRecallData.sendFlag = 0;
         }
         
         if (IsGsmWaitCloseFlag())

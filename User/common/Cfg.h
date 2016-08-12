@@ -25,6 +25,7 @@ enum
     C_NO2Va,
 };
 
+int Initcfg(char *temp);
 int ReadCfg(int index,char *value);
 int ReadCfgInt(int index, int *iVal);
 

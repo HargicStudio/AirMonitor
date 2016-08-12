@@ -12,3 +12,15 @@ u32 stringToInt(u8 *buf, u16 len)
     
     return rst;
 }
+
+bool IsDirExit(u8 *path)
+{
+    DIR fd;
+    if (FR_OK == f_opendir(&fd, path))
+    {
+        f_closedir(&fd);
+        return true;
+    }
+    
+    return false;
+}

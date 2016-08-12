@@ -11,6 +11,8 @@ extern "C" {
 #include "stm32f4xx_hal.h"
 #include "AaInclude.h"
 #include "config.h"
+#include "ff.h"
+#include "osa_file.h"
 
 #define LOCAL_BIG_ENDIAN 在编译器中定义
 #ifdef LOCAL_BIG_ENDIAN
@@ -29,7 +31,8 @@ extern "C" {
 #define NOK_2	-2
 #define NOK_3 -3
   
-
+#define LEN_REPORT_DATA         56
+#define LEN_REPORT_DATA_WO_HEAD 46 
 #define LEN_HEAD                10
 #define LEN_PARM_LEN            2
 #define LEN_CRC                 2
@@ -126,6 +129,8 @@ typedef struct MSG_HEAD_t
 #define IsReachSamples(n, target)       ((n) >= (target) ? 1 : 0)
 
 u32 stringToInt(u8 *buf, u16 len);
+
+bool IsDirExit(u8 *path);
 
 
 #ifdef __cplusplus

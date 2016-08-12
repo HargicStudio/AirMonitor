@@ -1,6 +1,5 @@
 
 /* Includes ------------------------------------------------------------------*/
-#include "gpsAnalyser.h"
 #include "gps.h"
 #include "dataHandler.h"
 #include "gps_dev.h"

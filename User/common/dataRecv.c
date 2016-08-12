@@ -3,6 +3,7 @@
 #include "AaInclude.h"
 #include "crc.h"
 #include "gsmCtrl.h"
+#include "dataRecord.h"
 
 
 void HandleGsmRecv(u8 *buf, u16 len)
@@ -89,6 +90,7 @@ void ProcessRecvData(u8 *buf, int cmd)
       /* 请求硬件版本号 */
     case 33:
       ProcessGetHardVersion(buf);
+      break;
       /* 应答处理 */
     case 500:
       ProcessServerResp(buf);
@@ -100,6 +102,12 @@ void ProcessRecvData(u8 *buf, int cmd)
       /* 配置参数 */
     case 502:
       ProcessConfig(buf);
+      break;
+      /* 回调 */
+    case 81:
+    case 83:
+    case 85:
+      ProcessRecall(buf, cmd);
       break;
         
     }
@@ -385,6 +393,74 @@ void ProcessConfig(u8 *buf)
     offset += 2;
     
     ConstructResponse("500", buf, REPLY_502);
+}
+
+/*
+typedef struct RECALL_INFO_t
+{
+    u8 flag;                    /是否需要回调的标志/
+    u16 type;                   / 回调类型 /
+    u8 startTime[11];           / 1608100828 /
+    u8 Folder[9];               / 1608/10/ /
+    u8 file[7];                 / 小时： 00- 23.txt /
+    
+}RECALL_INFO_t;
+*/
+void ProcessRecall(u8 *buf, u16 cmd)
+{
+    u8 *tmp = buf + LEN_ADDR + LEN_CMD;
+    
+    if (IsInRecall())
+    {
+        GSM_LOG_P1("Recall In Process! Ignored! %s", buf);
+        return;
+    }
+    
+    memset(&g_recallInfo, 0, sizeof(g_recallInfo));
+    
+    if (cmd == 81)
+    {
+        memcpy(g_recallInfo.startTime, tmp, 10);
+    }
+    else if (cmd == 83)
+    {
+        memcpy(g_recallInfo.startTime, tmp, 8);
+    }
+    else if (cmd == 85)
+    {
+        memcpy(g_recallInfo.startTime, tmp, 6);
+    }
+    else
+    {
+        return;
+    }
+    
+    // 年月
+    memcpy(g_recallInfo.Folder, tmp, 4);
+    //
+    g_recallInfo.Folder[5] = '\\';
+    g_recallInfo.Folder[6] = tmp[5];
+    g_recallInfo.Folder[7] = tmp[6];
+    g_recallInfo.Folder[8] = '\\';
+    
+    if (cmd == 81 || cmd == 83)
+    {
+        g_recallInfo.file[0] = tmp[7];
+        g_recallInfo.file[1] = tmp[8];  
+    }
+    else
+    {
+        /* 回调天数据，从00开始 */
+        g_recallInfo.file[0] = '0';
+        g_recallInfo.file[1] = '0';
+    }
+    
+    g_recallInfo.file[2] = '.';
+    g_recallInfo.file[3] = 't';
+    g_recallInfo.file[4] = 'x';
+    g_recallInfo.file[5] = 't';
+    
+    g_recallInfo.flag = 1;
 }
 
 /*

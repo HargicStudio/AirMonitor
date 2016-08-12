@@ -283,6 +283,7 @@ int OSA_fileOpen(const char *fileName, OSA_FileMode mode,
 {
     OSA_FileObject *pFileObj = NULL;
     BYTE modeFlag;
+    FRESULT result;
     
     if(NULL == fileName)
     {
@@ -310,6 +311,8 @@ int OSA_fileOpen(const char *fileName, OSA_FileMode mode,
         case OSA_FILEMODE_RDWR:
             modeFlag = FA_WRITE | FA_READ;
             break;
+        case OSA_FILEMODE_WRITEN:
+            modeFlag = FA__WRITTEN;
       
         default:
             printf("Invalid mode:%d\n", mode);
@@ -325,9 +328,10 @@ int OSA_fileOpen(const char *fileName, OSA_FileMode mode,
     }*/
     pFileObj = &gFileObj;
     
-    if(f_open(&pFileObj->MyFile, fileName, modeFlag) != FR_OK)
+    result = f_open(&pFileObj->MyFile, fileName, modeFlag);
+    if(result != FR_OK)
     {
-        printf("Open failed\n");
+        printf("Open failed\r\n");
         goto failed;
     }
 

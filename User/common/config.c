@@ -10,7 +10,7 @@ extern gps_process_data gps;
 
 CONFIG_t g_config;
 
-u8 _cfgBuf[20];
+char _cfgBuf[20];
 
 /*
 *  ≈‰÷√œÓ
@@ -18,11 +18,11 @@ u8 _cfgBuf[20];
 */
 void ConfigInit(void)
 {
-    s32 temp32 = 0;
+    int temp32 = 0;
     
     if (-1 != ReadCfg(C_ADDR, _cfgBuf))
     {
-        ConfigSetStrAddr(_cfgBuf);
+        ConfigSetStrAddr((u8 *)_cfgBuf);
     }
     
     if (-1 != ReadCfgInt(C_ADDR, &temp32))
@@ -42,7 +42,7 @@ void ConfigInit(void)
 
     if (-1 != ReadCfg(C_SERVERIP, _cfgBuf))
     {
-        ConfigSetServerIp(_cfgBuf, strlen(_cfgBuf));
+        ConfigSetServerIp((u8 *)_cfgBuf, strlen(_cfgBuf));
     }
 
     if (-1 != ReadCfgInt(C_SERVERPORT, &temp32))
@@ -412,6 +412,33 @@ u16 ConfigGetno2Va(void)
     return g_config.no2Va;
 }
 
+void GetCoZero(s16 *Vw, s16 *Va, s16 *S)
+{
+    *Vw = g_config.coVw0;
+    *Va = g_config.coVa0;
+    *S = g_config.coS;
+}
+
+void GetSo2Zero(s16 *Vw, s16 *Va, s16 *S)
+{
+    *Vw = g_config.so2Vw0;
+    *Va = g_config.so2Va0;
+    *S = g_config.so2S;
+}
+
+void Geto3Zero(s16 *Vw, s16 *Va, s16 *S)
+{
+    *Vw = g_config.o3Vw0;
+    *Va = g_config.o3Va0;
+    *S = g_config.o3S;
+}
+
+void Getno2Zero(s16 *Vw, s16 *Va, s16 *S)
+{
+    *Vw = g_config.no2Vw0;
+    *Va = g_config.no2Va0;
+    *S = g_config.no2S;
+}
 
 
 

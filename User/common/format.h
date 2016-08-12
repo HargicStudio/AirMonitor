@@ -7,7 +7,8 @@ extern "C" {
 
 #include "common.h"
 	
-#define MAX_SEND_BUFF_LEN				1024
+#define MAX_SEND_BUFF_LEN				100
+#define MAX_SEND_BIG_BUFF_LEN                           1024
 
 enum SEND_FLAG_e
 {
@@ -30,6 +31,21 @@ extern SEND_BUF_t g_sendBuf;
 
 /* 用于接收数据回应的缓冲区，避免block接收 */
 extern SEND_BUF_t g_sendResponse;
+
+
+/* 用于发送大量数据的发送缓冲区，比如回调数据 */
+typedef struct SEND_BIG_BUF_t
+{
+    u16 sendFlag;         // 数据是否准备好的标识
+    u16 respFlag;         // 这条消息是否需要回应
+    u16 useLen;
+    u8 buf[MAX_SEND_BIG_BUFF_LEN];
+    
+}SEND_BIG_BUF_t;
+
+/* 回调应答的数据缓冲 */
+extern SEND_BIG_BUF_t g_sendRecallData;
+
 
 /* 如果发送不满足要求，可能需要使用环形buffer */
 #define SEND_RESPONSE_OFFSET(x)              (g_sendResponse.buf + (x))

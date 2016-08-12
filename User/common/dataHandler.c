@@ -35,6 +35,9 @@ SEND_BUF_t g_sendBuf;
 /* 用于接收数据回应的缓冲区，避免block接收 */
 SEND_BUF_t g_sendResponse;
 
+/* 回调应答的数据缓冲 */
+SEND_BIG_BUF_t g_sendRecallData;
+
 
 
 
@@ -100,6 +103,165 @@ s8 StoreWetTempInfo(u16 wet, s16 temp, TEMP_WET_t *bag)
 
     return OK;
 
+}
+
+/* 计算气体浓度的接口 */
+/*
+*  获得系数的接口
+*/
+double GetNso2Value(void)
+{
+    return 1.00;
+}
+
+double GetNno2Value(void)
+{
+    return 0.7;
+}
+
+double GetNcoValue(double temp)
+{
+    double n = 0;
+    double v1 = 0;
+    double v2 = 0;
+    double c = 0;
+    
+    if (-30 <= temp && temp <= 0)
+    {
+        n = 1.20;
+        return n;
+    }
+    else if (0 <= temp && temp <= 10)
+    {
+        v1 = 1.20;
+        v2 = 1.05;
+        c = temp - 0;
+    }
+    else if (10 < temp && temp <= 20)
+    {
+        v1 = 1.05;
+        v2 = -0.32;
+        c = temp - 10;
+    }
+    else if (20 < temp && temp <= 30)
+    {
+        v1 = -0.32;
+        v2 = -1.07;
+        c = temp - 20;
+    }
+    else if (30 < temp && temp <= 40)
+    {
+        v1 = -1.07;
+        v2 = -3.0;
+        c = temp - 30;
+    }
+    else if (40 < temp && temp <= 50)
+    {
+        v1 = -3.0;
+        v2 = -2.4;
+        c = temp - 40;
+    }
+    else
+    {
+        return 0;   /* 温度超出范围 */
+    }
+    
+    n = (v1 - v2) * c / 10 + v2;
+    
+    return n;
+}
+
+double GetNoxValue(double temp)
+{
+    double n = 0;
+    double v1 = 0;
+    double v2 = 0;
+    double c = 0;
+    
+    if (-30 <= temp && temp <= 10)
+    {
+        n = -0.9;
+        return n;
+    }
+    else if (10 < temp && temp <= 20)
+    {
+        v1 = -0.9;
+        v2 = -0.35;
+        c = temp - 10;
+    } 
+    else if (20 < temp && temp <= 30)
+    {
+        v1 = -0.35;
+        v2 = 0.5;
+        c = temp - 20;
+    }
+    else if (30 < temp && temp <= 40)
+    {
+        v1 = 0.5;
+        v2 = 1.15;
+        c = temp - 30;
+    }
+    else if (40 < temp && temp <= 50)
+    {
+        v1 = 1.15;
+        v2 = 1.80;
+        c = temp - 40;
+    }
+    else
+    {
+        return 0;
+    }
+    
+    n = (v1 - v2) * c / 10 + v2;
+    
+    return n;
+}
+/*
+*  Vw : 工作电极     Va ：辅助电极
+*  gasType : 0: CO   1: SO2   2: NO2    3: O3
+*  return : -1 温度异常  正常单位  ppb
+*/
+s32 CalGasVal(u32 Vw, u32 Va, u8 gasType)
+{
+    double n = 0;
+    double rst;
+    s16 Vw0;
+    s16 Va0;
+    s16 S;
+    double temp = 0;
+    
+    temp = GetTempIn()/10.0;
+    if (temp < -30 || temp > 50)
+    {
+        return -1;
+    }
+    
+    switch (gasType)
+    {
+    case 0:
+      GetCoZero(&Vw0, &Va0, &S);
+      n = GetNcoValue(temp);
+      break;
+    case 1:
+      GetSo2Zero(&Vw0, &Va0, &S);
+      n = GetNso2Value();
+      break;
+    case 2:
+      GetNo2Zero(&Vw0, &Va0, &S);
+      n = GetNno2Value();
+      break;
+    case 3:
+      GetO3Zero(&Vw0, &Va0, &S);
+      n = GetNoxValue(temp);
+      break;
+    }
+    
+    rst = ((Vw - Vw0) - n * (Va - Va0))/ S;
+    
+    /* PPM to PPB */
+    rst = rst * 1000;
+    
+    return rst;
 }
 
 /* 存储气体浓度 */
@@ -267,6 +429,7 @@ u32 GetSo2()
 {
     return g_so2.curData;
 }
+
 /* O3 */
 u32 GetO3()
 {
@@ -332,6 +495,11 @@ void ContructDataUp()
         offset += Format16(GetTempIn(), SEND_BUF_OFFSET(offset));
         offset += Format16(GetWetIn(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
     ret = GetModuleStu(MDU_OUT_TEMP_WET);
     if (STU_NORMAL == ret)
@@ -339,11 +507,20 @@ void ContructDataUp()
         offset += Format16(GetTempOut(), SEND_BUF_OFFSET(offset));
         offset += Format16(GetWetOut(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
     ret = GetModuleStu(MDU_PM25);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetPm25(), SEND_BUF_OFFSET(offset));
+    }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_PM10_SHARP);
@@ -351,18 +528,29 @@ void ContructDataUp()
     {
         offset += Format16(GetPm10(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
     ret = GetModuleStu(MDU_CO);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetCo(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
     ret = GetModuleStu(MDU_SO2);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetSo2(), SEND_BUF_OFFSET(offset));
-
+    }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
     }
     
     ret = GetModuleStu(MDU_NO2);
@@ -370,16 +558,23 @@ void ContructDataUp()
     {
         offset += Format16(GetNo2(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
     ret = GetModuleStu(MDU_O3);
     if (STU_NORMAL == ret)
     {
         offset += Format16(GetO3(), SEND_BUF_OFFSET(offset));
     }
+    else
+    {
+        offset += Format16(0, SEND_BUF_OFFSET(offset));
+    }
     
-    Format16(120, SEND_BUF_OFFSET(offset));
-    offset += 2;
-    
+    /* 电压 */
+    offset += Format16(120, SEND_BUF_OFFSET(offset));
     
     /* 计算CRC */
     crc = usMBCRC16( SEND_BUF_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
@@ -417,6 +612,178 @@ void ContstructHead(u32 crc, u16 dataLen)
     g_head.crc = crc;
     g_head.dataLen = dataLen;
 }
+
+/*
+*  构造记录到文件中的数据
+*/
+u8 ConstructRecordData(u8 *data)
+{
+    STATUS_e ret = STU_ERROR;
+    u16 offset = 0;
+    
+    SEND_BUF_FLAG_CLEAR();
+    
+    /* date*/
+    offset += FormatTime(&gps.utc.strTime[2], data+offset);
+    
+    /* 写入模块状态 */ 
+    offset += Format32(GetAllModuleStu(), data+offset);
+    
+    ret = GetModuleStu(MDU_IN_TEMP_WET);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetTempIn(), data+offset);
+        offset += Format16(GetWetIn(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_OUT_TEMP_WET);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetTempOut(), data+offset);
+        offset += Format16(GetWetOut(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_PM25);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetPm25(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_PM10_SHARP);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetPm10(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_CO);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetCo(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_SO2);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetSo2(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_NO2);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetNo2(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    ret = GetModuleStu(MDU_O3);
+    if (STU_NORMAL == ret)
+    {
+        offset += Format16(GetO3(), data+offset);
+    }
+    else
+    {
+        offset += Format16(0, data+offset);
+    }
+    
+    /* 电压 */
+    offset += Format16(120, data+offset);
+    
+    data[offset] = '\r';
+    data[offset + 1] = '\n';
+/*
+    GSM_LOG_P3("YYMMSS: %04d%02d%02d\r\n", gps.utc.year, gps.utc.month, gps.utc.date);
+    GSM_LOG_P3("HHMMSS: %02d%02d%02d\r\n", gps.utc.hour, gps.utc.min, gps.utc.sec);
+    GSM_LOG_P4("TmpI:WetI %d:%d, pm25:%d, pm10:%d",
+                 GetTempIn(), GetWetIn(), GetPm25(), GetPm10());
+    GSM_LOG_P4("CO:%d, SO2:%d, O3:%d, No2: %d", 
+                 GetCo(), GetSo2(), GetO3(), GetNo2());
+    */
+    return (offset + 2);
+}
+
+
+
+
+/*
+*  构造回调数据
+*/
+u8 ConstructRecordDataToSend(u8 *data, u8 *cmd)
+{
+    STATUS_e ret = STU_ERROR;
+    u16 offset = 0;
+    u32 crc = 0;
+    u8 *buf = g_sendRecallData.buf;
+    
+    g_sendRecallData.sendFlag = 0;
+   
+    if (MAX_SEND_BIG_BUFF_LEN - g_sendRecallData.useLen < LEN_REPORT_DATA + 2)
+    {
+       GSM_LOG_P1("Send buffer is full!", g_sendRecallData.useLen);
+       return 0;
+    }
+    
+    /* 写入地址 */
+    offset = LEN_HEAD;
+    memcpy(buf+offset, ConfigGetStrAddr(), MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy(buf+offset, cmd, 3);
+    
+    offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
+    
+    memcpy(buf+offset, data, LEN_REPORT_DATA_WO_HEAD);
+    offset = LEN_REPORT_DATA;
+    
+    
+    /* 计算CRC */
+    crc = usMBCRC16( buf + LEN_HEAD , offset - LEN_HEAD );
+    
+    /* 赋值头部 */
+    FormatHead(crc, offset - LEN_HEAD, buf);
+    
+    buf[offset] = '\r';
+    buf[offset + 1] = '\n';
+    
+    g_sendRecallData.useLen += offset + 2;
+    
+    return offset + 2;
+
+}
+
+void InitSendRecallData()
+{
+    g_sendRecallData.sendFlag = 0;
+    g_sendRecallData.useLen = 0;
+}
+
 
 
 
