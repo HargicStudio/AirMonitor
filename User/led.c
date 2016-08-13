@@ -49,12 +49,20 @@ static void RunLedThread(void const *argument)
   * @param  none
   * @retval None
   */
-void StartRunLedTask()
+u8 StartRunLedTask()
 {
     LedDeviceInit();
 
     osThreadDef(RunLed, RunLedThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _runled_id = AaThreadCreateStartup(osThread(RunLed), NULL);
+    if(_runled_id == NULL) {
+        AaSysLogPrintF(LOGLEVEL_ERR, SystemStartup, "%s %d: RunLedThread initialize failed",
+                __FUNCTION__, __LINE__);
+        return 1;
+    }
+    AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "create RunLedThread success");
+
+    return 0;
 }
 
 

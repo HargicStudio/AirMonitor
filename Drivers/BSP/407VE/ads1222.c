@@ -6,7 +6,7 @@
 * Author : menki
 * Version: V1.0.0  2016-8-2 Create
 *
-* Desc: 实现ADS1222传感器底层驱动程序
+* Desc: 脢碌脧脰ADS1222麓芦赂脨脝梅碌脳虏茫脟媒露炉鲁脤脨貌
 *
 * Modification: 
 *    Date    :  
@@ -17,7 +17,7 @@
 *******************************************************************************/
 
 /* ========================================================================== */
-/*                             头文件区                                       */
+/*                             脥路脦脛录镁脟酶                                       */
 /* ========================================================================== */
 #include "ads1222.h"
 #include <stdio.h>
@@ -25,69 +25,74 @@
 #include "cmsis_os.h"
 #include "AaInclude.h"
 #include "main.h"
+#include "alpha_sense.h"
 
-/* ========================================================================== */
-/*                           宏和类型定义区                                   */
-/* ========================================================================== */
-#define ADS1222_DelayMs(x)   HAL_Delay(x)
-/* ========================================================================== */
-/*                          数据结构定义区                                    */
-/* ========================================================================== */
 
-/* ========================================================================== */
-/*                          函数声明区                                        */
-/* ========================================================================== */
-static void ADS1222_DOUT_IPU(uint8_t chipId);
-static void ADS1222_DOUT_Out_PP(uint8_t chipId);
 
-/* ========================================================================== */
-/*                          全局变量定义区                                    */
-/* ========================================================================== */
+static void delay_us(uint16_t us);
+static void delay_10us(uint16_t _10us);
 
-/* ========================================================================== */
-/*                          函数定义区                                        */
-/* ========================================================================== */
-/*static void ADS1222_DelayMs(uint16_t time)
+static void Ads1222_SenseA_EXTIGpioConfig();
+static void Ads1222_SenseA_InputGpioConfig();
+static void Ads1222_SenseA_OutputGpioConfig();
+
+
+
+/** 
+ * This is a brief description. 
+ * delay microsecond, used in F407 168MHz system clock. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-06 Huang Shengda
+ */  
+static void delay_us(uint16_t us)
 {
-    portTickType xDelay = time / portTICK_RATE_MS;
-    vTaskDelay( xDelay );
-}*/
-
-/**
-  * 函数功能: 
-  * 输入参数: 无
-  * 返 回 值: 无
-  * 说    明：无
-  */
-static void ADS1222_DelayUs(uint16_t time)
-{
-    uint8_t i;
-    //taskENTER_CRITICAL(); //or portENTER_CRITICAL();
-    while(time)
-    {    
-        for (i = 0; i < 25; i++)
-        {
-        }
-        time--;
+    uint16_t cnt;
+    while(us--) {
+        cnt = 21;
+        while(cnt--);
     }
-    //taskEXIT_CRITICAL();  //or portEXIT_CRITICAL();
+}
+
+/** 
+ * This is a brief description. 
+ * delay microsecond base on 10 us, only used in F407 168MHz system clock. 
+ * @param[in]   In multiples of 10 us. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-06 Huang Shengda
+ */  
+static void delay_10us(uint16_t _10us)
+{
+    uint16_t cnt;
+    while(_10us--) {
+        cnt = 274;
+        while(cnt--);
+    }
 }
 
 /**
-  * 函数功能: ADS1222 初始化函数
-  * 输入参数: 无
-  * 返 回 值: 无
-  * 说    明：无
+  * 潞炉脢媒鹿娄脛脺: ADS1222 鲁玫脢录禄炉潞炉脢媒
+  * 脢盲脠毛虏脦脢媒: 脦脼
+  * 路碌 禄脴 脰碌: 脦脼
+  * 脣碌    脙梅拢潞脦脼
   */
 void ADS1222_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
-
-    //DOUT CLK ENABLE
-    ADS1222_A_DOUT_GPIO_CLK_ENABLE();
-    ADS1222_B_DOUT_GPIO_CLK_ENABLE();
-    ADS1222_C_DOUT_GPIO_CLK_ENABLE();
-    ADS1222_D_DOUT_GPIO_CLK_ENABLE();
     
     //SCLK CLK ENABLE
     ADS1222_A_SCLK_GPIO_CLK_ENABLE();
@@ -95,7 +100,7 @@ void ADS1222_Init(void)
     ADS1222_C_SCLK_GPIO_CLK_ENABLE();
     ADS1222_D_SCLK_GPIO_CLK_ENABLE();
     
-    //GPIO配置为输出
+    //GPIO脜盲脰脙脦陋脢盲鲁枚
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     
@@ -126,22 +131,14 @@ void ADS1222_Init(void)
     ADS1222_BUFEN_GPIO_CLK_ENABLE();
     GPIO_InitStruct.Pin = ADS1222_BUFEN_PIN;
     HAL_GPIO_Init(ADS1222_BUFEN_PORT, &GPIO_InitStruct); 
-    
-    ADS1222_DOUT_Out_PP(ADS1222_CHIP_A);
-    ADS1222_A_DOUT_HIGH();  // 拉高GPIO 
-    
-    ADS1222_DOUT_Out_PP(ADS1222_CHIP_B);
-    ADS1222_B_DOUT_HIGH();  // 拉高GPIO 
-    
-    ADS1222_DOUT_Out_PP(ADS1222_CHIP_C);
-    ADS1222_C_DOUT_HIGH();  // 拉高GPIO 
-    
-    
-    ADS1222_DOUT_Out_PP(ADS1222_CHIP_D);
-    ADS1222_D_DOUT_HIGH();  // 拉高GPIO 
+
+    ADS1222_A_SCLK_LOW();
+    ADS1222_B_SCLK_LOW();
+    ADS1222_C_SCLK_LOW();
+    ADS1222_D_SCLK_LOW();
     
     /* The signal is selected though the input mux, which is controlled by MUX */
-    ADS1222_MUX_LOW(); //默认通道0
+    ADS1222_MUX_LOW(); //脛卢脠脧脥篓碌脌0
     
     /*  On-chip diodes provide temperature-sensing capabili-ty.
         By setting the TEMPEN pin high, the selected analog
@@ -152,285 +149,376 @@ void ADS1222_Init(void)
     
     /* With the buffer disabled by setting the BUFEN pin low */
     ADS1222_BUFEN_LOW();
-
 }
 
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ */  
+static void Ads1222_SenseA_EXTIGpioConfig()
+{
+    GPIO_InitTypeDef   GPIO_InitStructure;
 
-/**
-  * 函数功能: 使ADS1222_DOUT引脚变为上拉输入模式
-  * 输入参数: chipId: ads1222芯片编号
-  * 返 回 值: 无
-  * 说    明：无
-  */
-static void ADS1222_DOUT_IPU(uint8_t chipId)
+    /* Enable /DRDY clock */
+    ADS1222_A_DOUT_GPIO_CLK_ENABLE();
+
+    /* Configure PA0 pin as input floating */
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pin = ADS1222_A_DOUT_PIN;
+    HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStructure);
+
+    /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+    // !!! this is very important
+    // !!! we must clear EXTI bit first or it will trigger next interrupt when IRQ enabled
+    __HAL_GPIO_EXTI_CLEAR_IT(ADS1222_A_DOUT_PIN);
+    HAL_NVIC_SetPriority(ADS1222_A_DOUT_EXTI_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_2, 0);
+    HAL_NVIC_EnableIRQ(ADS1222_A_DOUT_EXTI_IRQn);
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ */  
+static void Ads1222_SenseA_InputGpioConfig()
 {
     GPIO_InitTypeDef GPIO_InitStruct;
-    
-    switch(chipId)
-    {
-        case ADS1222_CHIP_A:
-        {
-          GPIO_InitStruct.Pin   = ADS1222_A_DOUT_PIN;
-          GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-          GPIO_InitStruct.Pull  = GPIO_PULLUP;
-          HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
-        
-        case ADS1222_CHIP_B:
-        {
-          GPIO_InitStruct.Pin   = ADS1222_B_DOUT_PIN;
-          GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-          GPIO_InitStruct.Pull  = GPIO_PULLUP;
-          HAL_GPIO_Init(ADS1222_B_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
 
-        case ADS1222_CHIP_C:
-        {
-          GPIO_InitStruct.Pin   = ADS1222_C_DOUT_PIN;
-          GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-          GPIO_InitStruct.Pull  = GPIO_PULLUP;
-          HAL_GPIO_Init(ADS1222_C_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_A_DOUT_EXTI_IRQn);
 
-        case ADS1222_CHIP_D:
-        {
-          GPIO_InitStruct.Pin   = ADS1222_D_DOUT_PIN;
-          GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-          GPIO_InitStruct.Pull  = GPIO_PULLUP;
-          HAL_GPIO_Init(ADS1222_D_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
-        
+    // configuration as input
+    GPIO_InitStruct.Pin   = ADS1222_A_DOUT_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull  = GPIO_PULLUP;
+    HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct);
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ */  
+static void Ads1222_SenseA_OutputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_A_DOUT_EXTI_IRQn);
+
+    // configuration as output
+    GPIO_InitStruct.Pin = ADS1222_A_DOUT_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct); 
+}
+
+/**
+  * 潞炉脢媒鹿娄脛脺: 脢鹿ADS1222_DOUT脪媒陆脜卤盲脦陋脡脧脌颅脢盲脠毛脛拢脢陆
+  * 脢盲脠毛虏脦脢媒: chipId: ads1222脨戮脝卢卤脿潞脜
+  * 路碌 禄脴 脰碌: 脦脼
+  * 脣碌    脙梅拢潞脦脼
+  */
+void ADS1222_DOUT_IPU(uint8_t chipId)
+{    
+    switch(chipId) {
+        case ADS1222_CHIP_A: Ads1222_SenseA_InputGpioConfig(); break;
+        case ADS1222_CHIP_B: break;
+        case ADS1222_CHIP_C: break;
+        case ADS1222_CHIP_D: break;
         default:break;
     }
 }
 
 /**
-  * 函数功能: 使ADS1222_DOUT引脚变为推挽输出模式
-  * 输入参数: chipId: ads1222芯片编号
-  * 返 回 值: 无
-  * 说    明：无
+  * 潞炉脢媒鹿娄脛脺: 脢鹿ADS1222_DOUT脪媒陆脜卤盲脦陋脥脝脥矛脢盲鲁枚脛拢脢陆
+  * 脢盲脠毛虏脦脢媒: chipId: ads1222脨戮脝卢卤脿潞脜
+  * 路碌 禄脴 脰碌: 脦脼
+  * 脣碌    脙梅拢潞脦脼
   */
-static void ADS1222_DOUT_Out_PP(uint8_t chipId)
-{
-    GPIO_InitTypeDef GPIO_InitStruct;
-    
-     switch(chipId)
-    {
-        case ADS1222_CHIP_A:
-        {
-          GPIO_InitStruct.Pin = ADS1222_A_DOUT_PIN;
-          GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-          GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-          HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct); 
-          break;
-        }
-        
-        case ADS1222_CHIP_B:
-        {
-          GPIO_InitStruct.Pin = ADS1222_B_DOUT_PIN;
-          GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-          GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-          HAL_GPIO_Init(ADS1222_B_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
-
-        case ADS1222_CHIP_C:
-        {
-          GPIO_InitStruct.Pin = ADS1222_C_DOUT_PIN;
-          GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-          GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-          HAL_GPIO_Init(ADS1222_C_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
-
-        case ADS1222_CHIP_D:
-        {
-          GPIO_InitStruct.Pin = ADS1222_D_DOUT_PIN;
-          GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-          GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-          HAL_GPIO_Init(ADS1222_D_DOUT_PORT, &GPIO_InitStruct);
-          break;
-        }
+void ADS1222_DOUT_Out_PP(uint8_t chipId)
+{    
+     switch(chipId) {
+        case ADS1222_CHIP_A: Ads1222_SenseA_OutputGpioConfig(); break;
+        case ADS1222_CHIP_B: break;
+        case ADS1222_CHIP_C: break;
+        case ADS1222_CHIP_D: break;
         default:break;
     }
-
 }
 
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-11 Huang Shengda
+ */ 
+u8 Ads1222_GetChannel()
+{
+    if(Ads1222_MUX_PinRead() == GPIO_PIN_RESET) {
+        return ADS1222_CH0;
+    } else {
+        return ADS1222_CH1;
+    }
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-11 Huang Shengda
+ */
+void Ads1222_SetChannel(u8 channel)
+{
+    if(channel == ADS1222_CH0) {
+        ADS1222_MUX_LOW();
+    } else {
+        ADS1222_MUX_HIGH();
+    }
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ */  
+void Ads1222_EnableExti()
+{
+    Ads1222_SenseA_EXTIGpioConfig();
+}
 
 /*******************************************************************************
-* 函数名  : ADS1222_AdRead
-* 描  述  : 获取ADS1222．一次完整的数据传输为24bit，高位先出
-* 输  入  : chipId: ads1222芯片编号
-*           channel: ads1222芯片通道号 
-* 输  出  : 无
-* 返 回 值: 读取24bit 原始AD值
+* 潞炉脢媒脙没  : ADS1222_AdRead
+* 脙猫  脢枚  : 禄帽脠隆ADS1222拢庐脪禄麓脦脥锚脮没碌脛脢媒戮脻麓芦脢盲脦陋24bit拢卢赂脽脦禄脧脠鲁枚
+* 脢盲  脠毛  : chipId: ads1222脨戮脝卢卤脿潞脜
+*           channel: ads1222脨戮脝卢脥篓碌脌潞脜 
+* 脢盲  鲁枚  : 脦脼
+* 路碌 禄脴 脰碌: 露脕脠隆24bit 脭颅脢录AD脰碌
 *******************************************************************************/
-unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel)
+unsigned long ADS1222_AdRead(uint8_t chipId)
 {
     uint8_t i = 0;
     unsigned long adValue = 0;
+
+    // enter critical section
+    // first will disable global interrupt
+    // then will suspend all threads
+    // taskENTER_CRITICAL();
+    osThreadSuspendAll();
+
+    // //脩隆脭帽虏脡录炉脥篓碌脌
+    // if (channel == ADS1222_CH0) {
+    //     ADS1222_MUX_LOW();  //AIN1
+    // } else if (channel == ADS1222_CH1) {
+    //     ADS1222_MUX_HIGH(); //AIN2
+    // }
+    // delay_us(2);
     
-    //选择采集通道
-    if (channel == ADS1222_CH0)
-    {
-        ADS1222_MUX_LOW();  //AIN1
-    }
-    else if (channel == ADS1222_CH1)
-    {
-        ADS1222_MUX_HIGH(); //AIN2
-    }
-    
-    switch(chipId)
-    {
+    switch(chipId) {
         case ADS1222_CHIP_A:
         {
-            ADS1222_A_SCLK_LOW();
-            ADS1222_DelayUs(20); 
+            // ADS1222_A_SCLK_LOW();
+            // delay_10us(2); 
 
-            //ADS1222_DOUT_Out_PP(chipId); //DOUT配置输出强制拉高
-           // ADS1222_A_DOUT_HIGH();
-           // ADS1222_DelayUs(1);
+            // ADS1222_DOUT_Out_PP(chipId); //DOUT脜盲脰脙脢盲鲁枚脟驴脰脝脌颅赂脽
+            // ADS1222_A_DOUT_HIGH();
+            // delay_us(1);
             
             ADS1222_DOUT_IPU(chipId);
             
-            while(ADS1222_A_DOUT_IN() == GPIO_PIN_SET); //等待AD数据采集完成
-            //ADS1222_DelayMs(200);
+            // while(ADS1222_A_DOUT_IN() == GPIO_PIN_SET); //碌脠麓媒AD脢媒戮脻虏脡录炉脥锚鲁脡
+            // ADS1222_DelayMs(200);
             
-            for(i=0; i<24; i++)
-            {
-                adValue = adValue<<1;
+            for(i=0; i<24; i++) {
+                adValue = adValue << 1;
                 
                 ADS1222_A_SCLK_HIGH();
-                ADS1222_DelayUs(2);
+                delay_us(2);
                 // sampling when low level
                 ADS1222_A_SCLK_LOW();
                 
-                if (ADS1222_A_DOUT_IN() == GPIO_PIN_SET)
-                {
-                    adValue|=0x00000001;  //or adValue+=1;     
+                if (ADS1222_A_DOUT_IN() == GPIO_PIN_SET) {
+                    adValue |= 0x00000001;  //or adValue+=1;     
                 }
-
-                ADS1222_DelayUs(2);
+                delay_us(2);
             }
-            /* 最后一个脉冲结束 */
+            /* 脳卯潞贸脪禄赂枚脗枚鲁氓陆谩脢酶 */
             ADS1222_A_SCLK_HIGH();
-            ADS1222_DelayUs(2);
+            delay_us(2);
             ADS1222_A_SCLK_LOW();
-            ADS1222_DelayMs(1);
+            delay_us(1);
             
             break;
         }
         
         case ADS1222_CHIP_B:
         {
-            ADS1222_B_SCLK_LOW();
-            ADS1222_DelayUs(20); 
+            // ADS1222_B_SCLK_LOW();
+            // delay_us(20); 
 
-            ADS1222_DOUT_IPU(chipId);
+            // ADS1222_DOUT_IPU(chipId);
             
-            while(ADS1222_B_DOUT_IN() == GPIO_PIN_SET); //等待AD数据采集完成
-            //ADS1222_DelayMs(200);
+            // while(ADS1222_B_DOUT_IN() == GPIO_PIN_SET); //碌脠麓媒AD脢媒戮脻虏脡录炉脥锚鲁脡
+            // ADS1222_DelayMs(200);
             
-            for(i=0; i<24; i++)
-            {
-                adValue = adValue<<1;
+            for(i=0; i<24; i++) {
+                adValue = adValue << 1;
                 
                 ADS1222_B_SCLK_HIGH();
-                ADS1222_DelayUs(2);
+                delay_us(2);
                 ADS1222_B_SCLK_LOW();
                 
-                if (ADS1222_B_DOUT_IN() == GPIO_PIN_SET)
-                {
-                    adValue|=0x00000001;  //or adValue+=1;     
+                if (ADS1222_B_DOUT_IN() == GPIO_PIN_SET) {
+                    adValue |= 0x00000001;  //or adValue+=1;     
                 }
-
-                ADS1222_DelayUs(2);
+                delay_us(2);
             }
-            /* 最后一个脉冲结束 */
+            /* 脳卯潞贸脪禄赂枚脗枚鲁氓陆谩脢酶 */
             ADS1222_B_SCLK_HIGH();
-            ADS1222_DelayUs(2);
+            delay_us(2);
             ADS1222_B_SCLK_LOW();
-            ADS1222_DelayMs(1);
+            delay_us(1);
             
             break;
         }
         
         case ADS1222_CHIP_C:
         {
-            ADS1222_C_SCLK_LOW();
-            ADS1222_DelayUs(20); 
+            // ADS1222_C_SCLK_LOW();
+            // delay_us(20); 
 
-            ADS1222_DelayUs(20);
-            ADS1222_DOUT_IPU(chipId);
+            // delay_us(20);
+            // ADS1222_DOUT_IPU(chipId);
             
-            while(ADS1222_C_DOUT_IN() == GPIO_PIN_SET); //等待AD数据采集完成
-            //ADS1222_DelayMs(200);
+            // while(ADS1222_C_DOUT_IN() == GPIO_PIN_SET); //碌脠麓媒AD脢媒戮脻虏脡录炉脥锚鲁脡
+            // ADS1222_DelayMs(200);
             
-            for(i=0; i<24; i++)
-            {
-                adValue = adValue<<1;
+            for(i=0; i<24; i++) {
+                adValue = adValue << 1;
                 
                 ADS1222_C_SCLK_HIGH();
-                ADS1222_DelayUs(2);
+                delay_us(2);
                 ADS1222_C_SCLK_LOW();
                 
-                if (ADS1222_C_DOUT_IN() == GPIO_PIN_SET)
-                {
-                    adValue|=0x00000001;  //or adValue+=1;     
+                if (ADS1222_C_DOUT_IN() == GPIO_PIN_SET) {
+                    adValue |= 0x00000001;  //or adValue+=1;     
                 }
-
-                ADS1222_DelayUs(2);
+                delay_us(2);
             }
-            /* 最后一个脉冲结束 */
+            /* 脳卯潞贸脪禄赂枚脗枚鲁氓陆谩脢酶 */
             ADS1222_C_SCLK_HIGH();
-            ADS1222_DelayUs(2);
+            delay_us(2);
             ADS1222_C_SCLK_LOW();
-            ADS1222_DelayMs(1);
+            delay_us(1);
             
             break;
         }
 
         case ADS1222_CHIP_D:
         {
-            ADS1222_D_SCLK_LOW();
-            ADS1222_DelayUs(20); 
+            // ADS1222_D_SCLK_LOW();
+            // delay_us(20); 
 
-            ADS1222_DelayUs(20);
-            ADS1222_DOUT_IPU(chipId);
+            // delay_us(20);
+            // ADS1222_DOUT_IPU(chipId);
             
-            while(ADS1222_D_DOUT_IN() == GPIO_PIN_SET); //等待AD数据采集完成
-            //ADS1222_DelayMs(200);
+            // while(ADS1222_D_DOUT_IN() == GPIO_PIN_SET); //碌脠麓媒AD脢媒戮脻虏脡录炉脥锚鲁脡
+            // ADS1222_DelayMs(200);
             
-            for(i=0; i<24; i++)
-            {
-                adValue = adValue<<1;
+            for(i=0; i<24; i++) {
+                adValue = adValue << 1;
                 
                 ADS1222_D_SCLK_HIGH();
-                ADS1222_DelayUs(2);
+                delay_us(2);
                 ADS1222_D_SCLK_LOW();
                 
-                if (ADS1222_D_DOUT_IN() == GPIO_PIN_SET)
-                {
-                    adValue|=0x00000001;  //or adValue+=1;     
+                if (ADS1222_D_DOUT_IN() == GPIO_PIN_SET) {
+                    adValue |= 0x00000001;  //or adValue+=1;     
                 }
 
-                ADS1222_DelayUs(2);
+                delay_us(2);
             }
-            /* 最后一个脉冲结束 */
+            /* 脳卯潞贸脪禄赂枚脗枚鲁氓陆谩脢酶 */
             ADS1222_D_SCLK_HIGH();
-            ADS1222_DelayUs(2);
+            delay_us(2);
             ADS1222_D_SCLK_LOW();
-            ADS1222_DelayMs(1);
+            delay_us(1);
             
             break;
         }
-        default:break;
+        default: break;
     }
 
+    // exit critical section
+    // first will resume all threads
+    // then will re-enable global interrupt
+    osThreadResumeAll();
+    // taskEXIT_CRITICAL();
+
     return adValue;
+}
+
+/**
+  * @brief EXTI line detection callbacks
+  * @param GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_SenseA_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    Ads1222_ConvComplete();
 }
 

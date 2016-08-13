@@ -8,9 +8,11 @@ extern "C" {
 #endif
 
 
+#include "AaInclude.h"
+    
 
-u8 StartRunLedTask();
-
+u8 StartAlphaSenseTask();
+void Ads1222_ConvComplete();
 
 
 #ifdef __cplusplus

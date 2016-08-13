@@ -20,12 +20,13 @@ History:
 #include "am2302.h"
 #include "fan.h"
 #include "osa_file.h"
+#include "alpha_sense.h"
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
 
 /** AaMem heap buffer for whole system */  
-#define AAMEM_HEAP_BUFFER_SIZE  (1024*8)
+#define AAMEM_HEAP_BUFFER_SIZE  (1024*10)
 
 char _mem_heap_buf[AAMEM_HEAP_BUFFER_SIZE];
 
@@ -89,6 +90,7 @@ u8 CCSDeamonCEInit()
     //StartGsmTask();
     //StartCP15Task();
     //StartRunAm2302Task();
+    StartAlphaSenseTask();
     
     /* Init Fan */
     // FanStart();

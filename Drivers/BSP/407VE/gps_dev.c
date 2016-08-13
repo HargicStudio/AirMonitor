@@ -170,7 +170,7 @@ void HAL_UART_GPS_MspInit(UART_HandleTypeDef *huart)
   /*##-4- Configure the NVIC for DMA #########################################*/
   
   /* NVIC configuration for USART TC interrupt */
-  HAL_NVIC_SetPriority(USART_GPS_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(USART_GPS_IRQn, SYSTEM_IRQ_PRIORITY_LOW_2, 0);
   HAL_NVIC_EnableIRQ(USART_GPS_IRQn);
 }
 

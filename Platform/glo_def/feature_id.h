@@ -28,11 +28,13 @@ History:
 #define FeatureMem      "CCSMem"
 #define FeatureSysCom   "CCSCom"
 #define FeatureAaShell  "CCSShl"
+#define FeaturePP       "PPBuf"
 
 // application
 #define FeatureGps      "AppGps"
 #define FeatureGsm      "AppGsm"
 #define FeatureCP15     "AppCP15"
+#define FeatureAlpha    "AlphaS"
 
 
 #ifdef __cplusplus

@@ -6,7 +6,7 @@
 * Author : menki
 * Version: V1.0.0  2016-8-2 Create
 *
-* Desc: 实现ADS1222传感器底层驱动程序
+* Desc: 脢碌脧脰ADS1222麓芦赂脨脝梅碌脳虏茫脟媒露炉鲁脤脨貌
 *
 * Modification: 
 *    Date    :  
@@ -21,15 +21,15 @@
 #define	__ADS1222_H__
 
 /* ========================================================================== */
-/*                             头文件区                                       */
+/*                             脥路脦脛录镁脟酶                                       */
 /* ========================================================================== */
 #include "cmsis_os.h"
 #include "AaInclude.h"
 #include "main.h"
 /* ========================================================================== */
-/*                           宏和类型定义区                                   */
+/*                           潞锚潞脥脌脿脨脥露篓脪氓脟酶                                   */
 /* ========================================================================== */
-//ADS1222 SCLK连接引脚定义 
+//ADS1222 SCLK脕卢陆脫脪媒陆脜露篓脪氓 
 #define ADS1222_A_SCLK_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
 #define ADS1222_A_SCLK_PORT                  GPIOC
 #define ADS1222_A_SCLK_PIN                   GPIO_PIN_0
@@ -58,13 +58,15 @@
 #define ADS1222_D_SCLK_HIGH()         HAL_GPIO_WritePin(ADS1222_D_SCLK_PORT, ADS1222_D_SCLK_PIN, GPIO_PIN_SET)
 
 
-//ADS1222 DOUT连接引脚定义 
+//ADS1222 DOUT脕卢陆脫脪媒陆脜露篓脪氓 
 #define ADS1222_A_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
 #define ADS1222_A_DOUT_PORT                  GPIOC
 #define ADS1222_A_DOUT_PIN                   GPIO_PIN_1
 #define ADS1222_A_DOUT_LOW()     HAL_GPIO_WritePin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN, GPIO_PIN_RESET) 
 #define ADS1222_A_DOUT_HIGH()    HAL_GPIO_WritePin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN, GPIO_PIN_SET)
 #define ADS1222_A_DOUT_IN()	     HAL_GPIO_ReadPin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN)
+#define ADS1222_A_DOUT_EXTI_IRQn            EXTI1_IRQn
+#define ADS1222_A_DOUT_EXTI_IRQHandler      EXTI1_IRQHandler
 
 
 #define ADS1222_B_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
@@ -92,17 +94,17 @@
 
 
 
-//ADS1222 MUX引脚定义 
+//ADS1222 MUX脪媒陆脜露篓脪氓 
 #define ADS1222_MUX_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
 #define ADS1222_MUX_PORT                  GPIOB
 #define ADS1222_MUX_PIN                   GPIO_PIN_0
 
 #define ADS1222_MUX_LOW()        HAL_GPIO_WritePin(ADS1222_MUX_PORT, ADS1222_MUX_PIN, GPIO_PIN_RESET) 
 #define ADS1222_MUX_HIGH()       HAL_GPIO_WritePin(ADS1222_MUX_PORT, ADS1222_MUX_PIN, GPIO_PIN_SET)
+#define Ads1222_MUX_PinRead()       HAL_GPIO_ReadPin(ADS1222_MUX_PORT, ADS1222_MUX_PIN)
 
 
-
-//ADS1222 TEMPEN引脚定义 
+//ADS1222 TEMPEN脪媒陆脜露篓脪氓 
 #define ADS1222_TEMPEN_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
 #define ADS1222_TEMPEN_PORT                  GPIOB
 #define ADS1222_TEMPEN_PIN                   GPIO_PIN_1
@@ -112,7 +114,7 @@
 
 
 
-//ADS1222 BUFEN引脚定义 
+//ADS1222 BUFEN脪媒陆脜露篓脪氓 
 #define ADS1222_BUFEN_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
 #define ADS1222_BUFEN_PORT                  GPIOB
 #define ADS1222_BUFEN_PIN                   GPIO_PIN_2
@@ -121,41 +123,75 @@
 #define ADS1222_BUFEN_HIGH()     HAL_GPIO_WritePin(ADS1222_BUFEN_PORT, ADS1222_BUFEN_PIN, GPIO_PIN_SET)
 
 
-//ADS1222芯片编号
-#define  ADS1222_CHIP_A   0
-#define  ADS1222_CHIP_B   1
-#define  ADS1222_CHIP_C   2
-#define  ADS1222_CHIP_D   3
 
-//ADS1222芯片采集通道号
+
+
+//ADS1222脨戮脝卢卤脿潞脜
+#define ADS1222_CHIP_A   0
+#define ADS1222_CHIP_B   1
+#define ADS1222_CHIP_C   2
+#define ADS1222_CHIP_D   3
+#define Ads1222_ChipID_Invalid  0xFF
+
+//ADS1222脨戮脝卢虏脡录炉脥篓碌脌潞脜
 #define  ADS1222_CH0   0
 #define  ADS1222_CH1   1
 
 /* ========================================================================== */
-/*                          数据结构定义区                                    */
+/*                          脢媒戮脻陆谩鹿鹿露篓脪氓脟酶                                    */
 /* ========================================================================== */
 
 /* ========================================================================== */
-/*                          函数声明区                                        */
+/*                          潞炉脢媒脡霉脙梅脟酶                                        */
 /* ========================================================================== */
 
 /*******************************************************************************
-* 函数名  : ADS1222_Init
-* 描  述  : 该函数初始化ADS1222
-* 输  入  : 无
-* 输  出  : 无
-* 返回值  : 无
+* 潞炉脢媒脙没  : ADS1222_Init
+* 脙猫  脢枚  : 赂脙潞炉脢媒鲁玫脢录禄炉ADS1222
+* 脢盲  脠毛  : 脦脼
+* 脢盲  鲁枚  : 脦脼
+* 路碌禄脴脰碌  : 脦脼
 *******************************************************************************/
 void ADS1222_Init(void);
 
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ */  
+void Ads1222_EnableExti();
+
 /*******************************************************************************
-* 函数名  : ADS1222_AdRead
-* 描  述  : 获取ADS1222．一次完整的数据传输为24bit，高位先出
-* 输  入  : chipId: ads1222芯片编号
-*           channel: ads1222芯片通道号 
-* 输  出  : 无
-* 返 回 值: 读取24bit 原始AD值
+* 潞炉脢媒脙没  : ADS1222_AdRead
+* 脙猫  脢枚  : 禄帽脠隆ADS1222拢庐脪禄麓脦脥锚脮没碌脛脢媒戮脻麓芦脢盲脦陋24bit拢卢赂脽脦禄脧脠鲁枚
+* 脢盲  脠毛  : chipId: ads1222脨戮脝卢卤脿潞脜
+*           channel: ads1222脨戮脝卢脥篓碌脌潞脜 
+* 脢盲  鲁枚  : 脦脼
+* 路碌 禄脴 脰碌: 露脕脠隆24bit 脭颅脢录AD脰碌
 *******************************************************************************/
-unsigned long ADS1222_AdRead(uint8_t chipId, uint8_t channel);
+unsigned long ADS1222_AdRead(uint8_t chipId);
+
+/**
+  * @brief EXTI line detection callbacks
+  * @param GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_SenseA_EXTI_Callback(uint16_t GPIO_Pin);
+
+void ADS1222_DOUT_IPU(uint8_t chipId);
+void ADS1222_DOUT_Out_PP(uint8_t chipId);;
+u8 Ads1222_GetChannel();
+void Ads1222_SetChannel(u8 channel);
+
+
 
 #endif /* __ADS1222_H__ */

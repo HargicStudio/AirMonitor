@@ -238,7 +238,7 @@ void HAL_UART_DBG_MspInit(UART_HandleTypeDef *huart)
     
   /*##-4- Configure the NVIC for DMA #########################################*/
   /* NVIC configuration for DMA transfer complete interrupt (USART_DBG_TX) */
-  HAL_NVIC_SetPriority(USART_DBG_DMA_TX_IRQn, 5, 1);
+  HAL_NVIC_SetPriority(USART_DBG_DMA_TX_IRQn, SYSTEM_IRQ_PRIORITY_MIDDLE_4, 1);
   HAL_NVIC_EnableIRQ(USART_DBG_DMA_TX_IRQn);
     
   /* NVIC configuration for DMA transfer complete interrupt (USART_DBG_RX) */
@@ -246,7 +246,7 @@ void HAL_UART_DBG_MspInit(UART_HandleTypeDef *huart)
   // HAL_NVIC_EnableIRQ(USART_DBG_DMA_RX_IRQn);
   
   /* NVIC configuration for USART TC interrupt */
-  HAL_NVIC_SetPriority(USART_DBG_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(USART_DBG_IRQn, SYSTEM_IRQ_PRIORITY_MIDDLE_4, 0);
   HAL_NVIC_EnableIRQ(USART_DBG_IRQn);
 }
 

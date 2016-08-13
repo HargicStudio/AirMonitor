@@ -41,6 +41,22 @@ typedef enum EStatus_t {
 } EStatus;
 
 
+#define SYSTEM_IRQ_PRIORITY_HIGH_1      5
+#define SYSTEM_IRQ_PRIORITY_HIGH_2      6
+#define SYSTEM_IRQ_PRIORITY_HIGH_3      7
+#define SYSTEM_IRQ_PRIORITY_HIGH_4      8
+
+#define SYSTEM_IRQ_PRIORITY_MIDDLE_1    9
+#define SYSTEM_IRQ_PRIORITY_MIDDLE_2    10
+#define SYSTEM_IRQ_PRIORITY_MIDDLE_3    11
+#define SYSTEM_IRQ_PRIORITY_MIDDLE_4    12
+
+#define SYSTEM_IRQ_PRIORITY_LOW_1       13
+#define SYSTEM_IRQ_PRIORITY_LOW_2       14
+#define SYSTEM_IRQ_PRIORITY_LOW_3       15
+
+
+
 #ifdef __cplusplus
 }
 #endif

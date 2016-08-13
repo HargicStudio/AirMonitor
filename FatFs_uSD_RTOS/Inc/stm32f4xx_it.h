@@ -40,6 +40,7 @@
 #include "gps_dev.h"
 #include "gsm_dev.h"
 #include "cp15_dev.h"
+#include "ads1222.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -64,7 +65,7 @@ void USART_DBG_IRQHandler(void);
 void USART_GPS_IRQHandler(void);
 void USART_GSM_IRQHandler(void);
 void UART_CP15_IRQHandler(void);
-
+void ADS1222_A_DOUT_EXTI_IRQHandler(void);
 
 
 #ifdef __cplusplus

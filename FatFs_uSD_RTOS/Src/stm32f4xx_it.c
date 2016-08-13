@@ -224,6 +224,15 @@ void UART_CP15_IRQHandler(void)
   HAL_UART_IRQHandler(&UartHandle_cp15);
 }
 
+/**
+  * @brief  This function handles gpio exti interrupt request.
+  * @param  None
+  * @retval None
+  */
+void ADS1222_A_DOUT_EXTI_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ADS1222_A_DOUT_PIN);
+}
 
 /**
   * @brief  This function handles PPP interrupt request.
