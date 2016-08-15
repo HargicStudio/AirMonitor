@@ -6,6 +6,7 @@
 
 osThreadId _data_record_id;
 
+/*　38 的数据加 \r\n　*/ 
 #define RECORD_DATA_LEN                 40
 
 /* 保存到文件中的数据 */
@@ -44,10 +45,6 @@ s32 StartDataRecordTask(void)
 
 bool ReadConfigFile(void)
 {
-    OSA_FileHandle hFile;
-    s32 ret = 0;
-    
-    
     if (-1 == Initcfg(NULL))
     {
         printf("Initcfg ERROR!\r\n");
@@ -93,11 +90,13 @@ static void DataRecordThread(void const *argument)
         /* 文件命名规则： 0-23 .txt */
         /* 文件内容格式： 除头部上报数据完整记录 */
         /* 头部的地址信息可能更改 */
-        osDelay(1000);
+        osDelay(20000);
         
         RecallHandler();
         
         RecordData();
+        
+        UpdateConfig();
         
     }
 }
@@ -145,7 +144,7 @@ void RecordData(void)
         f_mkdir(g_recordInfo.newNameDay);
     }
     
-    if (OSA_OK != f_open(&fp, g_recordInfo.newNameHour, FA_WRITE))
+    if (FR_OK != f_open(&fp, g_recordInfo.newNameHour, FA_WRITE))
     {
         printf("Create New hour file: %s\r\n", g_recordInfo.newNameHour);
         if (OSA_OK != f_open(&fp, g_recordInfo.newNameHour, FA_CREATE_NEW | FA_WRITE))
@@ -191,6 +190,8 @@ void RecallHandler(void)
     
     InitSendRecallData();
     
+    GSM_LOG_P1("Recall data: type %d", g_recallInfo.type);
+    
     /* 分钟回调和小时回调都用小时回调，因为数据量都不大 */
     if (81 == g_recallInfo.type)
     {
@@ -210,22 +211,35 @@ void RecallMinData(void)
 {
     FIL fp;
     u8 path[] = "1608\\11\\11.txt";
+    u32 readByte = 0;
+    u32 seek = 0;
     
     sprintf(path, "%s%s", g_recallInfo.Folder, g_recallInfo.file);
     /* 打开目标文件 */
-    if (OSA_OK != f_open(&fp, g_recordInfo.newNameHour, FA_READ))
+    if (FR_OK != f_open(&fp, path, FA_READ))
     {
+        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
         ClearRecallFlag();
         return;
     }
     
-    while (f_gets(_record_buf, sizeof(_record_buf), &fp))
+    f_lseek(&fp, 0);
+      
+    while (FR_OK == f_read(&fp, _record_buf, RECORD_DATA_LEN, &readByte))
     {
+        if (readByte < RECORD_DATA_LEN)
+        {
+            break;
+        }
+        
         if (0 == ConstructRecordDataToSend(_record_buf, "082"))
         {
             /* 缓存用完，可以发送了 */
             goto READY_TO_SEND;
         }
+        
+        seek += readByte;
+        f_lseek(&fp, seek);
     }
     
 READY_TO_SEND:
@@ -233,6 +247,8 @@ READY_TO_SEND:
     g_sendRecallData.respFlag = 0;
     /* 小时数据，一次发送，所以不需要继续，发送数据时，判断这个是否继续标志决定是否清除回调标志 */
     g_recallInfo.continueFlag = 0;
+    
+    f_close(&fp);
     
 }
 
@@ -240,29 +256,44 @@ void RecallHourData(void)
 {
     FIL fp;
     u8 path[] = "1608\\11\\11.txt";
+    u32 readByte = 0;
+    u32 seek = 0;
     
-    sprintf(path, "%s%s", g_recallInfo.Folder, g_recallInfo.file);
+    sprintf(path, "%s%s", path, g_recallInfo.file);
     /* 打开目标文件 */
-    if (OSA_OK != f_open(&fp, g_recordInfo.newNameHour, FA_READ))
-    {
+    if (FR_OK != f_open(&fp, g_recordInfo.newNameHour, FA_READ))
+    { 
+        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
         ClearRecallFlag();
         return;
     }
     
-    while (f_gets(_record_buf, sizeof(_record_buf), &fp))
+    f_lseek(&fp, 0);
+      
+    while (FR_OK == f_read(&fp, _record_buf, RECORD_DATA_LEN, &readByte))
     {
+        if (readByte < RECORD_DATA_LEN)
+        {
+            break;
+        }
+        
         if (0 == ConstructRecordDataToSend(_record_buf, "082"))
         {
             /* 缓存用完，可以发送了 */
-            goto READY_TO_SEND;
+            goto READY_TO_SEND_HOUR;
         }
+        
+        seek += readByte;
+        f_lseek(&fp, seek);
     }
     
-READY_TO_SEND:
+READY_TO_SEND_HOUR:
     g_sendRecallData.sendFlag = 1;
     g_sendRecallData.respFlag = 0;
     /* 小时数据，一次发送，所以不需要继续，发送数据时，判断这个是否继续标志决定是否清除回调标志 */
     g_recallInfo.continueFlag = 0;
+    
+    f_close(&fp);
     
 }
 
@@ -271,22 +302,34 @@ void RecallDayData(void)
     FIL fp;
     u8 path[] = "1608\\11\\11.txt";
     u32 readBytes = 0;
+    u32 seek = 0;
     
     sprintf(path, "%s%s", g_recallInfo.Folder, g_recallInfo.file);
     /* 打开目标文件 */
-    if (OSA_OK != f_open(&fp, g_recordInfo.newNameHour, FA_READ))
+    if (FR_OK != f_open(&fp, path, FA_READ))
     {
+        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
         ClearRecallFlag();
         return;
     }
     
-    while (f_gets(_record_buf, sizeof(_record_buf), &fp))
+    f_lseek(&fp, 0);
+      
+    while (FR_OK == f_read(&fp, _record_buf, RECORD_DATA_LEN, &readBytes))
     {
+        if (readBytes < RECORD_DATA_LEN)
+        {
+            break;
+        }
+        
         if (0 == ConstructRecordDataToSend(_record_buf, "082"))
         {
             /* 缓存用完，可以发送了 */
             goto READY_TO_SENDDAY;
         }
+        
+        seek += readBytes;
+        f_lseek(&fp, seek);
     }
     
 READY_TO_SENDDAY:
@@ -309,6 +352,8 @@ READY_TO_SENDDAY:
         g_recallInfo.file[0] = (readBytes%100)/10 + '0';
         g_recallInfo.file[1] = readBytes%10 + '0';
     }
+    
+    f_close(&fp);
     
     return;
     
@@ -336,5 +381,19 @@ void SetRecallFlag()
 {
     g_recallInfo.flag = 1;
 }
+
+//////////// 更新配置 ////////////////////////////
+void UpdateConfig(void)
+{
+    if (!IsConfigUpdated())
+    {
+        return;
+    }
+    
+    ConfigUpdate();
+    
+    ConfigSetUpdate(0);
+}
+//////////////////////END/////////////////////////
 //////////////////////////////记录到文件操作接口END/////////////////////////////
                        

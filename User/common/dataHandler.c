@@ -740,7 +740,7 @@ u8 ConstructRecordDataToSend(u8 *data, u8 *cmd)
     STATUS_e ret = STU_ERROR;
     u16 offset = 0;
     u32 crc = 0;
-    u8 *buf = g_sendRecallData.buf;
+    u8 *buf = g_sendRecallData.buf + g_sendRecallData.useLen;
     
     g_sendRecallData.sendFlag = 0;
    

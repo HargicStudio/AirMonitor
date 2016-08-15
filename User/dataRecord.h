@@ -53,6 +53,8 @@ void RecallHourData(void);
 
 void RecallDayData(void);
 
+void UpdateConfig(void);
+
 /* 回调应答的数据缓冲 */
 extern SEND_BIG_BUF_t g_sendRecallData;
 

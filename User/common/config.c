@@ -12,8 +12,18 @@ CONFIG_t g_config;
 
 char _cfgBuf[20];
 
+/* 读取配置是否改变 */
+u8 IsConfigUpdated()
+{
+    return g_config.updateFlag;
+}
+
+void ConfigSetUpdate(u8 flag)
+{
+    g_config.updateFlag = flag;
+}
 /*
-*  配置项
+*  配置项 80000 作为保留地址 
 *
 */
 void ConfigInit(void)
@@ -24,100 +34,216 @@ void ConfigInit(void)
     {
         ConfigSetStrAddr((u8 *)_cfgBuf);
     }
+    else
+    {
+        ConfigSetStrAddr((u8 *)"80000");
+    }
     
     if (-1 != ReadCfgInt(C_ADDR, &temp32))
     {
         ConfigSetAddr(temp32);
+    }
+    else
+    {
+        ConfigSetAddr(80000);
     }
     
     if (-1 != ReadCfgInt(C_SOFTVER, &temp32))
     {
         ConfigSetSoftVer(temp32);
     }
+    else
+    {
+        ConfigSetSoftVer(301);
+    }
     
     if (-1 != ReadCfgInt(C_HARDVER, &temp32))
     {
         ConfigSetHardVer(temp32);
+    }
+    else
+    {
+        ConfigSetHardVer(401);
     }
 
     if (-1 != ReadCfg(C_SERVERIP, _cfgBuf))
     {
         ConfigSetServerIp((u8 *)_cfgBuf, strlen(_cfgBuf));
     }
+    else
+    {
+        ConfigSetServerIp("120.27.26.208", 13);
+    }
 
     if (-1 != ReadCfgInt(C_SERVERPORT, &temp32))
     {
         ConfigSetServerPort(temp32);
+    }
+    else
+    {
+        ConfigSetServerPort(21006);
     }
     
     if (-1 != ReadCfgInt(C_SIMPLEINT, &temp32))
     {
         ConfigSetSimpleInterval(temp32);
     }
+    else
+    {
+        ConfigSetSimpleInterval(5);
+    }
     
     if (-1 != ReadCfgInt(C_REPORTINT, &temp32))
     {
         ConfigSetReportInterval(temp32);
+    }
+    else
+    {
+        ConfigSetReportInterval(5);
     }
     
     if (-1 != ReadCfgInt(C_K25, &temp32))
     {
         ConfigSetpm25K(temp32);
     }
+    else
+    {
+        ConfigSetpm25K(1);
+    }
     
     if (-1 != ReadCfgInt(C_B25, &temp32))
     {
         ConfigSetpm25B(temp32);
+    }
+    else
+    {
+        ConfigSetpm25B(1);
     }
     
     if (-1 != ReadCfgInt(C_K10, &temp32))
     {
         ConfigSetpm10K(temp32);
     }
+    else
+    {
+        ConfigSetpm10K(1);
+    }
     
     if (-1 != ReadCfgInt(C_B10, &temp32))
     {
         ConfigSetpm10B(temp32);
+    }
+    else
+    {
+        ConfigSetpm10B(1);
     }
     
     if (-1 != ReadCfgInt(C_COVw, &temp32))
     {
         ConfigSetcoVw(temp32);
     }
+    else
+    {
+        ConfigSetcoVw(400);
+    }
     
     if (-1 != ReadCfgInt(C_COVa, &temp32))
     {
         ConfigSetcoVa(temp32);
+    }
+    else
+    {
+        ConfigSetcoVa(300);
+    }
+    
+    if (-1 != ReadCfgInt(C_coS, &temp32))
+    {
+        ConfigSetcoS(temp32);
+    }
+    else
+    {
+        ConfigSetcoS(300);
     }
     
     if (-1 != ReadCfgInt(C_SO2Vw, &temp32))
     {
         ConfigSetso2Vw(temp32);
     }
+    else
+    {
+        ConfigSetso2Vw(400);
+    }
     
     if (-1 != ReadCfgInt(C_SO2Va, &temp32))
     {
         ConfigSetso2Va(temp32);
+    }
+    else
+    {
+        ConfigSetso2Va(300);
+    }
+    
+    if (-1 != ReadCfgInt(C_so2S, &temp32))
+    {
+        ConfigSetso2S(temp32);
+    }
+    else
+    {
+        ConfigSetso2S(300);
     }
     
     if (-1 != ReadCfgInt(C_O3Vw, &temp32))
     {
         ConfigSeto3Vw(temp32);
     }
+    else
+    {
+        ConfigSeto3Vw(400);
+    }
     
     if (-1 != ReadCfgInt(C_O3Va, &temp32))
     {
         ConfigSeto3Va(temp32);
+    }
+    else
+    {
+        ConfigSeto3Va(300);
+    }
+    
+    if (-1 != ReadCfgInt(C_o3S, &temp32))
+    {
+        ConfigSeto3S(temp32);
+    }
+    else
+    {
+        ConfigSeto3S(300);
     }
     
     if (-1 != ReadCfgInt(C_NO2Vw, &temp32))
     {
         ConfigSetno2Vw(temp32);
     }
+    else
+    {
+        ConfigSetno2Vw(400);
+    }
     
     if (-1 != ReadCfgInt(C_NO2Va, &temp32))
     {
         ConfigSetno2Va(temp32);
+    }
+    else
+    {
+        ConfigSetno2Va(300);
+    }
+    
+    if (-1 != ReadCfgInt(C_no2S, &temp32))
+    {
+        ConfigSetno2S(temp32);
+    }
+    else
+    {
+        ConfigSetno2S(400);
     }
     
     /* 默认的时间 */
@@ -127,18 +253,86 @@ void ConfigInit(void)
     
 }
 
+void ConfigUpdate(void)
+{
+    FIL pf;
+    s32 ret;
+    
+    ret = OpenCfgFile(FA_READ | FA_WRITE | FA_CREATE_ALWAYS, &pf);
+    if (ret != FR_OK)
+    {
+        GSM_LOG_P0("create cfg file error!");
+        return;
+    }
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_ADDR], g_config.myAddr);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_SOFTVER], g_config.softVer);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_HARDVER], g_config.hardVer);
+    
+    f_printf(&pf, "%s=%s\r\n", default_key[C_SERVERIP], g_config.serverIp);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_SERVERPORT], g_config.serverPort);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_SIMPLEINT], g_config.simpleInterval);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_REPORTINT], g_config.reportInterval);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_K25], g_config.pm25K);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_B25], g_config.pm25B);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_K10], g_config.pm10K);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_B10], g_config.pm10B);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_COVw], g_config.coVw);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_COVa], g_config.coVa);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_coS], g_config.coS);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_SO2Vw], g_config.so2Vw);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_SO2Va], g_config.so2Va);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_so2S], g_config.so2S);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_O3Vw], g_config.o3Vw);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_O3Va], g_config.o3Va);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_o3S], g_config.o3S);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_NO2Vw], g_config.no2Vw);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_NO2Va], g_config.no2Va);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_no2S], g_config.no2S);
+    
+    
+    OSA_fileSync(&pf);
+    
+    CloseCfgFile(&pf);
+    
+    ConfigPrint();
+    
+}
 void ConfigPrint(void)
 {
-    printf("Config Addr: %d, SADDR: %s\r\n", g_config.myAddr, g_config.strAddr);
-    printf("SOFT VER: %d, HARD VER: %d\r\n", g_config.softVer, g_config.hardVer);
-    printf("Cloud: %s, PORT: %d\r\n", g_config.serverIp, g_config.serverPort);
-    printf("SIMPLE: %d, REPORT: %d\r\n", g_config.simpleInterval, g_config.reportInterval);
-    printf("2.5 K,B : %d,%d; 10K,B : %d,%d\r\n", g_config.pm25K, g_config.pm25B,
+    GSM_LOG_P2("Config Addr: %d, SADDR: %s\r\n", g_config.myAddr, g_config.strAddr);
+    GSM_LOG_P2("SOFT VER: %d, HARD VER: %d\r\n", g_config.softVer, g_config.hardVer);
+    GSM_LOG_P2("Cloud: %s, PORT: %d\r\n", g_config.serverIp, g_config.serverPort);
+    GSM_LOG_P2("SIMPLE: %d, REPORT: %d\r\n", g_config.simpleInterval, g_config.reportInterval);
+    GSM_LOG_P4("2.5 K,B : %d,%d; 10K,B : %d,%d\r\n", g_config.pm25K, g_config.pm25B,
                g_config.pm10K, g_config.pm10B);
-    printf("CO W,A : %d,%d; SO2 W,A : %d,%d\r\n", g_config.coVw, g_config.coVa,
+    GSM_LOG_P4("CO W,A : %d,%d; SO2 W,A : %d,%d\r\n", g_config.coVw, g_config.coVa,
                g_config.so2Vw, g_config.so2Va);
-    printf("O3 W,A : %d,%d; NO2 W,A : %d,%d\r\n", g_config.o3Vw, g_config.o3Va,
+    GSM_LOG_P4("O3 W,A : %d,%d; NO2 W,A : %d,%d\r\n", g_config.o3Vw, g_config.o3Va,
                g_config.no2Vw, g_config.no2Va);
+    GSM_LOG_P4("COS: %d, SO2S: %d, O3S: %d, NO2S: %d", g_config.coS, g_config.so2S,
+               g_config.o3S, g_config.no2S);
 }
 
 void ConfigSetTime()
@@ -352,6 +546,26 @@ u16 ConfigGetcoVa(void)
     return g_config.coVa;
 }
 
+void ConfigSetcoS(u16 val)
+{
+    g_config.coS = val;
+}
+
+void ConfigSetso2S(u16 val)
+{
+    g_config.so2S = val;
+}
+
+void ConfigSeto3S(u16 val)
+{
+    g_config.o3S = val;
+}
+
+void ConfigSetno2S(u16 val)
+{
+    g_config.no2S = val;
+}
+
 void ConfigSetso2Va(u16 val)
 {
     g_config.so2Va = val;
@@ -414,31 +628,35 @@ u16 ConfigGetno2Va(void)
 
 void GetCoZero(s16 *Vw, s16 *Va, s16 *S)
 {
-    *Vw = g_config.coVw0;
-    *Va = g_config.coVa0;
+    *Vw = g_config.coVw;
+    *Va = g_config.coVa;
     *S = g_config.coS;
 }
 
 void GetSo2Zero(s16 *Vw, s16 *Va, s16 *S)
 {
-    *Vw = g_config.so2Vw0;
-    *Va = g_config.so2Va0;
+    *Vw = g_config.so2Vw;
+    *Va = g_config.so2Va;
     *S = g_config.so2S;
 }
 
 void Geto3Zero(s16 *Vw, s16 *Va, s16 *S)
 {
-    *Vw = g_config.o3Vw0;
-    *Va = g_config.o3Va0;
+    *Vw = g_config.o3Vw;
+    *Va = g_config.o3Va;
     *S = g_config.o3S;
 }
 
 void Getno2Zero(s16 *Vw, s16 *Va, s16 *S)
 {
-    *Vw = g_config.no2Vw0;
-    *Va = g_config.no2Va0;
+    *Vw = g_config.no2Vw;
+    *Va = g_config.no2Va;
     *S = g_config.no2S;
 }
+
+
+/* 配置改变时，在写文件的线程操作文件，因为打开文件需要比较大的栈 */
+/* END */
 
 
 

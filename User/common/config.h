@@ -10,43 +10,42 @@ extern "C" {
 #define MAX_IP_LEN              20
 #define MAX_ADDR_LEN            5
   
+  
 typedef struct CONFIG_t
 {
+    u8 updateFlag;
+    u8 strAddr[MAX_ADDR_LEN+1];
+    u8 serverIp[MAX_IP_LEN+1];
     u32 myAddr;
-    u8 strAddr[MAX_ADDR_LEN];
-    u8 serverIp[MAX_IP_LEN];
     u16 serverPort;
     u16 softVer;
     u16 hardVer;
     u8 simpleInterval;     
     u8 reportInterval;
-    u16 pm25K;    /* 以下是校准参数, 用于最终计算的类型可能变化 */
-    u16 pm25B;
-    u16 pm10K;
-    u16 pm10B;
-    u16 coVw;
-    u16 coVa;
-    u16 so2Vw;
-    u16 so2Va;
-    u16 o3Vw;
-    u16 o3Va;
-    u16 no2Vw;
-    u16 no2Va;
+    s16 pm25K;    /* 以下是校准参数, 用于最终计算的类型可能变化 */
+    s16 pm25B;
+    s16 pm10K;
+    s16 pm10B;
+    s16 coVw;
+    s16 coVa;
+    s16 so2Vw;
+    s16 so2Va;
+    s16 o3Vw;
+    s16 o3Va;
+    s16 no2Vw;
+    s16 no2Va;
     /* 零点 及 灵敏度 */
-    s16 coVw0;
-    s16 coVa0;
     s16 coS;
-    s16 so2Vw0;
-    s16 so2Va0;
     s16 so2S;
-    s16 o3Vw0;
-    s16 o3Va0;
     s16 o3S;
-    s16 no2Vw0;
-    s16 no2Va0;
     s16 no2S;
 
 }CONFIG_t;
+
+/* 读取配置是否改变 */
+u8 IsConfigChanged();
+
+void ConfigSetUpdate(u8 flag);
 
 void ConfigInit(void);
 
@@ -110,6 +109,11 @@ void ConfigSetpm25B(u16 val);
 
 u16 ConfigGetpm25K(void);
 void ConfigSetpm25K(u16 val);
+
+void ConfigSetno2S(u16 val);
+void ConfigSeto3S(u16 val);
+void ConfigSetso2S(u16 val);
+void ConfigSetcoS(u16 val);
 
 void Getno2Zero(s16 *Vw, s16 *Va, s16 *S);
 void Geto3Zero(s16 *Vw, s16 *Va, s16 *S);

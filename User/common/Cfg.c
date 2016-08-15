@@ -8,9 +8,8 @@
 #include "common.h"
 #include "moduleStatus.h"
 
-#define COUNT_KEY  19
 
-static char * default_key[] ={
+char * default_key[COUNT_KEY] ={
 
     "addr",
     "softVer",
@@ -25,16 +24,20 @@ static char * default_key[] ={
     "b10",
     "coVw",
     "coVa",
+    "coS",
     "so2Vw",
     "so2Va",
+    "so2S",
     "o3Vw",
     "o3Va",
+    "o3S",
     "no2Vw",
     "no2Va",
-    0,
+    "no2S",
 
 };
-static char * default_value[] ={
+
+char * default_value[] ={
     "80001",
     "301",
     "201",
@@ -48,32 +51,37 @@ static char * default_value[] ={
     "1",
     "1",
     "1",
+    "2",
     "1",
     "1",
+    "2",
     "1",
     "1",
+    "2",
     "1",
     "1",
-    0,
+    "2",
 };
+
+u8 temp_buf[256];
 
 /************************************************
 *Input:
 *Output:
 *Des: 打开配置文件
 ************************************************/
-OSA_FileHandle OpenCfgFile(u8 opera)
+s32 OpenCfgFile(u8 opera, FIL *fp)
 {
-    OSA_FileHandle p = NULL;
+    s32 ret;
     
-    if (OSA_OK != OSA_fileOpen(CFG_FILE, opera, &p))
+    ret = f_open(fp, CFG_FILE, opera);
+    if (FR_OK != ret)
     {
         SetModuleStu(MDU_CARD, STU_ERROR);
         printf("++++++SD CARD in problem! +++++++\r\n");
-        return NULL;
     }
     
-    return p;
+    return ret;
 }
 
 /************************************************
@@ -81,10 +89,10 @@ OSA_FileHandle OpenCfgFile(u8 opera)
 *Output:
 *Des: 关闭配置文件
 ************************************************/
-void CloseCfgFile(OSA_FileHandle pf)
+void CloseCfgFile(FIL *pf)
 {
     if (NULL != pf)
-        OSA_fileClose(pf);
+        f_close(pf);
 
     pf = NULL;
 }
@@ -96,22 +104,22 @@ void CloseCfgFile(OSA_FileHandle pf)
 ************************************************/
 int Initcfg(char *temp)
 {
-    OSA_FileHandle pf;
+    FIL pf;
+    s32 ret;
       
-    pf = OpenCfgFile(OSA_FILEMODE_RDONLY);
+    ret = OpenCfgFile(FA_READ, &pf);
     
-    if (pf == NULL || temp !=NULL) //no file
+    if (ret != FR_OK || temp !=NULL) //no file
     {
-        if (pf == NULL)
+        if (ret != FR_OK)
             printf("not exsit cfg file\n");
         else 
-            CloseCfgFile(pf);
+            CloseCfgFile(&pf);
                 
         int i;
-        pf = OpenCfgFile(OSA_FILEMODE_RDWR_NEW);
+        ret = OpenCfgFile(FA_READ | FA_WRITE | FA_CREATE_ALWAYS, &pf);
 
-        printf("cfg\n");
-        if (pf == NULL)
+        if (ret != FR_OK)
         {
             printf("create cfg file error\n");
             return -1;
@@ -119,23 +127,22 @@ int Initcfg(char *temp)
 
         if (temp == NULL)
         {
-            printf("1\n");
             for (i = 0; i < COUNT_KEY; i++)
             {
                 printf("cfg default %s: %s\r\n", default_key[i], default_value[i]);
-                f_printf(pf, "%s=%s\r\n", default_key[i], default_value[i]);
+                f_printf(&pf, "%s=%s\r\n", default_key[i], default_value[i]);
             }
         }
         else
         {
-            f_printf(pf, "%s", temp);
+            f_printf(&pf, "%s", temp);
         }
 
 
-        OSA_fileSync(pf);
+        f_sync(&pf);
     }
 
-    CloseCfgFile(pf);
+    CloseCfgFile(&pf);
 
     return 0;
 }
@@ -147,31 +154,33 @@ int Initcfg(char *temp)
 ************************************************/
 int ReadValue(char *key,int keylen, char *value) 
 { 
-    char buf[40] = { 0 };
-    OSA_FileHandle pf;
+    FIL pf;
+    s32 ret;
+    
+    memset(temp_buf, 0, 40);
 
-    pf = OpenCfgFile(OSA_FILEMODE_RDONLY);
-    if (pf == NULL)
+    ret = OpenCfgFile(FA_READ, &pf);
+    if (ret != FR_OK)
     {
         printf("error\n");
         return -1;
 
     }
-    OSA_fileSeek(pf, 0);
+    f_lseek(&pf, 0);
 
-    while (f_gets(buf,sizeof(buf),pf) != NULL)
+    while (f_gets(temp_buf,40,&pf) != NULL)
     {
        
-        if (strncmp(buf,key,keylen) == 0)
+        if (strncmp(temp_buf,key,keylen) == 0)
         {
-            memcpy(value, buf + keylen + 1, strlen(buf) - keylen - 1);
+            memcpy(value, temp_buf + keylen + 1, strlen(temp_buf) - keylen - 2);
 
-            CloseCfgFile(pf);
+            CloseCfgFile(&pf);
             return 0;
         }
     }
 
-    CloseCfgFile(pf);
+    CloseCfgFile(&pf);
     return -1; 
 }
 
@@ -183,18 +192,20 @@ int ReadValue(char *key,int keylen, char *value)
 int WriteValue(char *key, int keylen, char *value)
 {
     char buf[40] = { 0 };
-    char temp[256] = { 0 };
     int  len = 0;
-    OSA_FileHandle pf;
-
-    pf = OpenCfgFile(OSA_FILEMODE_RDONLY);
-    if (pf == NULL)
+    FIL pf;
+ 
+    s32 ret;
+    
+    ret = OpenCfgFile(FA_READ, &pf);
+    if (ret != FR_OK)
     {
         return -1;
     }
-    OSA_fileSeek(pf, 0);
+    
+    f_lseek(&pf, 0);
 
-    while (f_gets(buf,sizeof(buf),pf) != NULL)
+    while (f_gets(buf,sizeof(buf),&pf) != NULL)
     {
        
         if (strncmp(buf, key, keylen) == 0)
@@ -202,14 +213,14 @@ int WriteValue(char *key, int keylen, char *value)
             printf("cfg write %s: %s\n", key, buf);
             sprintf(buf, "%s=%s\n", key, value);
         }
-        memcpy(temp + len, buf, strlen(buf)); //save
+        memcpy(temp_buf + len, buf, strlen(buf)); //save
         len += strlen(buf);
        
     }
    
-    CloseCfgFile(pf);
+    CloseCfgFile(&pf);
 
-    return Initcfg(temp);
+    return Initcfg(temp_buf);
 }
 
 /************************************************

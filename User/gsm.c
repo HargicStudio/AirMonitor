@@ -247,7 +247,7 @@ u8 StartGsmTask()
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmThread success");
 
 
-    osThreadDef(GsmTest, GsmSendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(GsmTest, GsmSendTestThread, /*osPriorityNormal8*/osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE);
     _gsm_send_test_id = AaThreadCreateStartup(osThread(GsmTest), NULL);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmSendTestThread success");
 
@@ -287,6 +287,15 @@ void GsmWaitForSendCplt()
     osSemaphoreRelease(_gsm_sendcplt_sem_id);
 }
 
+void GsmSendToUSART(u8 * data, u16 len)
+{
+    GsmDataSendByIT(data, len);
+    if (osOK != osSemaphoreWait(_gsm_sendcplt_sem_id, 1000))
+    {
+      GSM_LOG_P2("Send Failed: len : %d, %s", len, data);
+    }
+}
+
 /*
 * 接收模式
 * 1. 透传模式开启以前。接收以"\r\n"结尾的字符串
@@ -297,7 +306,7 @@ void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
     
     HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1);
     
-    //GSM_LOG_P1("*********** %c", recv_char);
+    //GSM_LOG_P1("*********** %02x", recv_char);
     
     /* 透明传输模式开启 */
     if (GSM_TCP_CONNECTED == GsmStatusGet())
@@ -371,6 +380,7 @@ void ReceiveTransparentData(u8 data)
                 /* 错误的格式，初始化 */
                 flag = 0xff;
                 pos = 0;
+                //GSM_LOG_P0("TEST: Error format!");
                 return;
             }
         }
@@ -384,6 +394,7 @@ void ReceiveTransparentData(u8 data)
                 /* 不支持的命令，初始化 */
                 flag = 0xff;
                 pos = 0;
+                //GSM_LOG_P0("TEST: Didn't support the cmd!");
                 return;
             }
             else
@@ -395,6 +406,7 @@ void ReceiveTransparentData(u8 data)
                     /* 数据长度错误, 初始化*/
                     flag = 0xff;
                     pos = 0;
+                    //GSM_LOG_P2("TEST: Wrong length! Len in cmd: %d, len: %d", dataLen, more_len + LEN_ADDR_CMD);
                     return;
                 }
                 
@@ -414,6 +426,7 @@ void ReceiveTransparentData(u8 data)
                 }
                 
                 /* 继续接收剩下的数据 */
+                ring_buffer_write(&_gsm_rx_ringbuf, recv, 18);
                 flag = 3;
             }
         }
@@ -516,6 +529,18 @@ bool SendResponseToServer(void)
 {
    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
     if ( !SendData(g_sendResponse.buf, g_sendResponse.useLen, g_sendResponse.respFlag) )
+    {
+        GSM_LOG_P0("Send Response fail!");
+        return false;
+    }
+    //osSemaphoreRelease(_gsm_send_test_id);
+    return true;
+}
+
+bool SendRecallDataToServer(void)
+{
+    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
+    if ( !SendData(g_sendRecallData.buf, g_sendRecallData.useLen, g_sendRecallData.respFlag) )
     {
         GSM_LOG_P0("Send Response fail!");
         return false;

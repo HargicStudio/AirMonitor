@@ -24,7 +24,7 @@ static u8 s_testCGATT[] = "AT+CGATT=1\r\n";
 static u8 s_testCIPCSGP[] = "AT+CIPCSGP=1,\"CMNET\"\r\n";
 static u8 s_testCLPORT[] = "AT+CLPORT=\"TCP\",\"2222\"\r\n";
 static u8 s_testCIPMODE[] = "AT+CIPMODE=1\r\n";
-static u8 s_testCIPSTART[] = "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\n";
+static u8 s_testCIPSTART[] = "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\r\n";
 
 void GsmWaitCloseFlagSet(void)
 {
@@ -80,17 +80,25 @@ u8 GetCmdDataLen(u16 cmd)
     case 19: /* 请求软件版本 */
     case 21: /* 请求当前数据 */
       return 0;
+    case 3:  /* 校时 */
+      return 12;
     case 7:  /* 修改站号 */
       return 5;
     case 11: /* 修改采集间隔 */
-    case 12: /* 修改上报间隔 */
+    case 13: /* 修改上报间隔 */
       return 2;
     case 81: /* 回调数据1 */
       return 10;
-    case 82: /* 回调数据2 */
+    case 83: /* 回调数据2 */
       return 8;
     case 85: /* 回调天的数据 */
       return 6;
+    case 501: /* 校准信息 */
+      return 32;
+    case 502: /* 配置参数 */
+      return 15;
+    case 503: /* 请求经纬度 */
+      return 0;
     default: /* Don't support command */
       return 0xff;
     }
@@ -114,9 +122,10 @@ bool IsCommandSuss()
 *  因为只有GSM thread会执行这个指令，所以无需加锁
 *  等待回应，每50ms检查一次结果，waittime控制等待时间
 */
+/*
 bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
 {
-    GsmDataSendByIT(cmd, len);
+    GsmSendToUSART(cmd, len);
     SetAtStatus(rspType);
 
     osDelay(waitTimes*50);
@@ -129,27 +138,24 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
     
     GSM_LOG_P1("AT CMD Failed: %s\r\n", cmd);
     return false;
-}
-/*
+}*/
+
 bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
 {
     u16 temp = waitTimes;
     
-    GSM_LOG_P0("@@@@@@@@@@@@@@@@@11111\r\n");
-    GsmDataSendByIT(cmd, len);
+    GsmSendToUSART(cmd, len);
     SetAtStatus(rspType);
-    GSM_LOG_P0("@@@@@@@@@@@@@@@@@2222\r\n");
     
     while (rspType == GetAtStatus())
     {
-        GSM_LOG_P2("AT CMD fail: %s, Times: %d\r\n", cmd, temp - waitTimes);
         osDelay(50);
-        
+    
         if (0 == waitTimes)
         {
             GSM_LOG_P2("AT CMD fail: %s, Times: %d\r\n", cmd, temp - waitTimes);
             SetAtStatus(AT_INVALID);
-            break;
+            return false;
         }
         waitTimes--;
     }
@@ -166,7 +172,7 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
     GSM_LOG_P2("AT CMD Success: %s, Times: %d\r\n", cmd, temp - waitTimes);
     
     return true;
-}*/
+}
 
 void IsAtSuss(u8 *buf, u8 *key)
 {
@@ -213,7 +219,8 @@ void GsmPowerUpDownOpt(u8 type)
     GsmPowerDown();
     osDelay(tiemLen);
     GsmPowerUp();
-    osDelay(3000);
+    
+    osDelay(30000);
     
     GSM_LOG_P1("GSM POWER control: %d\r\n", type);
 }
@@ -225,6 +232,7 @@ void GsmPowerUpDownOpt(u8 type)
   */
 bool GsmStartup(void)
 {
+    osDelay(100);
     if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
     {
         return true;
@@ -331,7 +339,10 @@ bool GsmStartAndconect(void)
         //return false;
     }
     
+    memset(s_cmd, 0, sizeof(s_cmd));
     sprintf((char *)s_cmd, s_testCIPSTART, ConfigGetServerIp(), ConfigGetServerPort());
+    
+    GSM_LOG_P1("CONNECT TO %s END!", s_cmd);
     
     if (false == AtCmdRun(s_cmd, strlen((char const *)s_cmd), MAX_WAIT_TIMES + 100, AT_WAIT_CONNECT_RSP))
     {
@@ -343,7 +354,7 @@ bool GsmStartAndconect(void)
     /* DTU head, 为了兼容单组分 */
     memcpy(s_cmd + 11, ConfigGetStrAddr(), 5);
     GSM_LOG_P1("Send Head: %s\r\n", s_cmd);
-    GsmDataSendByIT(s_cmd, 52);
+    GsmSendToUSART(s_cmd, 52);
     osDelay(100);
     
     return true;   
@@ -352,12 +363,12 @@ bool GsmStartAndconect(void)
 bool GsmSendData(u8 *data, u16 len, u8 respFlag)
 {
     /* 测试，直接发送 */ 
-    GsmDataSendByIT(data, len);
+    GsmSendToUSART(data, len);
     /*
     if (!respFlag)
     {
         // 透传模式发送数据 /
-        GsmDataSendByIT(data, len);
+        GsmSendToUSART(data, len);
     }
     else
     {
@@ -382,13 +393,13 @@ bool GsmSendData(u8 *data, u16 len, u8 respFlag)
     
     
     /*
-    //GsmDataSendByIT(send, strlen(send));
+    //GsmSendToUSART(send, strlen(send));
     if (false == AtCmdRun(send, len, MAX_WAIT_TIMES+20, AT_WAIT_TO_SEND))
     {
         return false;
     }
     
-    //GsmDataSendByIT(data, len);
+    //GsmSendToUSART(data, len);
     
     if (false == AtCmdRun(data, len+2, MAX_WAIT_TIMES + 300, AT_WAIT_SEND_OK))
     {

@@ -39,7 +39,8 @@
 
 /* 用于计算和保存信息 */
 extern gps_process_data gps;
-#define IsClockSynced()      gps.utc.syncFlag
+#define IsClockSynced()         gps.utc.syncFlag
+#define SetClockSynced(flag)    gps.utc.syncFlag = (flag)
     
 #define GPS_SERIAL_RX_BUFFER_NUM        (2)
 #define GPS_SERIAL_RX_BUFFER_SIZE       (256)

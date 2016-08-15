@@ -58,6 +58,8 @@ void GPGGA_Analysis(gps_process_data *gps_data,unsigned char *buf);
 void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf);
 void GPGSA_Analysis(gps_process_data *gps_data,unsigned char *buf);
 
+extern gps_process_data gps;
+
 
 
 #ifdef __cplusplus

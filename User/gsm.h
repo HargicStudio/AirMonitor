@@ -46,6 +46,7 @@ bool SendDataToServer(void);
 bool SendResponseToServer(void);
 void ReceiveNormalData(u8 data);
 void ReceiveTransparentData(u8 data);
+bool SendRecallDataToServer(void);
 
 
 
