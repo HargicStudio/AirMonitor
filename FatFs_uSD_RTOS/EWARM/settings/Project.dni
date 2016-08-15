@@ -37,7 +37,7 @@ ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
 [DebugChecksum]
-Checksum=-1299571189
+Checksum=-381038150
 [CodeCoverage]
 Enabled=_ 0
 [CallStack]
@@ -106,6 +106,13 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c}.1693.3" 0 0 1 "" 0 "" 0
+Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\User\gsm.c}.159.17" 0 0 1 "" 0 "" 0
+Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\User\common\dataRecv.c}.422.9" 0 0 1 "" 0 "" 0
+Count=3
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -113,6 +120,11 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Aliases]
+A0=_ "F:\mcu\stm32\项目\空气检测\code\trunk\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c" ""
+A1=_ "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\Src\main.c" "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\Src\main.c"
+Count=2
+SuppressDialog=1
 [DriverProfiling]
 Enabled=0
 Mode=3
@@ -127,12 +139,3 @@ ShowTiming=1
 Frequency=10000
 Probe0=I0
 ProbeSetup0=2 1 1 2 0 0
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\Platform\CCSDaemon\CCSDaemon.c}.85.5" 0 0 1 "" 0 "" 0
-Count=1
-[Aliases]
-A0=_ "F:\mcu\stm32\项目\空气检测\code\trunk\FatFs_uSD_RTOS\Src\main.c" "E:\Bussiness Project\bjsensor\gitSVN\AirMonitor.git\trunk\FatFs_uSD_RTOS\Src\main.c"
-Count=1
-SuppressDialog=1
