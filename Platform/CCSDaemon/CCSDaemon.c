@@ -21,6 +21,7 @@ History:
 #include "fan.h"
 #include "osa_file.h"
 #include "alpha_sense.h"
+#include "dataRecord.h"
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
@@ -86,9 +87,9 @@ u8 CCSDeamonCEInit()
     StartDataRecordTask();
     //StartTFCardTask();
     StartRunLedTask();
-    //StartGpsTask();
-    //StartGsmTask();
-    //StartCP15Task();
+    StartGpsTask();
+    StartGsmTask();
+    StartCP15Task();
     //StartRunAm2302Task();
     StartAlphaSenseTask();
     
