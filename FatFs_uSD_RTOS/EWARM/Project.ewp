@@ -128,7 +128,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>22</version>
-          <state>40</state>
+          <state>39</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -335,6 +335,7 @@
           <state>$PROJ_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\include</state>
           <state>$PROJ_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS</state>
           <state>$PROJ_DIR$\..\..\User\common</state>
+          <state>$PROJ_DIR$\..\..\Common\PingPangBuffer</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -1025,6 +1026,9 @@
       <name>$PROJ_DIR$\..\..\Common\BipBuffer\BipBuffer.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\Common\PingPangBuffer\PingPang.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\Common\RingBuffer\RingBufferUtils.c</name>
     </file>
   </group>
@@ -1040,6 +1044,9 @@
       <name>BSP</name>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\407VE_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\cp15_dev.c</name>
@@ -1216,6 +1223,9 @@
         <name>$PROJ_DIR$\..\..\User\common\moduleStatus.c</name>
       </file>
     </group>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\alpha_sense.c</name>
+    </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\am2302.c</name>
     </file>

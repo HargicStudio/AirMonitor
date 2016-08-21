@@ -1096,6 +1096,9 @@
       <name>$PROJ_DIR$\..\..\Common\BipBuffer\BipBuffer.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\Common\PingPangBuffer\PingPang.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\Common\RingBuffer\RingBufferUtils.c</name>
     </file>
   </group>
@@ -1111,6 +1114,9 @@
       <name>BSP</name>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\407VE_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\cp15_dev.c</name>
@@ -1287,6 +1293,9 @@
         <name>$PROJ_DIR$\..\..\User\common\moduleStatus.c</name>
       </file>
     </group>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\alpha_sense.c</name>
+    </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\am2302.c</name>
     </file>
