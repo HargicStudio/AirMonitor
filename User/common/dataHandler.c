@@ -481,6 +481,7 @@ void ContructDataUp()
     offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
     
     /* date*/
+    /*
     if (IsClockSynced())
     {
         RTC_GetTime(&g_stime);
@@ -488,7 +489,7 @@ void ContructDataUp()
         sprintf(gps.utc.strTime + 2, "%02d%02d%02d%02d%02d%02d", 
                 g_sdate.Year, g_sdate.Month, g_sdate.Date, 
                 g_stime.Hours, g_stime.Minutes, g_stime.Seconds);
-    }
+    }*/
     
     offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
     

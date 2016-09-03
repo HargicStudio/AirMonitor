@@ -8,7 +8,7 @@
 #include "gps.h"
 #include "cfg.h"
 #include "dataHandler.h"
-#include "rtc.h"
+//#include "rtc.h"
 #include "config.h"
 
 

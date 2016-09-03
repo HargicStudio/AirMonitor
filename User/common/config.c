@@ -3,7 +3,7 @@
 #include "gpsAnalyser.h"
 #include "common.h"
 #include "cfg.h"
-#include "rtc.h"
+//#include "rtc.h"
 
 
 /* 用于计算和保存信息 */
@@ -356,7 +356,7 @@ bool CpnfigSetRTCTime(u8 y, u8 m, u8 d, u8 h, u8 min, u8 s)
     g_sdate.Year = y;
     g_sdate.Month = m;
     g_sdate.Date = d;
-    g_sdate.WeekDay = RTC_CaculateWeekDay(g_sdate.Year,g_sdate.Month, g_sdate.Date);
+    //g_sdate.WeekDay = RTC_CaculateWeekDay(g_sdate.Year,g_sdate.Month, g_sdate.Date);
   
     g_stime.Hours = h;
     g_stime.Minutes = min;
@@ -365,7 +365,8 @@ bool CpnfigSetRTCTime(u8 y, u8 m, u8 d, u8 h, u8 min, u8 s)
     g_stime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     g_stime.StoreOperation = RTC_STOREOPERATION_RESET;
     
-    return RTC_CalendarConfig(&g_sdate, &g_stime);
+    //return RTC_CalendarConfig(&g_sdate, &g_stime);
+    return true;
 }
 
 void ConfigSetAddr(u32 addr)

@@ -9,7 +9,7 @@
 #include "gsmCtrl.h"
 #include "format.h"
 #include "dataRecord.h"
-#include "rtc.h"
+//#include "rtc.h"
 #include "gps.h"
 
 /* Private typedef -----------------------------------------------------------*/
