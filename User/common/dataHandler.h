@@ -108,6 +108,8 @@ u8 ConstructRecordData(u8 *data);
 
 void InitSendRecallData();
 
+void ContructDataUp();
+
 /*
 *  构造回调数据
 */

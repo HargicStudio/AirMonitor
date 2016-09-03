@@ -45,6 +45,10 @@ typedef struct CONFIG_t
 /* 读取配置是否改变 */
 u8 IsConfigChanged();
 
+u8 IsConfigUpdated();
+
+void ConfigUpdate(void);
+
 void ConfigSetUpdate(u8 flag);
 
 void ConfigInit(void);
@@ -121,8 +125,12 @@ void GetSo2Zero(s16 *Vw, s16 *Va, s16 *S);
 void GetCoZero(s16 *Vw, s16 *Va, s16 *S);
 
 void ConfigSetTime();
+bool CpnfigSetRTCTime(u8 y, u8 m, u8 d, u8 h, u8 min, u8 s);
 
 void ConfigPrint();
+
+extern RTC_DateTypeDef g_sdate;
+extern RTC_TimeTypeDef g_stime;
   
   
 #ifdef __cplusplus

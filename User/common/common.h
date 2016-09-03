@@ -132,6 +132,8 @@ u32 stringToInt(u8 *buf, u16 len);
 
 bool IsDirExit(u8 *path);
 
+u32 myPow(u32 val, u32 times);
+
 
 #ifdef __cplusplus
 }

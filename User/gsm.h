@@ -47,6 +47,7 @@ bool SendResponseToServer(void);
 void ReceiveNormalData(u8 data);
 void ReceiveTransparentData(u8 data);
 bool SendRecallDataToServer(void);
+void GsmSendToUSART(u8 * data, u16 len);
 
 
 

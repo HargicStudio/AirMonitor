@@ -3,6 +3,11 @@
 #include "moduleStatus.h"
 #include "common.h"
 #include "gps.h"
+#include "dataHandler.h"
+#include "cfg.h"
+
+
+extern SEND_BUF_t g_recordBuf;
 
 osThreadId _data_record_id;
 
@@ -19,6 +24,8 @@ RECORD_INFO_t g_recordInfo;
 RECALL_INFO_t g_recallInfo;
 
 static void DataRecordThread(void const *argument);
+
+
 
 
 s32 StartDataRecordTask(void)
@@ -80,6 +87,7 @@ static void DataRecordThread(void const *argument)
     }
     
     ReadConfigFile();
+
     
     for(;;)
     {
@@ -90,7 +98,7 @@ static void DataRecordThread(void const *argument)
         /* 文件命名规则： 0-23 .txt */
         /* 文件内容格式： 除头部上报数据完整记录 */
         /* 头部的地址信息可能更改 */
-        osDelay(20000);
+        osDelay(5000);
         
         RecallHandler();
         
@@ -104,34 +112,43 @@ static void DataRecordThread(void const *argument)
 /////////////////////////////// 记录到文件操作接口//////////////////////////////
 void RecordData(void)
 {
-    u8 offset = 0;
-    u8 path[] = "1608\\10\\00.txt";
     FIL fp;
     s32 ret;
     u32 writtenByte = 0;
     
     /* 时间不同步，无需记录 */
-    /*  测试先屏蔽掉
+    /*  测试先屏蔽掉 */
+    /*
     if (!IsClockSynced())
     {
-        printf("*** Didn't synced! ***\r\n");
+        GSM_LOG_P0("*** Didn't synced! ***\r\n");
         return;
     }*/
     
-    /* 判断是否到了记录的时间,RTC接口有了再做判断 */
-    memset(_record_buf, 0, sizeof(_record_buf));
-    offset = ConstructRecordData(_record_buf);
+    // memset(_record_buf, 0, sizeof(_record_buf));
+    // offset = ConstructRecordData(_record_buf);
+    
+    if (g_recordBuf.sendFlag == 0)
+    {
+        return;
+    }
     
     /* 获得到时间，得到文件目录信息 */
     /* 获得RTC时间之前模拟 */
-    memcpy(g_recordInfo.newNameMon, "1603", 4);
-    memcpy(g_recordInfo.newNameDay, "1603\\01", 7);
-    memcpy(g_recordInfo.newNameHour, "1603\\01\\23.txt", 14);
+    GSM_LOG_P1("Name Mon: %s", g_recordInfo.newNameMon);
+    GSM_LOG_P1("Name Day: %s", g_recordInfo.newNameDay);
+    GSM_LOG_P1("Name Hour: %s", g_recordInfo.newNameHour);
     
     
     /* 根据当前的时间写到相应的文件中 */
     // to do 获得时间
     /* 判断目录是否存在 */
+    if (!IsDirExit(g_recordInfo.newNameYear))
+    {
+        printf("Create New Year dir: %s\r\n", g_recordInfo.newNameYear);
+        f_mkdir(g_recordInfo.newNameYear);
+    }
+    
     if (!IsDirExit(g_recordInfo.newNameMon))
     {
         printf("Create New Month dir: %s\r\n", g_recordInfo.newNameMon);
@@ -152,26 +169,30 @@ void RecordData(void)
             /* 设置TF卡状态 */
             SetModuleStu(MDU_CARD, STU_ERROR);
             printf("Create New file failed ! %s\r\n", g_recordInfo.newNameHour);
-            return;
+            goto RETURN_RST;
         }
     }
     
     f_lseek(&fp, f_size(&fp));
     
-    ret = f_write(&fp, _record_buf, offset, &writtenByte);
-    if (OSA_EFAIL == ret || writtenByte < offset)
+    ret = f_write(&fp, g_recordBuf.buf, g_recordBuf.useLen, &writtenByte);
+    if (OSA_EFAIL == ret || writtenByte < g_recordBuf.useLen)
     {
         /* 设置TF卡状态 */
         SetModuleStu(MDU_CARD, STU_ERROR);
-        printf("Write file failed ! %s\r\n", g_recordInfo.newNameHour);
+        GSM_LOG_P1("Write file failed ! %s\r\n", g_recordInfo.newNameHour);
         f_close(&fp);
-        return;
+        goto RETURN_RST;
     }
     
-    printf("Write %d data to file: %s\r\n", writtenByte, g_recordInfo.newNameHour);
+    GSM_LOG_P2("Write %d data to file: %s\r\n", writtenByte, g_recordInfo.newNameHour);
     f_sync(&fp);
     
     f_close(&fp);
+    
+RETURN_RST:
+    g_recordBuf.sendFlag = 0;
+
 }
 
 void RecallHandler(void)
@@ -210,7 +231,7 @@ void RecallHandler(void)
 void RecallMinData(void)
 {
     FIL fp;
-    u8 path[] = "1608\\11\\11.txt";
+    u8 path[] = "16\\08\\11\\11.txt";
     u32 readByte = 0;
     u32 seek = 0;
     
@@ -218,7 +239,7 @@ void RecallMinData(void)
     /* 打开目标文件 */
     if (FR_OK != f_open(&fp, path, FA_READ))
     {
-        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
+        GSM_LOG_P1("Open file fail: %s", path);
         ClearRecallFlag();
         return;
     }
@@ -255,7 +276,7 @@ READY_TO_SEND:
 void RecallHourData(void)
 {
     FIL fp;
-    u8 path[] = "1608\\11\\11.txt";
+    u8 path[] = "16\\08\\11\\11.txt";
     u32 readByte = 0;
     u32 seek = 0;
     
@@ -263,7 +284,7 @@ void RecallHourData(void)
     /* 打开目标文件 */
     if (FR_OK != f_open(&fp, g_recordInfo.newNameHour, FA_READ))
     { 
-        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
+        GSM_LOG_P1("Open file fail: %s", path);
         ClearRecallFlag();
         return;
     }
@@ -300,7 +321,7 @@ READY_TO_SEND_HOUR:
 void RecallDayData(void)
 {
     FIL fp;
-    u8 path[] = "1608\\11\\11.txt";
+    u8 path[] = "16\\08\\11\\11.txt";
     u32 readBytes = 0;
     u32 seek = 0;
     
@@ -308,7 +329,7 @@ void RecallDayData(void)
     /* 打开目标文件 */
     if (FR_OK != f_open(&fp, path, FA_READ))
     {
-        GSM_LOG_P1("Open file fail: %s", g_recordInfo.newNameHour);
+        GSM_LOG_P1("Open file fail: %s", path);
         ClearRecallFlag();
         return;
     }
