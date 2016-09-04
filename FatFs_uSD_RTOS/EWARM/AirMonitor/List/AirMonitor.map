@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR ELF Linker V7.30.1.7746/W32 for ARM                 04/Sep/2016  02:33:40
+# IAR ELF Linker V7.30.1.7746/W32 for ARM                 04/Sep/2016  11:24:49
 # Copyright 2007-2014 IAR Systems AB.
 #
 #    Output file  =  
@@ -177,13 +177,12 @@ __dlib_dynamic_initialization = normal
   .text               ro code  0x08007a18   0x1a6  AaThread.o [1]
   .text               ro code  0x08007bbe    0xbc  RingBufferUtils.o [1]
   .text               ro code  0x08007c7c    0x84  gsmCtrl.o [1]
-  .text               ro code  0x08007d00    0x32  common.o [1]
-  .text               ro code  0x08007d34    0x34  sprintf.o [3]
-  .text               ro code  0x08007d68    0x2c  vsprintf.o [3]
-  .text               ro code  0x08007d94   0x950  queue.o [1]
-  .text               ro code  0x080086e4    0x66  ABImemset.o [5]
-  .text               ro code  0x0800874c    0x6c  strncpy_unaligned.o [5]
-  .text               ro code  0x080087b8    0x1c  dataRecv.o [1]
+  .text               ro code  0x08007d00    0x4e  common.o [1]
+  .text               ro code  0x08007d50    0x34  sprintf.o [3]
+  .text               ro code  0x08007d84    0x2c  vsprintf.o [3]
+  .text               ro code  0x08007db0   0x950  queue.o [1]
+  .text               ro code  0x08008700    0x66  ABImemset.o [5]
+  .text               ro code  0x08008768    0x6c  strncpy_unaligned.o [5]
   .text               ro code  0x080087d4   0x660  AaSysCom.o [1]
   .text               ro code  0x08008e34   0x26c  AaTag.o [1]
   .text               ro code  0x080090a0    0x44  strcpy_unaligned.o [5]
@@ -554,10 +553,9 @@ D:\HargicStudio\AirMonitor\AirMonitor_git\FatFs_uSD_RTOS\EWARM\AirMonitor\Obj: [
     ads1222.o                    10
     alpha_sense.o                20                 4
     cmsis_os.o                1 216
-    common.o                     50
+    common.o                     78
     cp15.o                      176                27
     cp15_dev.o                  192                64
-    dataRecv.o                   28
     gps.o                       256               540
     gps_dev.o                   196                64
     gsm.o                       640        1       48
@@ -850,7 +848,7 @@ NVIC_SetPriorityGrouping
                         0x080061c9    0x1e  Code  Lc  stm32f4xx_hal_cortex.o [1]
 PendSV_Handler          0x080048a5          Code  Gb  portasm.o [1]
 ReceiveNormalData       0x08006a3d    0x3e  Code  Gb  gsm.o [1]
-ReceiveTransparentData  0x08006a7b   0x1da  Code  Gb  gsm.o [1]
+ReceiveTransparentData  0x08006a7b   0x1d8  Code  Gb  gsm.o [1]
 Region$$Table$$Base     0x08009f0c           --   Gb  - Linker created -
 Region$$Table$$Limit    0x08009f38           --   Gb  - Linker created -
 RunLedThread            0x08009129    0x96  Code  Lc  led.o [1]
@@ -910,7 +908,7 @@ __aeabi_dsub            0x08002cd9          Code  Gb  DblSub.o [4]
 __aeabi_i2d             0x08002ca9          Code  Gb  I32ToDbl.o [4]
 __aeabi_ldiv0           0x08003335          Code  Gb  I64DivZer.o [5]
 __aeabi_memclr4         0x080093f1          Code  Gb  ABImemclr4.o [5]
-__aeabi_memset          0x080086e5          Code  Gb  ABImemset.o [5]
+__aeabi_memset          0x08008701          Code  Gb  ABImemset.o [5]
 __aeabi_ui2d            0x08002cbd          Code  Gb  I32ToDbl.o [4]
 __aeabi_uldivmod        0x080029ad          Code  Gb  I64DivMod.o [5]
 __cmain                 0x0800a265          Code  Gb  cmain.o [5]
@@ -922,10 +920,10 @@ __iar_Locale_lconv_init
                         0x08003245    0x3a  Code  Gb  localeconv.o [3]
 __iar_Mbcurmax          0x08002911     0xa  Code  Gb  xmbcurmax.o [3]
 __iar_Memchr            0x080028b9          Code  Gb  memchr.o [5]
-__iar_Memset            0x080086e5          Code  Gb  ABImemset.o [5]
+__iar_Memset            0x08008701          Code  Gb  ABImemset.o [5]
 __iar_Memset4_word      0x080093f9          Code  Gb  ABImemset48.o [5]
 __iar_Memset8_word      0x080093f9          Code  Gb  ABImemset48.o [5]
-__iar_Memset_word       0x080086ed          Code  Gb  ABImemset.o [5]
+__iar_Memset_word       0x08008709          Code  Gb  ABImemset.o [5]
 __iar_Strchr            0x08002861          Code  Gb  strchr.o [5]
 __iar_d2uiz             0x08002c89          Code  Gb  DblToI32.o [4]
 __iar_dadd              0x08003339          Code  Gb  DblAdd.o [4]
@@ -950,7 +948,7 @@ __iar_unaligned___aeabi_memcpy8
 __iar_unaligned_strcmp  0x080090e5          Code  Gb  strcmp_unaligned.o [5]
 __iar_unaligned_strcpy  0x080090a1          Code  Gb  strcpy_unaligned.o [5]
 __iar_unaligned_strncpy
-                        0x0800874d          Code  Gb  strncpy_unaligned.o [5]
+                        0x08008769          Code  Gb  strncpy_unaligned.o [5]
 __iar_zero_init3        0x0800168f    0x22  Code  Gb  zero_init3.o [5]
 __low_level_init        0x0800a27f     0x4  Code  Gb  low_level_init.o [3]
 __vector_table          0x08000000          Data  Gb  startup_stm32f407xx.o [1]
@@ -1015,7 +1013,7 @@ max_mem                 0x20007020     0x4  Data  Lc  AaMem.o [1]
 mem_size_aligned        0x20007018     0x4  Data  Lc  AaMem.o [1]
 memchr                  0x080028b9          Code  Gb  memchr.o [5]
 mparams                 0x20006f38    0x18  Data  Lc  dlmalloc.o [3]
-myPow                   0x080087b9    0x1c  Code  Gb  dataRecv.o [1]
+myPow                   0x08007d33    0x1c  Code  Gb  common.o [1]
 osDelay                 0x08006fad    0x1c  Code  Gb  cmsis_os.o [1]
 osKernelStart           0x08006f3d     0xa  Code  Gb  cmsis_os.o [1]
 osKernelSysTick         0x08006f47    0x16  Code  Gb  cmsis_os.o [1]
@@ -1047,8 +1045,8 @@ prvAddCurrentTaskToDelayedList
 prvAllocateTCBAndStack  0x08003d99    0x3c  Code  Lc  tasks.o [1]
 prvCheckTasksWaitingTermination
                         0x08003cd9    0x66  Code  Lc  tasks.o [1]
-prvCopyDataFromQueue    0x08008603    0x30  Code  Lc  queue.o [1]
-prvCopyDataToQueue      0x0800856b    0x98  Code  Lc  queue.o [1]
+prvCopyDataFromQueue    0x0800861f    0x30  Code  Lc  queue.o [1]
+prvCopyDataToQueue      0x08008587    0x98  Code  Lc  queue.o [1]
 prvDeleteTCB            0x08003dd5    0x12  Code  Lc  tasks.o [1]
 prvHeapInit             0x080047b5    0x6e  Code  Lc  heap_4.o [1]
 prvIdleTask             0x08003be1    0x26  Code  Lc  tasks.o [1]
@@ -1057,12 +1055,12 @@ prvInitialiseTCBVariables
 prvInitialiseTaskLists  0x08003c81    0x58  Code  Lc  tasks.o [1]
 prvInsertBlockIntoFreeList
                         0x08004823    0x62  Code  Lc  heap_4.o [1]
-prvIsQueueEmpty         0x0800869d    0x20  Code  Lc  queue.o [1]
-prvIsQueueFull          0x080086bd    0x22  Code  Lc  queue.o [1]
+prvIsQueueEmpty         0x080086b9    0x20  Code  Lc  queue.o [1]
+prvIsQueueFull          0x080086d9    0x22  Code  Lc  queue.o [1]
 prvResetNextTaskUnblockTime
                         0x08003de7    0x2e  Code  Lc  tasks.o [1]
 prvTaskExitError        0x08004351    0x2a  Code  Lc  port.o [1]
-prvUnlockQueue          0x08008633    0x6a  Code  Lc  queue.o [1]
+prvUnlockQueue          0x0800864f    0x6a  Code  Lc  queue.o [1]
 pvPortMalloc            0x08004625   0x118  Code  Gb  heap_4.o [1]
 pvTaskIncrementMutexHeldCount
                         0x08003fb3    0x1e  Code  Gb  tasks.o [1]
@@ -1080,7 +1078,7 @@ recv_char               0x200070df     0x1  Data  Lc  gsm.o [1]
 ring_buffer_write       0x08007bbf    0x9c  Code  Gb  RingBufferUtils.o [1]
 ring_buffer_write_c     0x08007c5b    0x20  Code  Gb  RingBufferUtils.o [1]
 segment_holding         0x08000189    0x1a  Code  Lc  dlmalloc.o [3]
-sprintf                 0x08007d35    0x34  Code  Gb  sprintf.o [3]
+sprintf                 0x08007d51    0x34  Code  Gb  sprintf.o [3]
 strchr                  0x08002861          Code  Gb  strchr.o [5]
 stringToInt             0x08007d01    0x32  Code  Gb  common.o [1]
 strlen                  0x08002881          Code  Gb  strlen.o [5]
@@ -1123,7 +1121,7 @@ vTaskSetTimeOutState    0x08003b11    0x26  Code  Gb  tasks.o [1]
 vTaskStartScheduler     0x080036db    0x62  Code  Gb  tasks.o [1]
 vTaskSuspendAll         0x0800373d    0x10  Code  Gb  tasks.o [1]
 vTaskSwitchContext      0x080039a1    0x72  Code  Gb  tasks.o [1]
-vsprintf                0x08007d69    0x2c  Code  Gb  vsprintf.o [3]
+vsprintf                0x08007d85    0x2c  Code  Gb  vsprintf.o [3]
 xBlockAllocatedBit      0x20007088     0x4  Data  Lc  heap_4.o [1]
 xDelayedTaskList1       0x20006f64    0x14  Data  Lc  tasks.o [1]
 xDelayedTaskList2       0x20006f78    0x14  Data  Lc  tasks.o [1]
@@ -1137,16 +1135,16 @@ xPendingReadyList       0x20006f8c    0x14  Data  Lc  tasks.o [1]
 xPortStartScheduler     0x0800437b    0xcc  Code  Gb  port.o [1]
 xPortSysTickHandler     0x080044b3    0x2c  Code  Gb  port.o [1]
 xQueueCreateCountingSemaphore
-                        0x08007f0f    0x58  Code  Gb  queue.o [1]
-xQueueCreateMutex       0x08007ea3    0x6c  Code  Gb  queue.o [1]
-xQueueGenericCreate     0x08007e25    0x7e  Code  Gb  queue.o [1]
-xQueueGenericReceive    0x080082dd   0x1cc  Code  Gb  queue.o [1]
-xQueueGenericReset      0x08007d95    0x90  Code  Gb  queue.o [1]
-xQueueGenericSend       0x08007f67   0x1b2  Code  Gb  queue.o [1]
+                        0x08007f2b    0x58  Code  Gb  queue.o [1]
+xQueueCreateMutex       0x08007ebf    0x6c  Code  Gb  queue.o [1]
+xQueueGenericCreate     0x08007e41    0x7e  Code  Gb  queue.o [1]
+xQueueGenericReceive    0x080082f9   0x1cc  Code  Gb  queue.o [1]
+xQueueGenericReset      0x08007db1    0x90  Code  Gb  queue.o [1]
+xQueueGenericSend       0x08007f83   0x1b2  Code  Gb  queue.o [1]
 xQueueGenericSendFromISR
-                        0x08008119    0xec  Code  Gb  queue.o [1]
-xQueueGiveFromISR       0x08008205    0xd8  Code  Gb  queue.o [1]
-xQueueReceiveFromISR    0x080084a9    0xc2  Code  Gb  queue.o [1]
+                        0x08008135    0xec  Code  Gb  queue.o [1]
+xQueueGiveFromISR       0x08008221    0xd8  Code  Gb  queue.o [1]
+xQueueReceiveFromISR    0x080084c5    0xc2  Code  Gb  queue.o [1]
 xSchedulerRunning       0x200070b8     0x4  Data  Lc  tasks.o [1]
 xStart                  0x20007000     0x8  Data  Lc  heap_4.o [1]
 xSuspendedTaskList      0x20006fb4    0x14  Data  Lc  tasks.o [1]
