@@ -32,6 +32,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "AaInclude.h"
+#include <stdbool.h>
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -44,6 +45,9 @@ void GsmRecvDataFromISR(UART_HandleTypeDef *huart);
 bool ProcessAtResponse(u8 *buf, u16 len);
 bool SendDataToServer(void);
 bool SendResponseToServer(void);
+void ReceiveNormalData(u8 data);
+void ReceiveTransparentData(u8 data);
+bool SendRecallDataToServer(void);
 
 
 

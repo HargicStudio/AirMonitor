@@ -13,6 +13,12 @@ StopOnUncaught=_ 0
 StopOnThrow=_ 0
 [JLinkDriver]
 CStepIntDis=_ 0
+TraceBufferSize=0x00010000
+TraceStallIfFIFOFull=0x00000000
+TracePortSize=0x00000004
+WatchCond=_ 0
+Watch0=_ 0 "" 0 "" 0 "" 0 "" 0 0 0 0
+Watch1=_ 0 "" 0 "" 0 "" 0 "" 0 0 0 0
 [SWOTraceHWSettings]
 OverrideDefaultClocks=0
 CpuClock=168000000
@@ -31,13 +37,27 @@ ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
 [DebugChecksum]
-Checksum=-1854398183
+Checksum=1458735345
 [CodeCoverage]
 Enabled=_ 0
 [CallStack]
 ShowArgs=0
 [Disassembly]
 MixedMode=1
+<<<<<<< HEAD
+[CallStackStripe]
+ShowTiming=1
+[Interrupts]
+Enabled=1
+[MemConfig]
+Base=1
+Manual=0
+Ddf=1
+TypeViol=0
+Stop=1
+[Simulator]
+Freq=10000000
+MultiCoreRunAll=1
 [SWOTraceWindow]
 PcSampling=0
 InterruptLogs=0
@@ -68,6 +88,14 @@ SumEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
 ShowTimeSum=1
+Title_0=Ch3
+Symbol_0=0 4 1
+Title_1=Ch2
+Symbol_1=0 4 1
+Title_2=Ch1
+Symbol_2=0 4 1
+Title_3=Ch0
+Symbol_3=0 4 1
 SumSortOrder=0
 [InterruptLog]
 LogEnabled=0
@@ -98,9 +126,7 @@ Exclusions=
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\User\cp15.c}.65.9" 0 0 1 "" 0 "" 0
-Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\User\cp15.c}.167.5" 0 0 1 "" 0 "" 0
-Count=2
+Count=0
 [Aliases]
 Count=0
 SuppressDialog=0

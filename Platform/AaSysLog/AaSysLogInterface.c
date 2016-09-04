@@ -17,7 +17,7 @@ History:
 #define PRINT_STRING_MAX_LENGTH             250
 
 /** Description of the macro */  
-#define PRINT_FEATURE_STRING_MAX_LENGTH     8
+#define PRINT_FEATURE_STRING_MAX_LENGTH     12
 
 /** Description of the macro */  
 #define PRINT_MEMORY_NUMBER_PER_LINE        8
@@ -144,21 +144,41 @@ void AaSysLogPrintF(ELogLevel level, char* feature_id, const char* fmt, ...)
         return ;
     }
 
-    if(strlen(feature_id) > PRINT_FEATURE_STRING_MAX_LENGTH) {
-        memcpy(feature_str, feature_id, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
-        feature_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
-    } else {
-        memcpy(feature_str, feature_id, strlen(feature_id));
+    if(feature_id != NULL)
+    {
+        if(strlen(feature_id) > PRINT_FEATURE_STRING_MAX_LENGTH)
+        {
+            memcpy(feature_str, feature_id, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
+            feature_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
+        } 
+        else 
+        {
+            memcpy(feature_str, feature_id, strlen(feature_id));
+        }
+    }
+    else 
+    {
+        memcpy(feature_str, "NULL", strlen("NULL"));
     }
 
     char* trd = AaThreadGetName(osThreadGetId());
-
-    if (strlen(trd) > PRINT_FEATURE_STRING_MAX_LENGTH) {
-        memcpy(thread_str, trd, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
-        thread_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
-    } else {
-        memcpy(thread_str, trd, strlen(trd));
+    if(trd != NULL)
+    {
+        if (strlen(trd) > PRINT_FEATURE_STRING_MAX_LENGTH)
+        {
+            memcpy(thread_str, trd, PRINT_FEATURE_STRING_MAX_LENGTH - 1);
+            thread_str[PRINT_FEATURE_STRING_MAX_LENGTH - 1] = '\0';
+        }
+        else
+        {
+            memcpy(thread_str, trd, strlen(trd));
+        }
     }
+    else 
+    {
+        memcpy(thread_str, "NULL", strlen("NULL"));
+    }
+    
 
     len += sprintf(str + len, "%02x %dT %s/%s/%s ", idx, osKernelSysTick(), AaSysLogGetLevelString(level), feature_str, thread_str);
 

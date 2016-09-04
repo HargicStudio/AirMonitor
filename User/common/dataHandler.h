@@ -22,11 +22,11 @@ typedef struct TEMP_WET_t
     u8      validNum;                       /* 当前保存了几个有效的数据 */
     u8      curPos;                         /* 当前已更新的数据位置 */
     s16     curTemp;                         /* 最近的温度平均值结果 */
-    s8      curWet;													/* 最近的湿度平均值结果 */
+    u16     curWet;													/* 最近的湿度平均值结果 */
     s16     totalTemp;                      /* 温度采样数据之和 */
     u16     totalWet;                       /* 湿度采样数据之和 */
     s16     dataTemp[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
-    s8      dataWet[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
+    u16     dataWet[SAMPLE_TEMP_WET_NUM];      /* 采样数据 */
 
 }TEMP_WET_t;
 
@@ -82,8 +82,15 @@ typedef struct WIND_t
 
 }WIND_t;
 
+/*
+*  Vw : 工作电极     Va ：辅助电极
+*  gasType : 0: CO   1: SO2   2: NO2    3: O3
+*  return : -1 温度异常  正常单位  ppb
+*/
+s32 CalGasVal(u32 Vw, u32 Va, u8 gasType);
+
 /* 存储温度湿度 */
-s8 StoreWetTempInfo(s8 wet, s8 temp, TEMP_WET_t *bag);
+s8 StoreWetTempInfo(u16 wet, s16 temp, TEMP_WET_t *bag);
 /* 存储气体浓度 */
 s8 StoreGasInfo(u32 val, GAS_t *bag);
 /* 存储颗粒物浓度 */
@@ -96,15 +103,40 @@ s8 StoreWindInfo(u8 speedVal, u8 dirVal);
 void testFillData(void);
 
 void ContstructHead(u32 crc, u16 dataLen);
+
+u8 ConstructRecordData(u8 *data);
+
+void InitSendRecallData();
+
 /*
-void ContstructByte4();
-
-void ConstructByte2();
-
-void ConstuctByte();
-
-void ContructString();
+*  构造回调数据
 */
+u8 ConstructRecordDataToSend(u8 *data, u8 *cmd);
+
+/* 坐标纬度 */
+u32 GetCoordLati();
+/* 坐标经度 */
+u32 GetCoordLong();
+/* O3 */
+u32 GetO3();
+/* SO2 */
+u32 GetSo2();
+/* NO2 */
+u32 GetNo2();
+/* CO */
+u32 GetCo();
+/* PM10 */
+u16 GetPm10();
+/* PM2.5 */
+u16 GetPm25();
+/* 获取箱内湿度 */
+u16 GetWetIn();
+/* 获取箱内温度 */
+s16 GetTempIn();
+/* 获取箱外湿度 */
+u16 GetWetOut();
+/* 获取箱外温度 */
+s16 GetTempOut();
 
 /* 站号 */
 /* 出厂唯一编号 */

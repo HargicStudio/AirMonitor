@@ -84,7 +84,7 @@ static void AaTagDeamonThread(void const *arg)
     osEvent evt;
     u8 i;
 
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "AaTagDeamonThread started");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "AaTagDeamonThread started");
 
 
     for(;;) {
@@ -94,7 +94,7 @@ static void AaTagDeamonThread(void const *arg)
             
             get_ptr = evt.value.p;
 
-//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "get one msg %p", get_ptr);
+//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "get one msg %p", get_ptr);
 
             for(i=0; i<AATAG_CALLBACK_MAX_NUMBER; i++) {
                 if(get_ptr->notify_func_callback[i] == NULL) {
@@ -102,7 +102,7 @@ static void AaTagDeamonThread(void const *arg)
                 }
                 get_ptr->notify_func_callback[i](get_ptr->value);
                 
-//                AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "callback called %p", get_ptr->notify_func_callback[i]);
+//                AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "callback called %p", get_ptr->notify_func_callback[i]);
             }
         }
         
@@ -115,23 +115,23 @@ u8 AaTagCEInit()
 {
     _aatag_mutex_id = osMutexCreate(osMutex(aatag_mutex));
     if(_aatag_mutex_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureTag, "%s %d: aatag_mutex initialize failed",
+        AaSysLogPrintF(LOGLEVEL_ERR, FeatureSysTag, "%s %d: aatag_mutex initialize failed",
                 __FUNCTION__, __LINE__);
         return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "create aatag_mutex success");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "create aatag_mutex success");
 
 
     _aatag_msgbox_id = osMessageCreate(osMessageQ(aatag_msgbox), NULL);
     if(_aatag_msgbox_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureTag, "%s %d: aatag_msgbox initialize failed",
+        AaSysLogPrintF(LOGLEVEL_ERR, FeatureSysTag, "%s %d: aatag_msgbox initialize failed",
                 __FUNCTION__, __LINE__);
         return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "create aatag_msgbox success");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "create aatag_msgbox success");
 
 
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "AaTag initialize success");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "AaTag initialize success");
 
     return 0;
 }
@@ -144,11 +144,11 @@ u8 AaTagCreateDeamon()
     
     _aatagdaemon_id = AaThreadCreateStartup(osThread(AaTagDaemon), _aatag_mng);
     if(_aatagdaemon_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureTag, "%s %d: AaTagDeamon initialize failed",
+        AaSysLogPrintF(LOGLEVEL_ERR, FeatureSysTag, "%s %d: AaTagDeamon initialize failed",
                 __FUNCTION__, __LINE__);
         return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "create AaTagDeamon success");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "create AaTagDeamon success");
 
     return 0;
 }
@@ -161,7 +161,7 @@ u8 AaTagCreate(char* name, u32 value)
     
     SAaTag* new_ptr = AaMemMalloc(sizeof(SAaTag));
     if(new_ptr == NULL) {
-        AaSysLogPrintF(LOGLEVEL_WRN, FeatureTag, "create tag failed");
+        AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysTag, "create tag failed");
         return 1;
     }
 
@@ -189,7 +189,7 @@ u8 AaTagCreate(char* name, u32 value)
 
     osMutexRelease(_aatag_mutex_id);
 
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "create tag %s success", cur_ptr->name);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "create tag %s success", cur_ptr->name);
 
     return 0;
 }
@@ -202,7 +202,7 @@ u8 AaTagDelete(char* name)
 
     SAaTag* cur_ptr = AaTagFindMngPtr(name);
     if(cur_ptr == NULL) {
-        AaSysLogPrintF(LOGLEVEL_WRN, FeatureTag, "delete tag failed, don't find");
+        AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysTag, "delete tag failed, don't find");
         return 1;
     }
     
@@ -212,7 +212,7 @@ u8 AaTagDelete(char* name)
     prv_ptr->next = nxt_ptr;
     nxt_ptr->prev = prv_ptr;
 
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "delete tag %s", cur_ptr->name);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "delete tag %s", cur_ptr->name);
 
     AaMemFree(cur_ptr);
 
@@ -226,7 +226,7 @@ u8 AaTagRegister(char* name, void(*function)(u32))
 {
     SAaTag* cur_ptr = AaTagFindMngPtr(name);
     if(cur_ptr == NULL) {
-        AaSysLogPrintF(LOGLEVEL_WRN, FeatureTag, "register tag failed, don't find");
+        AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysTag, "register tag failed, don't find");
         return 1;
     }
 
@@ -234,13 +234,13 @@ u8 AaTagRegister(char* name, void(*function)(u32))
         if(cur_ptr->notify_func_callback[i] == NULL) {
             
             cur_ptr->notify_func_callback[i] = function;
-            AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "register tag success");
+            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "register tag success");
             
             return 0;;
         }
     }
 
-    AaSysLogPrintF(LOGLEVEL_WRN, FeatureTag, "register tag failed, callback full");
+    AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysTag, "register tag failed, callback full");
 
     return 2;
 }
@@ -262,7 +262,7 @@ u8 AaTagSetValue(char* name, u32 value)
     // trigger notification
     osMessagePut(_aatag_msgbox_id, (u32)cur_ptr, osWaitForever);
 
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureTag, "set tag %s with %d", cur_ptr->name, cur_ptr->value);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysTag, "set tag %s with %d", cur_ptr->name, cur_ptr->value);
 
     return 0;
 }

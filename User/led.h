@@ -9,7 +9,7 @@ extern "C" {
 
 
 
-void StartRunLedTask();
+u8 StartRunLedTask();
 
 
 

@@ -39,7 +39,7 @@ typedef struct SAaSysLog_t {
      *          Now it can be process by three method: 
      *              (1) print by polling without Bip buffer.
      *                  This method can be used without Bip buffer but need memory heap initialized.
-     *              (2) print by polling with store into Bip buffer.
+     *              (2) store into Bip buffer but do not print out.
      *                  This method can be used only when Bip buffer has constructed and memory heap initialized.
      *              (3) print by IT/DMA with store into Bip buffer.
      *                  This method only can be used when Bip buffer has constructed, memory heap has initialized and AaSysLog Daemon created.
@@ -145,7 +145,7 @@ void AaSysLogBipBufferList(void);
  *      2016-05-21 Huang Shengda
         2016-07-17 Huang Shengda
  */  
-u8 AaSysLogProcessPrintRegister(void (*function)(char*, u32));
+void AaSysLogProcessPrintRegister(void (*function)(char*, u32));
 
 /** 
  * This is a brief description. 

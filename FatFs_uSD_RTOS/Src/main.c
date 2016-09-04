@@ -30,7 +30,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "AaInclude.h"
-#include "osa_file.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,8 +38,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
-static void Error_Handler(void);
-static void StartThread(void const *argument);
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -61,10 +59,6 @@ int main(void)
  
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
-  
-  /*##-1- Start task #########################################################*/
-  osThreadDef(uSDThread, StartThread, osPriorityNormal, 0, 8 * configMINIMAL_STACK_SIZE);
-  osThreadCreate(osThread(uSDThread), NULL);
 
   // start ccs platform
   CCSDeamonCEInit();
@@ -76,80 +70,6 @@ int main(void)
   for( ;; );
 }
 
-/**
-  * @brief  Start task
-  * @param  pvParameters not used
-  * @retval None
-  */
-static void StartThread(void const *argument)
-{
-//以前为FATFS文件系统封装各个接口的测试代码
-    
-  uint32_t byteswritten, bytesread;                     /* File write/read counts */
-  uint8_t wtext[] = "This is AirMonitor working with FatFs"; /* File write buffer */
-  uint8_t rtext[36];                                   /* 注意读缓冲空间大小，大空间用malloc申请 */
-  SD_sizeInfo sdSizeInfo;
-  OSA_FileHandle hFile;
-
-  /* 文件系统初始化　*/
-  OSA_fileInit();
-  
-  /* 获取SD卡容量信息 */
-  if (OSA_getSdSize(&sdSizeInfo) == OSA_OK)
-  {
-      AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "SD totalSize=%dM availableSize=%dM\n\r",
-                     sdSizeInfo.totalSize, sdSizeInfo.availableSize);
-  }
-  
-  if (OSA_fileOpen("AirMonitor.txt", OSA_FILEMODE_RDWR, &hFile) != OSA_OK)
-  {
-      Error_Handler();
-  }
-  
-  byteswritten = OSA_fileWrite(hFile, wtext, sizeof(wtext));
-  if (byteswritten <= 0)
-  {
-      Error_Handler();
-  }
-  else
-  {
-      OSA_fileSync(hFile);
-      OSA_fileClose(hFile);
-      
-      if (OSA_fileOpen("AirMonitor.txt", OSA_FILEMODE_RDONLY, &hFile) != OSA_OK)
-      {
-          Error_Handler();
-      }
-      else
-      {
-          /* 跳转４个字节读写 */
-          OSA_fileSeek (hFile, 4);
-
-          bytesread = OSA_fileRead (hFile, rtext, sizeof(rtext));
-          if (bytesread <= 0)
-          {
-              Error_Handler();
-          }
-          else
-          {
-              //printf("fatfs read: %s, len = %d\n\r",rtext, bytesread);
-              AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "fatfs read: %s, len = %d\n\r",rtext, bytesread);
-          }
-
-          OSA_fileClose(hFile);
-      }
-  }
-  /* 删除文件 */
-  OSA_removeFile("STM32.TXT");
-  
-  /* 文件系统反初始化　*/
-  OSA_fileDeInit();
-
-  /* Infinite Loop */
-  for( ;; )
-  {
-  }
-}
 
 /**
   * @brief  System Clock Configuration
@@ -212,20 +132,6 @@ static void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-static void Error_Handler(void)
-{
-  /* Turn LED3 on */
-  while(1)
-  {
-      printf("Error_Handler!!!\n\r");
-      osDelay(1000);
-  }
-}
 
 #ifdef  USE_FULL_ASSERT
 /**

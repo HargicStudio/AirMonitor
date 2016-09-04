@@ -17,36 +17,49 @@ History:
 
 
 
+#include "syscom_cfg.h"
+#include "ApiInternalMsg.h"
+
+
 
 typedef u32 SAaSysComMsgId;
-typedef u16 SAaSysComSicad;
+
 
 
 typedef struct SMsgHeader_t {
+    u32             magic;
     SAaSysComMsgId  msg_id;
-    SAaSysComSicad  target;
-    SAaSysComSicad  sender;
+    ESysComID       target;
+    ESysComID       sender;
     u16             pl_size;
 } SMsgHeader;
 
 
-enum {
-    MsgQueue_MAX,
-    MsgQueue_Unknow,
-};
+
+typedef enum
+{
+    SysCom_Ok = 0,
+    SysCom_ErrParam,
+    SysCom_ErrMem,
+    SysCom_ErrProc,
+    SysCom_ErrRTOS,
+} ESysComStatus;
 
 
-void AaSysComInit(void);
-void* AaSysComCreate(SAaSysComMsgId msgid, SAaSysComSicad sender, SAaSysComSicad receiver, u16 pl_size);
+
+u8 AaSysComCEInit();
+ESysComID AaSysComRegister(ESysComID syscom, char* name, u32 q_size);
+ESysComStatus AaSysComUnregister(ESysComID syscom);
+void* AaSysComCreate(SAaSysComMsgId msgid, ESysComID sender, ESysComID receiver, u16 pl_size);
+void AaSysComDestory(void* msg_ptr);
 void* AaSysComGetPayload(void* msg_ptr);
-OSStatus AaSysComSend(void* msg_ptr);
-SAaSysComSicad AaSysComGetSender(void* msg_ptr);
-OSStatus AaSysComSetSender(void* msg_ptr, SAaSysComSicad sender);
-SAaSysComSicad AaSysComGetReceiver(void* msg_ptr);
-OSStatus AaSysComSetReceiver(void* msg_ptr, SAaSysComSicad receiver);
-OSStatus AaSysComForward(void* msg_ptr, SAaSysComSicad sender, SAaSysComSicad receiver);
-void* AaSysComReceiveHandler(SAaSysComSicad receiver, u32 timeout);
-OSStatus AaSysComDestory(void* msg_ptr);
+ESysComStatus AaSysComSend(void* msg_ptr, u32 timeout);
+ESysComID AaSysComGetSender(void* msg_ptr);
+ESysComStatus AaSysComSetSender(void* msg_ptr, ESysComID sender);
+ESysComID AaSysComGetReceiver(void* msg_ptr);
+ESysComStatus AaSysComSetReceiver(void* msg_ptr, ESysComID receiver);
+ESysComStatus AaSysComForward(void* msg_ptr, ESysComID sender, ESysComID receiver, u32 timeout);
+void* AaSysComReceiveHandler(ESysComID receiver, u32 timeout);
 
    
 #ifdef __cplusplus

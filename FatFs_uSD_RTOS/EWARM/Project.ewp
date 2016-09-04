@@ -12,7 +12,7 @@
       <name>General</name>
       <archiveVersion>3</archiveVersion>
       <data>
-        <version>24</version>
+        <version>22</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
@@ -28,30 +28,40 @@
           <state>AirMonitor\List</state>
         </option>
         <option>
+          <name>Variant</name>
+          <version>21</version>
+          <state>40</state>
+        </option>
+        <option>
           <name>GEndianMode</name>
           <state>0</state>
         </option>
         <option>
           <name>Input variant</name>
           <version>3</version>
-          <state>6</state>
+          <state>1</state>
         </option>
         <option>
           <name>Input description</name>
-          <state>No specifier n, no float nor long long, no scan set, no assignment suppressing.</state>
+          <state>Full formatting.</state>
         </option>
         <option>
           <name>Output variant</name>
           <version>2</version>
-          <state>5</state>
+          <state>1</state>
         </option>
         <option>
           <name>Output description</name>
-          <state>No specifier a, A, no specifier n, no float nor long long.</state>
+          <state>Full formatting.</state>
         </option>
         <option>
           <name>GOutputBinary</name>
           <state>0</state>
+        </option>
+        <option>
+          <name>FPU</name>
+          <version>2</version>
+          <state>5</state>
         </option>
         <option>
           <name>OGCoreOrChip</name>
@@ -73,11 +83,11 @@
         </option>
         <option>
           <name>OGProductVersion</name>
-          <state>4.41A</state>
+          <state>7.30.1.7765</state>
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>7.50.2.10499</state>
+          <state>7.30.1.7765</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -119,16 +129,21 @@
         <option>
           <name>GeneralMisraRules04</name>
           <version>0</version>
-          <state>011111111111111110111111111111011111111111111011110100111111111111111111111111111111111111111111101111111111111011111111111111111111111111111</state>
+          <state>111101110010111111111000110111111111111111111111111110010111101111010101111111111111111111111111101111111011111001111011111011111111111111111</state>
         </option>
         <option>
           <name>RTConfigPath2</name>
           <state>$TOOLKIT_DIR$\INC\c\DLib_Config_Full.h</state>
         </option>
         <option>
+          <name>GFPUCoreSlave</name>
+          <version>21</version>
+          <state>40</state>
+        </option>
+        <option>
           <name>GBECoreSlave</name>
-          <version>22</version>
-          <state>39</state>
+          <version>21</version>
+          <state>40</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -141,34 +156,6 @@
         <option>
           <name>GRuntimeLibThreads</name>
           <state>0</state>
-        </option>
-        <option>
-          <name>CoreVariant</name>
-          <version>22</version>
-          <state>39</state>
-        </option>
-        <option>
-          <name>GFPUDeviceSlave</name>
-          <state>STM32F407VE	ST STM32F407VE</state>
-        </option>
-        <option>
-          <name>FPU2</name>
-          <version>0</version>
-          <state>4</state>
-        </option>
-        <option>
-          <name>NrRegs</name>
-          <version>0</version>
-          <state>1</state>
-        </option>
-        <option>
-          <name>NEON</name>
-          <state>0</state>
-        </option>
-        <option>
-          <name>GFPUCoreSlave2</name>
-          <version>22</version>
-          <state>39</state>
         </option>
       </data>
     </settings>
@@ -226,7 +213,7 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state></state>
+          <state>Pa050</state>
         </option>
         <option>
           <name>CCDiagRemark</name>
@@ -323,9 +310,11 @@
           <state>$PROJ_DIR$\..\..\Platform\AaSysLog</state>
           <state>$PROJ_DIR$\..\..\Platform\AaTag</state>
           <state>$PROJ_DIR$\..\..\Platform\AaThread</state>
+          <state>$PROJ_DIR$\..\..\Platform\AaSysCom</state>
           <state>$PROJ_DIR$\..\..\Platform\CCSDaemon</state>
-          <state>$PROJ_DIR$\..\..\Common\BipBuffer</state>
-          <state>$PROJ_DIR$\..\..\Common\RingBuffer</state>
+          <state>$PROJ_DIR$\..\..\Platform\Common\BipBuffer</state>
+          <state>$PROJ_DIR$\..\..\Platform\Common\RingBuffer</state>
+          <state>$PROJ_DIR$\..\..\Platform\Common\PingPangBuffer</state>
           <state>$PROJ_DIR$\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include</state>
           <state>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Inc</state>
           <state>$PROJ_DIR$\..\..\Drivers\BSP\407VE</state>
@@ -617,8 +606,8 @@
         <debug>1</debug>
         <option>
           <name>OOCOutputFormat</name>
-          <version>3</version>
-          <state>3</state>
+          <version>2</version>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -644,7 +633,6 @@
       <data>
         <extensions></extensions>
         <cmdline></cmdline>
-        <hasPrio>0</hasPrio>
       </data>
     </settings>
     <settings>
@@ -979,11 +967,26 @@
   </configuration>
   <group>
     <name>AaPlatform</name>
+    <group>
+      <name>Common</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\Platform\Common\BipBuffer\BipBuffer.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Platform\Common\PingPangBuffer\PingPang.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Platform\Common\RingBuffer\RingBufferUtils.c</name>
+      </file>
+    </group>
     <file>
       <name>$PROJ_DIR$\..\..\Platform\AaMem\AaMem.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Platform\AaShell\AaShell.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Platform\AaSysCom\AaSysCom.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Platform\AaSysLog\AaSysLogInterface.c</name>
@@ -1020,15 +1023,6 @@
     </group>
   </group>
   <group>
-    <name>Common</name>
-    <file>
-      <name>$PROJ_DIR$\..\..\Common\BipBuffer\BipBuffer.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\Common\RingBuffer\RingBufferUtils.c</name>
-    </file>
-  </group>
-  <group>
     <name>Doc</name>
     <file>
       <name>$PROJ_DIR$\..\readme.txt</name>
@@ -1040,6 +1034,9 @@
       <name>BSP</name>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\407VE_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\cp15_dev.c</name>
@@ -1100,6 +1097,12 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</name>
@@ -1186,6 +1189,12 @@
     <group>
       <name>common</name>
       <file>
+        <name>$PROJ_DIR$\..\..\User\common\Cfg.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\User\common\common.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\User\common\config.c</name>
       </file>
       <file>
@@ -1205,7 +1214,19 @@
       </file>
     </group>
     <file>
+      <name>$PROJ_DIR$\..\..\User\alpha_sense.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\am2302.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\User\cp15.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\dataRecord.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\fan.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\gps.c</name>

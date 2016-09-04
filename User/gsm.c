@@ -8,6 +8,7 @@
 #include "dataRecv.h"
 #include "gsmCtrl.h"
 #include "format.h"
+#include "dataRecord.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -35,12 +36,19 @@ osSemaphoreId _gsm_recvcplt_sem_id;
 
 ring_buffer_t _gsm_rx_ringbuf;
 u8 _gsm_rx_ringbuf_data[GSM_SERIAL_RX_RINGBUFFER_SIZE];
-
-/* ���ڻ����յ������� */ 
 u8 _gsm_rx_buf[GSM_SERIAL_RX_RINGBUFFER_SIZE];
 
 /** Description of the macro */  
 static char recv_char;
+
+/* 发送 ringbuf */
+/*
+#define GSM_TX_RINGBUFFER_SIZE       (1024)
+
+ring_buffer_t _gsm_tx_ringbuf;
+u8 _gsm_tx_ringbuf_data[GSM_TX_RINGBUFFER_SIZE];
+u8 _gsm_tx_buf[GSM_TX_RINGBUFFER_SIZE];
+*/
 
 
 extern UART_HandleTypeDef UartHandle_gsm;
@@ -77,7 +85,14 @@ static void GsmThread(void const *argument)
     {
         osSemaphoreWait(_gsm_recvcplt_sem_id, osWaitForever);
         
-        ring_buffer_consume_enter(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        if (GSM_TCP_CONNECTED == GsmStatusGet())
+        {
+            ring_buffer_consume_str(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        }
+        else
+        {
+            ring_buffer_consume_enter(&_gsm_rx_ringbuf, _gsm_rx_buf, &len);
+        }
         _gsm_rx_buf[len] = 0;
         
         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM Recived: LEN: %d: %s \r\n", len, _gsm_rx_buf);
@@ -122,7 +137,7 @@ static void GsmSendTestThread(void const *argument)
     */
     for(;;)
     {
-        osDelay(50);
+        osDelay(100);
         times++;
 
         // As the interval will change, cal every time.
@@ -131,7 +146,7 @@ static void GsmSendTestThread(void const *argument)
             RepInt = ConfigGetReportInterval();
             // Interval = 20 * 60 * RepInt;
             // for test is 2 s
-            Interval = 20 * 2;
+            Interval = 10 * 5;
         }
 
         /* 间隔时间到 */
@@ -141,17 +156,30 @@ static void GsmSendTestThread(void const *argument)
             ContructDataUp();
             if (IsSendBufReady())
             {
-                SEND_BUF_FLAG_CLEAR();
                 SendDataToServer();
-                
+                SEND_BUF_FLAG_CLEAR();
             }
         }
 
+        /* 发送应答服务器的数据 */
         if (IsSendResponseReady())
         {
-            SEND_RESPONSE_FLAG_CLEAR();
             SendResponseToServer();
+            SEND_RESPONSE_FLAG_CLEAR();
+        }
+        
+        /* 发送回调数据 */
+        if (1 == g_sendRecallData.sendFlag)
+        {
+            SendRecallDataToServer();
             
+            /* 清除回调标志 */
+            if (g_recallInfo.continueFlag == 0)
+            {
+                ClearRecallFlag();
+            }
+            
+            g_sendRecallData.sendFlag = 0;
         }
         
         if (IsGsmWaitCloseFlag())
@@ -179,11 +207,14 @@ static void GsmSendTestThread(void const *argument)
 u8 StartGsmTask()
 {
     GsmDeviceInit();
-    ConfigInit();
 
+    /* 初始化接收ringbuf */
     ring_buffer_init(&_gsm_rx_ringbuf, _gsm_rx_ringbuf_data, GSM_SERIAL_RX_RINGBUFFER_SIZE);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create gsm serial rx ringbuffer success");
+    
+    /* 初始化发送ringbuf */
+    //ring_buffer_init(&_gsm_tx_ringbuf, _gsm_tx_ringbuf_data, GSM_TX_RINGBUFFER_SIZE);
 
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create gsm serial rx/tx ringbuffer success");
 
     _gsm_sendcplt_sem_id = osSemaphoreCreate(osSemaphore(gsm_sendcplt_sem), 1);
     if(_gsm_sendcplt_sem_id == NULL) {
@@ -216,7 +247,7 @@ u8 StartGsmTask()
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmThread success");
 
 
-    osThreadDef(GsmTest, GsmSendTestThread, osPriorityAboveNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(GsmTest, GsmSendTestThread, /*osPriorityNormal8*/osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE);
     _gsm_send_test_id = AaThreadCreateStartup(osThread(GsmTest), NULL);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmSendTestThread success");
 
@@ -256,25 +287,171 @@ void GsmWaitForSendCplt()
     osSemaphoreRelease(_gsm_sendcplt_sem_id);
 }
 
+void GsmSendToUSART(u8 * data, u16 len)
+{
+    GsmDataSendByIT(data, len);
+    if (osOK != osSemaphoreWait(_gsm_sendcplt_sem_id, 1000))
+    {
+      GSM_LOG_P2("Send Failed: len : %d, %s", len, data);
+    }
+}
 
+/*
+* 接收模式
+* 1. 透传模式开启以前。接收以"\r\n"结尾的字符串
+* 2. 透传模式开启后， 接收以CCXXXXXXCC来识别
+*/
 void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
 {
     
     HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1);
-
-    ring_buffer_write_c(&_gsm_rx_ringbuf, recv_char);
     
-    if (recv_char == '>')
+    //GSM_LOG_P1("*********** %02x", recv_char);
+    
+    /* 透明传输模式开启 */
+    if (GSM_TCP_CONNECTED == GsmStatusGet())
+    {
+        ReceiveTransparentData(recv_char);
+    }
+    else
+    {
+        ReceiveNormalData(recv_char);
+    }
+    
+    return;
+}
+
+void ReceiveNormalData(u8 data)
+{
+    ring_buffer_write_c(&_gsm_rx_ringbuf, data);
+    
+    if (data == '>')
     {
         ring_buffer_write_c(&_gsm_rx_ringbuf, '\n');
         osSemaphoreRelease(_gsm_recvcplt_sem_id);
         return;
     }
       
-    if (recv_char == '\n')
+    if (data == '\n')
     {
         osSemaphoreRelease(_gsm_recvcplt_sem_id);
     }
+
+}
+
+void ReceiveTransparentData(u8 data)
+{
+    static u8 flag = 0xff;
+    static u8 recv[18] = {0};     /* LEN_HEAD + LEN_ADDR + LEN_CMD */
+    static u8 pos = 0;
+    static u8 more_len = 0;
+    u16 cmd = 0;
+    u16 dataLen = 0;
+    
+    if (data == 'C' && flag == 0xff)
+    {
+        pos = 0;
+        recv[pos] = data;
+        pos++;
+        flag = 1;
+        more_len = 0;
+        
+        return;
+    }
+    
+    if (data == 'C' && flag == 1)
+    {
+        recv[pos] = data;
+        pos++;
+        flag = 2;
+        
+        return;
+    }
+    
+    if (flag == 2 && pos < 18)
+    {
+        recv[pos] = data;
+        pos++;
+        
+        if (pos == 9 || pos == 10)
+        {
+            if (recv[pos - 1] != 'C')
+            {
+                /* 错误的格式，初始化 */
+                flag = 0xff;
+                pos = 0;
+                //GSM_LOG_P0("TEST: Error format!");
+                return;
+            }
+        }
+        
+        if (pos == 18)
+        {
+            cmd = (u16)stringToInt(recv + OFFSET_CMD, LEN_CMD);
+            more_len = (u16)GetCmdDataLen(cmd);
+            if (more_len == 0xff)
+            {
+                /* 不支持的命令，初始化 */
+                flag = 0xff;
+                pos = 0;
+                //GSM_LOG_P0("TEST: Didn't support the cmd!");
+                return;
+            }
+            else
+            {
+                dataLen = recv[OFFSET_LEN] << 8;
+                dataLen |= recv[OFFSET_LEN+1];
+                if (dataLen != (more_len + LEN_ADDR_CMD))
+                {
+                    /* 数据长度错误, 初始化*/
+                    flag = 0xff;
+                    pos = 0;
+                    //GSM_LOG_P2("TEST: Wrong length! Len in cmd: %d, len: %d", dataLen, more_len + LEN_ADDR_CMD);
+                    return;
+                }
+                
+                /* cmd后不带数据的情况 */
+                if (more_len == 0)
+                {
+                    /* 添加结尾特殊数据 */
+                    ring_buffer_write(&_gsm_rx_ringbuf, recv, 18);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+                    /* 通知接收 */
+                    osSemaphoreRelease(_gsm_recvcplt_sem_id);
+                    flag = 0xff;
+                    pos = 0;
+                    return;
+                }
+                
+                /* 继续接收剩下的数据 */
+                ring_buffer_write(&_gsm_rx_ringbuf, recv, 18);
+                flag = 3;
+            }
+        }
+        
+        return;
+    }
+    
+    if (flag == 3)
+    {
+        more_len--;
+        ring_buffer_write_c(&_gsm_rx_ringbuf, data);
+        if (more_len == 0)
+        {
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            ring_buffer_write_c(&_gsm_rx_ringbuf, 0xff);
+            /* 通知接收 */
+            osSemaphoreRelease(_gsm_recvcplt_sem_id);
+            flag = 0xff;
+            pos = 0;
+        }
+        
+        return;
+    }
+    
     return;
 }
 
@@ -290,7 +467,14 @@ bool ProcessAtResponse(u8 *buf, u16 len)
     case AT_WAIT_CONNECT_RSP:
       IsAtSuss(buf, "CONNECT OK");
       IsAtSuss(buf, "ALREADY CONNECT");
-      IsAtSuss(buf, "CONNECT");    /* 透传模式 */
+      if (strstr((const char *)buf, "CONNECT FAIL"))
+      {
+          SetAtStatus(AT_ERROR);
+      }
+      else
+      {
+          IsAtSuss(buf, "CONNECT");    /* 透传模式 */
+      }
       break;
     case AT_WAIT_REG:
       IsAtSuss(buf, "CHINA");
@@ -345,6 +529,18 @@ bool SendResponseToServer(void)
 {
    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
     if ( !SendData(g_sendResponse.buf, g_sendResponse.useLen, g_sendResponse.respFlag) )
+    {
+        GSM_LOG_P0("Send Response fail!");
+        return false;
+    }
+    //osSemaphoreRelease(_gsm_send_test_id);
+    return true;
+}
+
+bool SendRecallDataToServer(void)
+{
+    // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
+    if ( !SendData(g_sendRecallData.buf, g_sendRecallData.useLen, g_sendRecallData.respFlag) )
     {
         GSM_LOG_P0("Send Response fail!");
         return false;

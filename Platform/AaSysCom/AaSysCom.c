@@ -4,291 +4,628 @@
 /***
 
 History:
-2016-04-23: Ted: Create
+2016-04-23 Ted: Create
+2016-09-03 Ted: port to mbed
 
 */
 
 #include "glo_def.h"
 #include "AaSysCom.h"
-#include "AaSysLog.h"
+#include "AaSysLogInterface.h"
+#include "AaMem.h"
 #include <stdbool.h>
 #include <string.h>
-#include "ApiInternalMsg.h"
 
 
-typedef struct SMsgInternalHeader_t {
-    SAaSysComMsgId  msg_id;
-    SAaSysComSicad  target;
-    SAaSysComSicad  sender;
-    u16             body_size;
-    void*           body;
-} SMsgInternalHeader;
+
+#define AASYSCOM_MAGIC_WORD     0xDEADC0DE
 
 
-#define AASYSCOM_QUEUE_NAME_LENGTH_MAX    16
 
-#define AASYSCOM_QUEUE_DEEP_MAX           8
+#define AASYSCOM_NAME_LENGTH_MAX        configMAX_TASK_NAME_LEN
 
-
-// Define mail queue
-osMailQDef(aasyscom_queue, AASYSCOM_QUEUE_DEEP_MAX, SMsgInternalHeader);
-osMailQId  _aasyscom_queue_id;
-
-
-EStatus AaSysComCEInit(void)
+typedef struct SSysComMng_t
 {
-    EStatus err = ErrOk;
-    char queue_name[AASYSCOM_QUEUE_NAME_LENGTH_MAX];
+    struct SSysComMng_t* next;
+    struct SSysComMng_t* prev;
+    
+    osMessageQId    q_id;
+    u32             q_sz;
+    ESysComID       syscom_id;
+    char            name[AASYSCOM_NAME_LENGTH_MAX];
+} SSysComMng;
 
-    for(u8 i=0; i<MsgQueue_MAX; i++) {
-        sprintf(queue_name, "MsgQueue%d", i);
-        _aasyscom_queue_id = osMailCreate(osMailQ(aasyscom_queue), NULL);
-        if(_aasyscom_queue_id == NULL) {
-            AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "MsgQueue%d initialize failed", i);
-            err = ErrInitialize;
-        } else {
-            AaSysLogPrint(LOGLEVEL_INF, FeatureSysCom, "MsgQueue%d initialize success", i);
+SSysComMng *_syscom_mng = NULL;
+
+ESysComID _syscom_id = SysCom_Auto;
+
+
+osMutexId _aasyscom_mutex_id;
+
+
+
+static ESysComID AaSysComGetSysComIDAuto();
+static char* AaSysComGetName(ESysComID sc_id);
+static osMessageQId AaSysComGetQueueID(ESysComID sc_id);
+static SSysComMng* AaSysComGetControlBlock(ESysComID sc_id);
+static bool AaSysComIsRegistered(ESysComID sc_id);
+static void AaSysComAdd2ControlBlock(SSysComMng* new);
+static void AaSysComRemove4ControlBlock(SSysComMng* rm);
+
+
+
+u8 AaSysComCEInit()
+{
+    char hello[10];
+    
+    AaSysLogPrintF( LOGLEVEL_INF, FeatureSysCom, "sizeof(%s) %d sizeof(%s) %d", 
+                    MAKECHAR(hello), sizeof(hello), MAKECHAR(char), sizeof(char));
+
+    osMutexDef(SysComMutex);
+    _aasyscom_mutex_id = osMutexCreate(osMutex(SysComMutex));
+    if(_aasyscom_mutex_id == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: AaSysCom CE initialize failed, Reason: SysComMutex initialize failed",
+                        __FUNCTION__, __LINE__);
+        return 1;
+    }
+    AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: create SysComMutex success",
+                    __FUNCTION__, __LINE__);
+
+    AaSysLogPrintF( LOGLEVEL_INF, FeatureSysCom, "AaSysCom service CE initialize success");
+
+    return 0;
+}
+
+static ESysComID AaSysComGetSysComIDAuto()
+{
+    if(_syscom_id >= SysCom_Auto && _syscom_id < SysCom_MAX) {
+        return _syscom_id++;
+    }
+    else 
+    {   
+        return SysCom_Unknow;
+    }
+}
+
+ESysComID AaSysComRegister(ESysComID syscom, char* name, u32 q_size)
+{
+    SSysComMng* new_ptr = AaMemCalloc(1, sizeof(SSysComMng));
+    if(new_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: SysCom %s initialize failed, Reason: control block calloc failed", 
+                        __FUNCTION__, __LINE__, name);
+        return SysCom_Unknow;
+    }
+
+    osMutexWait(_aasyscom_mutex_id, osWaitForever);
+        
+    if(syscom == SysCom_Unknow)
+    {
+        new_ptr->syscom_id = AaSysComGetSysComIDAuto();
+        if(new_ptr->syscom_id == SysCom_Unknow)
+        {
+            AaMemFree(new_ptr);
+            AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: SysCom %s initialize failed, Reason: get random syscomID failed", 
+                            __FUNCTION__, __LINE__, name);
+
+            osMutexRelease(_aasyscom_mutex_id);
+            
+            return SysCom_Unknow;
         }
     }
-
-    return err;
-}
-
-EStatus AaSysComEEInit(osMailQId q_id)
-{
+    else
+    {
+        new_ptr->syscom_id = syscom;
+    }
     
+    osMessageQDef(msg_q, q_size, u32);
+    new_ptr->q_id = osMessageCreate(osMessageQ(msg_q), NULL);
+    if(new_ptr->q_id == NULL)
+    {
+        AaMemFree(new_ptr);
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: SysCom %s initialize failed, Reason: osMessageCreate failed",
+                        __FUNCTION__, __LINE__, name);
+
+        osMutexRelease(_aasyscom_mutex_id);
+        
+        return SysCom_Unknow;
+    }
+
+    if(strlen(name) > AASYSCOM_NAME_LENGTH_MAX) 
+    {
+        strncpy(new_ptr->name, name, AASYSCOM_NAME_LENGTH_MAX);
+    }
+    else 
+    {
+        strncpy(new_ptr->name, name, strlen(name));
+    }
+    new_ptr->name[AASYSCOM_NAME_LENGTH_MAX-1] = '\0';
+    
+    new_ptr->q_sz = q_size;
+
+    AaSysComAdd2ControlBlock(new_ptr);
+
+    osMutexRelease(_aasyscom_mutex_id);
+
+    AaSysLogPrintF( LOGLEVEL_INF, FeatureSysCom, "%s %d: SysCom %s register success", 
+                    __FUNCTION__, __LINE__, new_ptr->name);
+
+    return new_ptr->syscom_id;
+}
+
+/** 
+ * Recycling syscom control block. 
+ * There is defective that even though control block has been recycling, 
+ *  but RTOS MessageQueue resource can't be recycling because there is not 
+ *  recycling API in mbed RTOS. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-09-04 Huang Shengda
+ */  
+ESysComStatus AaSysComUnregister(ESysComID syscom)
+{
+    if(!AaSysComIsRegistered(syscom))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: error syscom %d",
+                        __FUNCTION__, __LINE__, syscom);
+
+        return SysCom_ErrParam;
+    }
+
+    SSysComMng* ptr = AaSysComGetControlBlock(syscom);
+    if(ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: get control block failed",
+                        __FUNCTION__, __LINE__);
+
+        return SysCom_ErrParam;
+    }
+
+    osMutexWait(_aasyscom_mutex_id, osWaitForever);
+
+    AaSysComRemove4ControlBlock(ptr);
+
+    osMutexRelease(_aasyscom_mutex_id);
+
+    AaSysLogPrintF( LOGLEVEL_INF, FeatureSysCom, "%s %d: SysCom %s register success", 
+                    __FUNCTION__, __LINE__, ptr->name);
+
+    AaMemFree(ptr);
+
+    return SysCom_Ok;
 }
 
 
-void* AaSysComCreate(SAaSysComMsgId msgid, SAaSysComSicad sender, SAaSysComSicad receiver, u16 pl_size)
+void* AaSysComCreate(SAaSysComMsgId msgid, ESysComID sender, ESysComID receiver, u16 pl_size)
 {
-    if(sender >= MsgQueue_MAX || receiver >= MsgQueue_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "sender 0x%02x or receiver 0x%02x failed", sender, receiver);
+    if(!AaSysComIsRegistered(sender) || !AaSysComIsRegistered(receiver))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x create failed, Reason: no sender %d or receiver %d",
+                        __FUNCTION__, __LINE__, msgid, sender, receiver);
         return NULL;
     }
 
-    if(msgid >= API_MESSAGE_ID_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "message id 0x%04x failed", msgid);
+    if(msgid >= API_MESSAGE_ID_MAX)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x error",
+                        __FUNCTION__, __LINE__, msgid);
         return NULL;
     }
 
-    SMsgHeader* msg_ptr = AaMemMalloc(sizeof(SMsgHeader) + pl_size);
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "create message 0x%04x failed", msgid);
+    SMsgHeader* msg_ptr = AaMemCalloc(1, (sizeof(SMsgHeader) + pl_size));
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x create failed, Reason: calloc failed", 
+                        __FUNCTION__, __LINE__, msgid);
         return NULL;
     }
 
+    msg_ptr->magic  = AASYSCOM_MAGIC_WORD;
     msg_ptr->msg_id = msgid;
     msg_ptr->target = receiver;
     msg_ptr->sender = sender;
     msg_ptr->pl_size = pl_size;
 
-    AaSysLogPrint(LOGLEVEL_DBG, FeatureSysCom, "create message 0x%04x success", msgid);
+    AaSysLogPrintF( LOGLEVEL_DBG, FeatureSysCom, "create msg 0x%04x success", msgid);
 
     return (void*)msg_ptr;
 }
 
 
+void AaSysComDestory(void* msg_ptr)
+{
+    AaMemFree(msg_ptr);
+}
+
 void* AaSysComGetPayload(void* msg_ptr)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "msg_ptr is NULL");
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
         return NULL;
     }
     
-    u8* msg = msg_ptr;
-    
-    return (msg + sizeof(SMsgHeader));
+    return ((char*)msg_ptr + sizeof(SMsgHeader));
 }
 
 
-EStatus AaSysComSend(void* msg_ptr)
+ESysComStatus AaSysComSend(void* msg_ptr, u32 timeout)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "msg_ptr is NULL");
-        return ErrParam;
-    }
-
-    SMsgInternalHeader* header = osMailAlloc(_aasyscom_queue_id, osWaitForever);  
-    if(header == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "create internal msg failed");
-        return ErrMem;
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_ErrParam;
     }
     
-    SMsgHeader* msg = (SMsgHeader*)msg_ptr;
+    SMsgHeader* header = (SMsgHeader*)msg_ptr;
 
-    if(msg->sender >= MsgQueue_MAX || msg->target >= MsgQueue_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "sender 0x%02x or receiver 0x%02x failed", 
-                msg->sender, msg->target);
-        return ErrParam;
+    if(header->msg_id >= API_MESSAGE_ID_MAX)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x error",
+                        __FUNCTION__, __LINE__, header->msg_id);
+        return SysCom_ErrParam;
     }
 
-    if(msg->msg_id >= API_MESSAGE_ID_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "message id 0x%04x failed", msg->msg_id);
-        return ErrParam;
+    if(!AaSysComIsRegistered(header->sender) || !AaSysComIsRegistered(header->target))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x create failed, Reason: no sender %d or receiver %d",
+                        __FUNCTION__, __LINE__, header->msg_id, header->sender, header->target);
+        return SysCom_ErrParam;
     }
 
-    header->msg_id = msg->msg_id;
-    header->target = msg->target;
-    header->sender = msg->sender;
-    header->body_size = sizeof(SMsgHeader) + msg->pl_size;
-    header->body = msg_ptr;
+    osMessageQId q_id = AaSysComGetQueueID(header->target);
+    if(q_id == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: do not get queue ID",
+                        __FUNCTION__, __LINE__, header->msg_id);
+        return SysCom_ErrParam;
+    }
     
-    if(osOK != osMailPut(_aasyscom_queue_id, header)) {
-        AaSysLogPrint(LOGLEVEL_ERR, FeatureSysCom, "create internal msg failed");
-        osMailFree(_aasyscom_queue_id, header);
-        AaMemFree(msg_ptr);
-        return ErrRTOS;
+    if(osOK != osMessagePut(q_id, (u32)msg_ptr, timeout))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg 0x%04x send failed, Reason: osMessagePut failed",
+                        __FUNCTION__, __LINE__, header->msg_id);
+        AaSysComDestory(msg_ptr);
+        return SysCom_ErrRTOS;
     }
 
-    AaSysLogPrint(LOGLEVEL_DBG, "message(0x%04x) have been sent from %s to %s", 
-            header.msg_id, 
-            AaSysComPrintThreadName(header.sender), 
-            AaSysComPrintThreadName(header.target));
+    AaSysLogPrintF( LOGLEVEL_DBG, FeatureSysCom, "%s %d: msg 0x%04x send success from %s to %s", 
+                    __FUNCTION__, __LINE__, header->msg_id, AaSysComGetName(header->sender), AaSysComGetName(header->target));
 
-    return kNoErr;
+    return SysCom_Ok;
 }
 
-SAaSysComSicad AaSysComGetSender(void* msg_ptr)
+ESysComID AaSysComGetSender(void* msg_ptr)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "msg_ptr is NULL");
-        return MsgQueue_Unknow;
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_Unknow;
     }
     
     SMsgHeader* msg = (SMsgHeader*)msg_ptr;
     return msg->sender;
 }
 
-OSStatus AaSysComSetSender(void* msg_ptr, SAaSysComSicad sender)
+ESysComStatus AaSysComSetSender(void* msg_ptr, ESysComID sender)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "msg_ptr is NULL");
-        return kParamErr;
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_ErrParam;
+    }
+
+    if(!AaSysComIsRegistered(sender))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: no sender %d",
+                        __FUNCTION__, __LINE__, sender);
+        return SysCom_ErrParam;
     }
 
     SMsgHeader* msg = (SMsgHeader*)msg_ptr;
-    
-    if(sender >= MsgQueue_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, "sender 0x%02x incorrect", sender);
-        return kParamErr;
-    }
-
     msg->sender = sender;
 
-    return kNoErr;
+    return SysCom_Ok;
 }
 
-SAaSysComSicad AaSysComGetReceiver(void* msg_ptr)
+ESysComID AaSysComGetReceiver(void* msg_ptr)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "msg_ptr is NULL");
-        return MsgQueue_Unknow;
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_Unknow;
     }
     
     SMsgHeader* msg = (SMsgHeader*)msg_ptr;
     return msg->target;
 }
 
-OSStatus AaSysComSetReceiver(void* msg_ptr, SAaSysComSicad receiver)
+ESysComStatus AaSysComSetReceiver(void* msg_ptr, ESysComID receiver)
 {
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "msg_ptr is NULL");
-        return kParamErr;
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_ErrParam;
+    }
+
+    if(!AaSysComIsRegistered(receiver))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: no target %d",
+                        __FUNCTION__, __LINE__, receiver);
+        return SysCom_ErrParam;
     }
 
     SMsgHeader* msg = (SMsgHeader*)msg_ptr;
-
-    if(receiver >= MsgQueue_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, "target 0x%02x incorrect", receiver);
-        return kParamErr;
-    }
-
     msg->target = receiver;
 
-    return kNoErr;
+    return SysCom_Ok;
 }
 
 
-OSStatus AaSysComForward(void* msg_ptr, SAaSysComSicad sender, SAaSysComSicad receiver)
-{
-    OSStatus err;
-        
-    if(msg_ptr == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "msg_ptr is NULL");
-        return kParamErr;
+ESysComStatus AaSysComForward(void* msg_ptr, ESysComID sender, ESysComID receiver, u32 timeout)
+{ 
+    if(msg_ptr == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: msg ptr NULL", __FUNCTION__, __LINE__);
+        return SysCom_ErrParam;
     }
     
-    if(sender >= MsgQueue_MAX || receiver >= MsgQueue_MAX) {
-        AaSysLogPrint(LOGLEVEL_ERR, "sender 0x%02x or receiver 0x%02x failed", sender, receiver);
-        return kParamErr;
+    if(!AaSysComIsRegistered(sender) || !AaSysComIsRegistered(receiver))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: forward failed, Reason: no sender %d or receiver %d",
+                        __FUNCTION__, __LINE__, sender, receiver);
+        return SysCom_ErrParam;
     }
 
     SMsgHeader* msg = (SMsgHeader*)msg_ptr;
 
-    SMsgHeader* msg_fw = malloc(sizeof(SMsgHeader) + msg->pl_size);
-    if(msg_fw == NULL) {
-        AaSysLogPrint(LOGLEVEL_ERR, "forward message 0x%04x failed", msg->msg_id);
-        return kNoMemoryErr;
+    void* msg_fw = AaMemCalloc(1, (sizeof(SMsgHeader) + msg->pl_size));
+    if(msg_fw == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, "%s %d: msg 0x%04x forward failed, Reason: calloc failed", 
+                        __FUNCTION__, __LINE__, msg->msg_id);
+        return SysCom_ErrMem;
     }
 
     memcpy(msg_fw, msg_ptr, (sizeof(SMsgHeader) + msg->pl_size));
-    err = AaSysComSetSender(msg_fw, sender);
-    if(kNoErr != err) {
-        AaSysLogPrint(LOGLEVEL_ERR, "forward message failed when set sender");
-        return err;
+    if(SysCom_Ok != AaSysComSetSender(msg_fw, sender)) 
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, "%s %d: msg 0x%04x forward failed, Reason: set sender %s failed",
+                        __FUNCTION__, __LINE__, msg->msg_id, AaSysComGetName(sender));
+        return SysCom_ErrParam;
     }
-    err = AaSysComSetReceiver(msg_fw, receiver);
-    if(kNoErr != err) {
-        AaSysLogPrint(LOGLEVEL_ERR, "forward message failed when set target");
-        return err;
+    if(SysCom_Ok != AaSysComSetReceiver(msg_fw, receiver)) 
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, "%s %d: msg 0x%04x forward failed, Reason: set receiver %s failed",
+                        __FUNCTION__, __LINE__, msg->msg_id, AaSysComGetName(receiver));
+        return SysCom_ErrParam;
     }
 
-    err = AaSysComSend(msg_fw);
+    if(SysCom_Ok != AaSysComSend(msg_fw, timeout))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, "%s %d: msg 0x%04x forward failed, Reason: AaSysComSend failed",
+                        __FUNCTION__, __LINE__, msg->msg_id);
+        return SysCom_ErrProc;
+    }
 
-    return err;
+    SMsgHeader* header = (SMsgHeader*)msg_fw;
+    AaSysLogPrintF( LOGLEVEL_DBG, "%s %d: msg 0x%04x forward success from %s to %s", 
+                    __FUNCTION__, __LINE__, header->msg_id, AaSysComGetName(header->sender), AaSysComGetName(header->target));
+
+    return SysCom_Ok;
 }
 
-void* AaSysComReceiveHandler(SAaSysComSicad receiver, u32 timeout)
+void* AaSysComReceiveHandler(ESysComID receiver, u32 timeout)
 {
-    bool failed = false;
-    SMsgInternalHeader header;
+    osEvent  evt;
 
-    if(kNoErr == mico_rtos_pop_from_queue(&msg_queue[receiver], &header, timeout)) {
-        if(header.msg_id >= API_MESSAGE_ID_MAX) {
-            AaSysLogPrint(LOGLEVEL_ERR, "receive message id 0x%04x failed", header.msg_id);
-            failed = true;
-        }
+    if(!AaSysComIsRegistered(receiver))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: receiver %d is not registered",
+                        __FUNCTION__, __LINE__, receiver);
+        return NULL;
+    }
 
-        if(header.target >= MsgQueue_MAX || header.sender >= MsgQueue_MAX) {
-            AaSysLogPrint(LOGLEVEL_ERR, "receive target 0x%02x or sender 0x%02x failed", header.target, header.sender);
-            failed = true;
-        }
+    osMessageQId q_id = AaSysComGetQueueID(receiver);
+    if(q_id == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: do not get receiver %d queue ID",
+                        __FUNCTION__, __LINE__, receiver);
+        return NULL;
+    }
+    
+    evt = osMessageGet(q_id, timeout);
+    if (evt.status == osEventMessage) 
+    {
+        void* msg = evt.value.p;
 
-        SMsgHeader* msg_ptr = header.body;
-        if(msg_ptr == NULL) {
-            AaSysLogPrint(LOGLEVEL_ERR, "receive messgae body is NULL");
-            failed = true;
-        }
-        else if(header.body_size != (sizeof(SMsgHeader) + msg_ptr->pl_size)) {
-            AaSysLogPrint(LOGLEVEL_ERR, "receive message body size %d is not match sizeof(SMsgHeader) %d + pl_size %d", 
-                    header.body_size, sizeof(SMsgHeader), msg_ptr->pl_size);
-            failed = true;
-        }
+        SMsgHeader* header = (SMsgHeader*)msg;
 
-        if(failed == true) {
-            if(header.body != NULL) free(header.body);
+        if(header->magic != AASYSCOM_MAGIC_WORD)
+        {
+            AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysCom, "%s %d: failed, Reason: get error MAGIC 0x%x",
+                            __FUNCTION__, __LINE__, header->magic);
+            AaSysComDestory(msg);
+            
             return NULL;
         }
 
-        AaSysLogPrint(LOGLEVEL_DBG, "receive message id 0x%04x from %s success", 
-                header.msg_id, 
-                AaSysComPrintThreadName(header.sender));
-        
-        return (void*)header.body;
+        AaSysLogPrintF( LOGLEVEL_DBG, FeatureSysCom, "%s %d: receive msg 0x%04x success from %s to %s", 
+                        __FUNCTION__, __LINE__, header->msg_id, AaSysComGetName(header->sender), AaSysComGetName(header->target));
+
+        return msg;
     }
-    else {
+
+    return NULL;
+}
+
+static char* AaSysComGetName(ESysComID sc_id)
+{
+    SSysComMng* ptr = _syscom_mng;
+
+    if(ptr == NULL)
+    {
         return NULL;
+    }
+
+    while(ptr->syscom_id != sc_id)
+    {
+        if(ptr->next != NULL)
+        {
+            ptr = ptr->next;
+        }
+        else 
+        {
+            return NULL;
+        }
+    }
+
+    return ptr->name;
+}
+
+static osMessageQId AaSysComGetQueueID(ESysComID sc_id)
+{
+    SSysComMng* ptr = _syscom_mng;
+
+    if(ptr == NULL)
+    {
+        return NULL;
+    }
+
+    while(ptr->syscom_id != sc_id)
+    {
+        if(ptr->next != NULL)
+        {
+            ptr = ptr->next;
+        }
+        else 
+        {
+            return NULL;
+        }
+    }
+
+    return ptr->q_id;
+}
+
+static SSysComMng* AaSysComGetControlBlock(ESysComID sc_id)
+{
+    SSysComMng* ptr = _syscom_mng;
+
+    if(ptr == NULL)
+    {
+        return NULL;
+    }
+
+    while(ptr->syscom_id != sc_id)
+    {
+        if(ptr->next != NULL)
+        {
+            ptr = ptr->next;
+        }
+        else 
+        {
+            return NULL;
+        }
+    }
+
+    return ptr;
+}
+
+static bool AaSysComIsRegistered(ESysComID sc_id)
+{
+    SSysComMng* ptr = _syscom_mng;
+
+    if(ptr == NULL)
+    {
+        return false;
+    }
+
+    while(ptr->syscom_id != sc_id)
+    {
+        if(ptr->next != NULL)
+        {
+            ptr = ptr->next;
+        }
+        else 
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void AaSysComAdd2ControlBlock(SSysComMng* new)
+{
+    struct SSysComMng_t* cur;
+    
+    if(_syscom_mng == NULL)
+    {
+        _syscom_mng = new;
+        new->next = NULL;
+        new->prev = NULL;
+    }
+    else
+    {
+        cur = _syscom_mng;
+        while(cur->next != NULL)
+        {
+            cur = cur->next;
+        } 
+
+        cur->next = new;
+        new->prev = cur;
+        new->next = NULL;
+    }
+}
+
+static void AaSysComRemove4ControlBlock(SSysComMng* rm)
+{
+    struct SSysComMng_t* prv;
+    struct SSysComMng_t* nxt;
+
+    if(rm == NULL)
+    {
+        return ;
+    }
+
+    if(rm->prev == NULL)
+    {
+        if(rm->next == NULL)
+        {
+            _syscom_mng = NULL;
+        }
+        else
+        {
+            nxt = rm->next;
+            nxt->prev = NULL;
+            
+            _syscom_mng = nxt;
+        }
+    }
+    else
+    {
+        if(rm->next == NULL)
+        {
+            prv = rm->prev;
+            prv->next = NULL;
+        }
+        else 
+        {
+            prv = rm->prev;
+            nxt = rm->next;
+
+            prv->next = nxt;
+            nxt->prev = prv;
+        }
     }
 }
 

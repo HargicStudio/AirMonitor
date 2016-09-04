@@ -1,6 +1,5 @@
 #include "gpsAnalyser.h"							   								   
 #include "string.h"	 
-//RTrobot.org
 //��ֹ������ҵ��Ϊ
 
 /********************************************************************************************
@@ -120,7 +119,7 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
     if(end_buf!=0XFF)
         gps_data->ewhemi=*(address_buf+end_buf);																//������������		 
     
-    end_buf=Data_Removal(address_buf, 10);
+    end_buf=Data_Removal(address_buf, 9);
     if (end_buf != 0xFF && address_buf[end_buf] != ',')       /* ��Ҫȷ����Ч���ݵ����� */
     {
         unsigned char offset = end_buf;

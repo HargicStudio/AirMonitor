@@ -21,7 +21,7 @@ __packed typedef struct  gps_satellite
 UTCʱ����Ϣ
 ********************************************************************************************/
 __packed typedef struct  gps_utc_time
-{
+{       unsigned syncFlag;      // 是否同步的标志
  	unsigned long int year;	//���
 	unsigned char month;	//�·�
 	unsigned char date;	//����
@@ -57,6 +57,8 @@ void GPGSV_Analysis(gps_process_data *gps_data,unsigned char *buf);
 void GPGGA_Analysis(gps_process_data *gps_data,unsigned char *buf);
 void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf);
 void GPGSA_Analysis(gps_process_data *gps_data,unsigned char *buf);
+
+extern gps_process_data gps;
 
 
 

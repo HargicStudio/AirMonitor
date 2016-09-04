@@ -40,6 +40,9 @@ u8 StartCP15Task();
 void CP15WaitForSendCplt();
 void CP15RecvDataFromISR(UART_HandleTypeDef *huart);
 
+void SetAutoInterval(u16 interval);
+void OpenAutoOutput();
+
 
 
 #endif /* __Cp15_h */
