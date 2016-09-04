@@ -232,7 +232,7 @@ void HAL_UART_CP15_MspInit(UART_HandleTypeDef *huart)
   /*##-4- Configure the NVIC for DMA #########################################*/
   
   /* NVIC configuration for UART TC interrupt */
-  HAL_NVIC_SetPriority(UART_CP15_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(UART_CP15_IRQn, SYSTEM_IRQ_PRIORITY_LOW_2, 0);
   HAL_NVIC_EnableIRQ(UART_CP15_IRQn);
 }
 

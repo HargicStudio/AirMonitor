@@ -60,6 +60,8 @@ s32 GetAtStatus(void);
 u32 GsmStatusGet(void);
 void GsmStatusSet(u32 stu);
 
+u8 GetCmdDataLen(u16 cmd);
+
 bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType);
 void IsAtSuss(u8 *buf, u8 *key);
 

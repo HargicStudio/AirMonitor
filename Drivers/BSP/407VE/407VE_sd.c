@@ -81,6 +81,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "407VE_sd.h"
+#include "glo_def.h"
+
 
 /** @addtogroup BSP
   * @{
@@ -200,7 +202,7 @@ uint8_t BSP_SD_ITConfig(void)
   HAL_GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_Init_Structure);
     
   /* NVIC configuration for SDIO interrupts */
-  HAL_NVIC_SetPriority(SD_DETECT_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(SD_DETECT_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_4, 0);
   HAL_NVIC_EnableIRQ(SD_DETECT_IRQn);
   
   return 0;
@@ -413,7 +415,7 @@ static void SD_MspInit(void)
   HAL_GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_Init_Structure);
     
   /* NVIC configuration for SDIO interrupts */
-  HAL_NVIC_SetPriority(SDIO_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(SDIO_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_4, 0);
   HAL_NVIC_EnableIRQ(SDIO_IRQn);
     
   /* Configure DMA Rx parameters */
@@ -467,11 +469,11 @@ static void SD_MspInit(void)
   HAL_DMA_Init(&dmaTxHandle); 
   
   /* NVIC configuration for DMA transfer complete interrupt */
-  HAL_NVIC_SetPriority(SD_DMAx_Rx_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(SD_DMAx_Rx_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_4, 0);
   HAL_NVIC_EnableIRQ(SD_DMAx_Rx_IRQn);
   
   /* NVIC configuration for DMA transfer complete interrupt */
-  HAL_NVIC_SetPriority(SD_DMAx_Tx_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(SD_DMAx_Tx_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_4, 0);
   HAL_NVIC_EnableIRQ(SD_DMAx_Tx_IRQn);
 }
 

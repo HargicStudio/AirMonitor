@@ -73,7 +73,7 @@
         </option>
         <option>
           <name>OGProductVersion</name>
-          <state>4.41A</state>
+          <state>7.30.1.7765</state>
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
@@ -119,7 +119,7 @@
         <option>
           <name>GeneralMisraRules04</name>
           <version>0</version>
-          <state>011111111111111110111111111111011111111111111011110100111111111111111111111111111111111111111111101111111111111011111111111111111111111111111</state>
+          <state>111101110010111111111000110111111111111111111111111110010111101111010101111111111111111111111111101111111011111001111011111011111111111111111</state>
         </option>
         <option>
           <name>RTConfigPath2</name>
@@ -226,7 +226,7 @@
         </option>
         <option>
           <name>CCDiagSuppress</name>
-          <state></state>
+          <state>Pa050</state>
         </option>
         <option>
           <name>CCDiagRemark</name>
@@ -335,6 +335,7 @@
           <state>$PROJ_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\include</state>
           <state>$PROJ_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS</state>
           <state>$PROJ_DIR$\..\..\User\common</state>
+          <state>$PROJ_DIR$\..\..\Common\PingPangBuffer</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -1025,6 +1026,9 @@
       <name>$PROJ_DIR$\..\..\Common\BipBuffer\BipBuffer.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\Common\PingPangBuffer\PingPang.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\Common\RingBuffer\RingBufferUtils.c</name>
     </file>
   </group>
@@ -1040,6 +1044,9 @@
       <name>BSP</name>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\407VE_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\cp15_dev.c</name>
@@ -1100,6 +1107,12 @@
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</name>
@@ -1186,6 +1199,12 @@
     <group>
       <name>common</name>
       <file>
+        <name>$PROJ_DIR$\..\..\User\common\Cfg.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\User\common\common.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\User\common\config.c</name>
       </file>
       <file>
@@ -1205,7 +1224,19 @@
       </file>
     </group>
     <file>
+      <name>$PROJ_DIR$\..\..\User\alpha_sense.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\am2302.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\User\cp15.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\dataRecord.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\fan.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\gps.c</name>

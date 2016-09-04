@@ -40,6 +40,7 @@
 #include "gps_dev.h"
 #include "gsm_dev.h"
 #include "cp15_dev.h"
+#include "ads1222.h"
 
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
@@ -164,5 +165,17 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     }
 }
 
+/**
+  * @brief  GPIO EXTI callbacks
+  * @param  
+  * @note   
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if(GPIO_Pin == ADS1222_A_DOUT_PIN) {
+        HAL_GPIO_SenseA_EXTI_Callback(ADS1222_A_DOUT_PIN);
+    }
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

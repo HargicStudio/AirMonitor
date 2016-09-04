@@ -32,9 +32,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "AaInclude.h"
+#include "gpsAnalyser.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+
+/* 用于计算和保存信息 */
+extern gps_process_data gps;
+#define IsClockSynced()         gps.utc.syncFlag
+#define SetClockSynced(flag)    gps.utc.syncFlag = (flag)
     
 #define GPS_SERIAL_RX_BUFFER_NUM        (2)
 #define GPS_SERIAL_RX_BUFFER_SIZE       (256)
@@ -53,6 +59,7 @@ typedef struct GPS_BUF_t
 u8 StartGpsTask();
 void GpsWaitForSendCplt();
 void GpsRecvDataFromISR(UART_HandleTypeDef *huart);
+
 
 
 #endif /* __GPS_H */

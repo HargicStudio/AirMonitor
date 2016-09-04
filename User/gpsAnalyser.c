@@ -1,6 +1,7 @@
 #include "gpsAnalyser.h"							   								   
-#include "string.h"	 
-//RTrobot.org
+#include "string.h"
+#include "gps.h"
+#include "common.h"
 //��ֹ������ҵ��Ϊ
 
 /********************************************************************************************
@@ -69,13 +70,19 @@ void GPGGA_Analysis(gps_process_data *gps_data,unsigned char *buf)
 void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
 {
     unsigned char *address_buf,end_buf,decimal_places;		 
-    unsigned long int temp;	   
+    unsigned long int temp;
     float rs;  
+    unsigned char flag = 0;
     address_buf =(unsigned char*)strstr((const char *)buf,"GPRMC");
 
     /* ��ȡUTCʱ�� */
     end_buf = Data_Removal(address_buf, 1);
-    if (end_buf != 0xFF && address_buf[end_buf] != ',')       /* ��Ҫȷ����Ч���ݵ����� */
+    if (end_buf < 6)
+    {
+        return;
+    }
+    
+    if (end_buf != 0xFF && address_buf[end_buf] != ',' && !IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
     {
         unsigned char offset = end_buf;
         
@@ -90,6 +97,8 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
         gps_data->utc.sec = (address_buf[offset] - '0') * 10 + address_buf[offset+1] - '0';
         gps_data->utc.strTime[12] = address_buf[offset];
         gps_data->utc.strTime[13] = address_buf[offset + 1];
+        flag = 1;
+        
     }
 
     end_buf=Data_Removal(address_buf,3);																			//����ȥ��								
@@ -120,8 +129,12 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
     if(end_buf!=0XFF)
         gps_data->ewhemi=*(address_buf+end_buf);																//������������		 
     
-    end_buf=Data_Removal(address_buf, 10);
-    if (end_buf != 0xFF && address_buf[end_buf] != ',')       /* ��Ҫȷ����Ч���ݵ����� */
+    end_buf=Data_Removal(address_buf, 9);
+    if (end_buf < 6)
+    {
+        return;
+    }
+    if (end_buf != 0xFF && address_buf[end_buf] != ',' && !IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
     {
         unsigned char offset = end_buf;
         
@@ -139,6 +152,19 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
         gps_data->utc.strTime[2] = address_buf[offset];
         gps_data->utc.strTime[3] = address_buf[offset + 1];
         gps_data->utc.strTime[14] = 0;
+        
+        if (flag == 1 &&
+            (gps_data->utc.year  >= 2016 && 1 <= gps_data->utc.month && gps_data->utc.month <= 12 && 1 <= gps_data->utc.date && gps_data->utc.date <= 31 &&
+             gps_data->utc.hour <= 23 && gps_data->utc.min <= 59 && gps_data->utc.sec <= 59))
+        {
+            if (CpnfigSetRTCTime(gps_data->utc.year - 2000, gps_data->utc.month, gps_data->utc.date, 
+                             gps_data->utc.hour, gps_data->utc.min, gps_data->utc.sec))
+            {
+                SetClockSynced(1);
+            }
+        }
+
+        GSM_LOG_P1("time synced with GPS : %s", gps_data->utc.strTime);
     }
 }       
 

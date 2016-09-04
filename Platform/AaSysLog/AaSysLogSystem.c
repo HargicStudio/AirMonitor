@@ -19,7 +19,7 @@ History:
 
 
 /** uart tx buffer size */  
-#define AASYSLOG_BIPBUFFER_SIZE     (1024*3)
+#define AASYSLOG_BIPBUFFER_SIZE     (1024*4)
 
 /** aasyslog daemon stack size */  
 #define AASYSLOGDEAMON_STACK_SIZE   ( (u16) 0x80 )

@@ -17,14 +17,17 @@ History:
 #include "gps.h"
 #include "gsm.h"
 #include "cp15.h"
-
-
+#include "am2302.h"
+#include "fan.h"
+#include "osa_file.h"
+#include "alpha_sense.h"
+#include "dataRecord.h"
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
 
 /** AaMem heap buffer for whole system */  
-#define AAMEM_HEAP_BUFFER_SIZE  (1024*8)
+#define AAMEM_HEAP_BUFFER_SIZE  (1024*10)
 
 char _mem_heap_buf[AAMEM_HEAP_BUFFER_SIZE];
 
@@ -75,16 +78,23 @@ u8 CCSDeamonCEInit()
 
     // alternative CCS service initialization
     AaTagCEInit();
-    AaShellCEInit();
+    //AaShellCEInit();
 
     CCSDaemonCreateThread();
     AaSysLogCreateDeamon();
     AaTagCreateDeamon();
     // start application task
+    StartDataRecordTask();
+    //StartTFCardTask();
     StartRunLedTask();
     StartGpsTask();
     StartGsmTask();
     StartCP15Task();
+    //StartRunAm2302Task();
+    StartAlphaSenseTask();
+    
+    /* Init Fan */
+    // FanStart();
 
     // create global tag
     AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
