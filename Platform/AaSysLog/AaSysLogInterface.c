@@ -11,6 +11,8 @@ History:
 #include <stdarg.h>
 #include <stdbool.h>
 #include "AaMem.h"
+#include "rtc_dev.h"
+#include <time.h>
 
 
 /** Description of the macro */  
@@ -178,9 +180,13 @@ void AaSysLogPrintF(ELogLevel level, char* feature_id, const char* fmt, ...)
     {
         memcpy(thread_str, "NULL", strlen("NULL"));
     }
-    
 
-    len += sprintf(str + len, "%02x %dT %s/%s/%s ", idx, osKernelSysTick(), AaSysLogGetLevelString(level), feature_str, thread_str);
+    struct tm rtc;
+    RTC_GetCalendar(&rtc);
+
+    len += sprintf(str + len, "%02x <%04d-%02d-%02d %02d:%02d:%02dT><%dT> -%s- %s/%s ", 
+            idx, rtc.tm_year, rtc.tm_mon, rtc.tm_mday, rtc.tm_hour, rtc.tm_min, rtc.tm_sec, 
+            osKernelSysTick(), thread_str, AaSysLogGetLevelString(level), feature_str);
 
     va_start(args, fmt);
     len += vsprintf(str + len, fmt, args);
@@ -236,8 +242,13 @@ void AaSysLogPrintM(char* feature_id, const char* data, u32 data_len)
         memcpy(thread_str, trd, strlen(trd));
     }
 
+    struct tm rtc;
+    
     do {
-        len += sprintf(str + len, "%02x %dT %s/%s/%s Address 0x%p: ", idx, osKernelSysTick(), AaSysLogGetLevelString(LOGLEVEL_DBG), feature_str, thread_str, data + data_idx);
+        RTC_GetCalendar(&rtc);
+        len += sprintf(str + len, "%02x <%04d-%02d-%02d %02d:%02d:%02dT><%dT> -%s- %s/%s/ Address 0x%p: ", 
+                idx, rtc.tm_year, rtc.tm_mon, rtc.tm_mday, rtc.tm_hour, rtc.tm_min, rtc.tm_sec, 
+                osKernelSysTick(), thread_str, AaSysLogGetLevelString(LOGLEVEL_DBG), feature_str, data + data_idx);
         do {
             len += sprintf(str + len, "%02x ", *(data + data_idx));
             if(++data_idx >= data_len) {

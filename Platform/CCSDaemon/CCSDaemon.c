@@ -14,6 +14,7 @@ History:
 #include "AaInclude.h"
 #include "print_com.h"
 #include "led.h"
+#include "rtc_dev.h"
 #include "gps.h"
 #include "gsm.h"
 #include "cp15.h"
@@ -22,6 +23,8 @@ History:
 #include "osa_file.h"
 #include "alpha_sense.h"
 #include "dataRecord.h"
+
+
 
 #define CCSDEAMON_STACK_SIZE        0x80
 
@@ -63,6 +66,8 @@ u8 CCSDeamonCEInit()
 
     // @first because all service should depand on log
     StdUsartInit();
+    RtcInit();
+    
     AaMemHeapCEInit(_mem_heap_buf, &_mem_heap_buf[AAMEM_HEAP_BUFFER_SIZE - 1]);
 
     // bip buffer has not construct because of memery heap do not setup,

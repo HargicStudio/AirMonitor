@@ -18,7 +18,6 @@ History:
 #include "print_com.h"
 
 
-
 /** uart tx buffer size */  
 #define AASYSLOG_BIPBUFFER_SIZE     (1024*4)
 

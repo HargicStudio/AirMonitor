@@ -12,6 +12,7 @@ History:
 #include <stdio.h>
 #include "cmsis_os.h"
 #include "AaInclude.h"
+#include "rtc_dev.h"
 
 
 
@@ -37,6 +38,8 @@ static void RunLedThread(void const *argument)
     (void) argument;
     void* msg;
     u8 cnt = 0;
+    struct tm rtc;
+    time_t tp = 1472971856;
 
     AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "%s started", __FUNCTION__);
 
@@ -51,6 +54,11 @@ static void RunLedThread(void const *argument)
 
     for (;;)
     {
+        // get RTC
+        RTC_GetCalendar(&rtc);
+        AaSysLogPrintF( LOGLEVEL_DBG, SystemStartup, "%s %d: get rtc year:%d mon:%d mday:%d wday:%d hour:%d min:%d sec:%d", 
+                        __FUNCTION__, __LINE__, rtc.tm_year, rtc.tm_mon, rtc.tm_mday, rtc.tm_wday, rtc.tm_hour, rtc.tm_min, rtc.tm_sec);
+        
         LedToggle();
         osDelay(1000);
 //        AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "System running");
@@ -65,6 +73,11 @@ static void RunLedThread(void const *argument)
             }
 
             AaSysComSend(msg, osWaitForever);
+        }
+
+        if(cnt == 10)
+        {
+            RTC_SetTime(tp);
         }
     }
 }
@@ -131,7 +144,7 @@ static void HandleLedIndicationMsg(void* msg)
 u8 StartRunLedTask()
 {
     LedDeviceInit();
-    
+   
 
     osThreadDef(RunLed, RunLedThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _runled_id = AaThreadCreateStartup(osThread(RunLed), NULL);
