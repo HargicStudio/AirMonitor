@@ -9,6 +9,8 @@
 #include "gsmCtrl.h"
 #include "format.h"
 #include "dataRecord.h"
+//#include "rtc.h"
+#include "gps.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -123,8 +125,10 @@ static void GsmSendTestThread(void const *argument)
 {
     (void) argument;
     u16 times = 0;
-    static u16 Interval = 6000;
-    static u8 RepInt = 0xff;
+    u16 Interval = 6000;
+    u8 RepInt = 0xff;
+    u8 min = 0;
+    u8 minIntval = 0;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s started", __FUNCTION__);
 
@@ -137,7 +141,7 @@ static void GsmSendTestThread(void const *argument)
     */
     for(;;)
     {
-        osDelay(100);
+        osDelay(500);
         times++;
 
         // As the interval will change, cal every time.
@@ -146,18 +150,41 @@ static void GsmSendTestThread(void const *argument)
             RepInt = ConfigGetReportInterval();
             // Interval = 20 * 60 * RepInt;
             // for test is 2 s
-            Interval = 10 * 5;
+            // Interval = 2 * 60 * RepInt;
+            Interval = 2 * RepInt;
         }
 
+       /* if (IsClockSynced())
+        {
+            RTC_GetTime(&g_stime);
+        
+            g_stime.Minutes >= min ? (minIntval = g_stime.Minutes - min) : (minIntval = 60 - min + g_stime.Minutes);
+        }
+        else
+        {
+            gps.utc.min >= min ? (minIntval = utc.min - min) : (minIntval = 60 - min + utc.min);
+        }*/
+        
+        gps.utc.min >= min ? (minIntval = gps.utc.min - min) : (minIntval = 60 - min + gps.utc.min);
+        
+        
         /* 间隔时间到 */
-        if (times >= Interval)
+        if (times >= Interval || minIntval >= RepInt)
         {
             times = 0;
+            if (IsClockSynced())
+            {
+                min = g_stime.Minutes;
+            }
+            else
+            {
+                min = gps.utc.min;
+            }
+            
             ContructDataUp();
             if (IsSendBufReady())
             {
                 SendDataToServer();
-                SEND_BUF_FLAG_CLEAR();
             }
         }
 
@@ -465,8 +492,8 @@ bool ProcessAtResponse(u8 *buf, u16 len)
       IsAtSuss(buf, ">");
       break;
     case AT_WAIT_CONNECT_RSP:
-      IsAtSuss(buf, "CONNECT OK");
-      IsAtSuss(buf, "ALREADY CONNECT");
+      //IsAtSuss(buf, "CONNECT OK");
+      //IsAtSuss(buf, "ALREADY CONNECT");
       if (strstr((const char *)buf, "CONNECT FAIL"))
       {
           SetAtStatus(AT_ERROR);
@@ -487,7 +514,7 @@ bool ProcessAtResponse(u8 *buf, u16 len)
       break;
     }
     
-    if (GetAtStatus() == AT_WAIT_CONNECT_STU)
+    if (GetAtStatus() == AT_WAIT_CONNECT_STU || GetAtStatus() == AT_WAIT_CONNECT_RSP)
     {
         if (strstr((const char *)buf, "INITIAL") ||
             (strstr((const char *)buf, "CONNECTING")))

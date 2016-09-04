@@ -19,7 +19,7 @@ typedef struct RECALL_INFO_t
     u8 continueFlag;            /* 对于天回调，要构造多次数据 */
     u16 type;                   /* 回调类型 */
     u8 startTime[11];           /* 1608100828 */
-    u8 Folder[9];               /* 1608/10/ */
+    u8 Folder[10];               /* 16/08/10/ */
     u8 file[7];                 /* 小时： 00- 23.txt*/
     
 }RECALL_INFO_t;
@@ -27,9 +27,10 @@ typedef struct RECALL_INFO_t
 /* 写文件信息 */
 typedef struct RECORD_INFO_t
 {
-    u8 newNameMon[5];   /* 1608 */
-    u8 newNameDay[8];   /* 1608//01 */
-    u8 newNameHour[15];  /* 1608//01//10.txt */
+    u8 newNameYear[3];  /* 16 */
+    u8 newNameMon[6];   /* 16//08 */
+    u8 newNameDay[9];   /* 16//08//01 */
+    u8 newNameHour[16];  /* 16//08//01//10.txt */
   
 }RECORD_INFO_t;
    

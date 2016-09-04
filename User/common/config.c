@@ -3,12 +3,16 @@
 #include "gpsAnalyser.h"
 #include "common.h"
 #include "cfg.h"
+//#include "rtc.h"
 
 
 /* 用于计算和保存信息 */
 extern gps_process_data gps;
 
 CONFIG_t g_config;
+
+RTC_DateTypeDef g_sdate;
+RTC_TimeTypeDef g_stime;
 
 char _cfgBuf[20];
 
@@ -344,6 +348,25 @@ void ConfigSetTime()
     gps.utc.min = 16;
     gps.utc.sec = 16;
     memcpy(gps.utc.strTime, "20160807161616", 15);
+}
+
+bool CpnfigSetRTCTime(u8 y, u8 m, u8 d, u8 h, u8 min, u8 s)
+{
+    /* 设置时间到RTC */
+    g_sdate.Year = y;
+    g_sdate.Month = m;
+    g_sdate.Date = d;
+    //g_sdate.WeekDay = RTC_CaculateWeekDay(g_sdate.Year,g_sdate.Month, g_sdate.Date);
+  
+    g_stime.Hours = h;
+    g_stime.Minutes = min;
+    g_stime.Seconds = s;
+    g_stime.TimeFormat = RTC_HOURFORMAT12_AM;
+    g_stime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    g_stime.StoreOperation = RTC_STOREOPERATION_RESET;
+    
+    //return RTC_CalendarConfig(&g_sdate, &g_stime);
+    return true;
 }
 
 void ConfigSetAddr(u32 addr)

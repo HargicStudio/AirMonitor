@@ -24,3 +24,18 @@ bool IsDirExit(u8 *path)
     
     return false;
 }
+
+u32 myPow(u32 val, u32 times)
+{
+    u32 rst = 0;
+    if (times == 0)
+      return 1;
+    
+    rst = val;
+    while(--times)
+    {
+        rst *= val;  
+    }
+    
+    return rst;
+}

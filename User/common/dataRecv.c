@@ -8,6 +8,8 @@
 #include "gps.h"
 #include "cfg.h"
 #include "dataHandler.h"
+//#include "rtc.h"
+#include "config.h"
 
 
 void HandleGsmRecv(u8 *buf, u16 len)
@@ -125,43 +127,55 @@ void ProcessRecvData(u8 *buf, int cmd)
     }
 }
 
-u32 myPow(u32 val, u32 times)
-{
-    u32 rst = 0;
-    if (times == 0)
-      return 1;
-    
-    rst = val;
-    while(--times)
-    {
-        rst *= val;  
-    }
-    
-    return rst;
-}
+
 
 void ProcessServerTime(u8 *buf)
 {
     u8 offset = LEN_ADDR + LEN_CMD;
+    u8 y, m, d, h, min, s;
     
-    GSM_LOG_P0("Recv Server Time!");
-    SetClockSynced(1);
+    y = stringToInt(buf + offset, 2);
+    offset += 2;
+    m = stringToInt(buf + offset, 2);
+    offset += 2;
+    d = stringToInt(buf + offset, 2);
+    offset += 2;
+    h = stringToInt(buf + offset, 2);
+    offset += 2;
+    min = stringToInt(buf + offset, 2);
+    offset += 2;
+    s = stringToInt(buf + offset, 2);
+    offset += 2;
+    
+    GSM_LOG_P3("Server to config Date: %02d.%02d.%02d", y, m, d);
+    GSM_LOG_P3("Server to config time: %02d:%02d:%02d", h, min, s);
+    
+    if (!(y >= 16 && 1 <= m && m <= 12 && 1 <= d && d <= 31 
+          && h <= 23 && min <= 59 && s <= 59))
+    {
+        GSM_LOG_P0("Error time format!");
+        return;
+    }
+      
+    memcpy(gps.utc.strTime, buf + LEN_ADDR + LEN_CMD, 12);
+    
+    gps.utc.year = y + 2000;
+    gps.utc.month = m;
+    gps.utc.date = d;
+    gps.utc.hour = h;
+    gps.utc.min = min;
+    gps.utc.sec = s;
+    
     /* 设置时间到RTC */
+    if (false == CpnfigSetRTCTime(y, m, d, h, min, s))
+    {
+        GSM_LOG_P0("Time config error!");
+        return;
+    }
     
-    memcpy(gps.utc.strTime, buf + offset, 12);
+    SetClockSynced(1);
     
-    gps.utc.year = stringToInt(buf + offset, 2);
-    offset += 2;
-    gps.utc.month = stringToInt(buf + offset, 2);
-    offset += 2;
-    gps.utc.date = stringToInt(buf + offset, 2);
-    offset += 2;
-    gps.utc.hour = stringToInt(buf + offset, 2);
-    offset += 2;
-    gps.utc.min = stringToInt(buf + offset, 2);
-    offset += 2;
-    gps.utc.sec = stringToInt(buf + offset, 2);
-    offset += 2;
+    GSM_LOG_P1("time synced with Server : %s", gps.utc.strTime);
     
     ConstructResponse("004", buf, 0xff);
 }
@@ -527,7 +541,7 @@ typedef struct RECALL_INFO_t
     u8 flag;                    /是否需要回调的标志/
     u16 type;                   / 回调类型 /
     u8 startTime[11];           / 1608100828 /
-    u8 Folder[9];               / 1608/10/ /
+    u8 Folder[9];               / 16/08/10/ /
     u8 file[7];                 / 小时： 00- 23.txt /
     
 }RECALL_INFO_t;
@@ -565,13 +579,18 @@ void ProcessRecall(u8 *buf, u16 cmd)
         return;
     }
     
-    // 年月
-    memcpy(g_recallInfo.Folder, tmp, 4);
-    //
-    g_recallInfo.Folder[4] = '\\';
-    g_recallInfo.Folder[5] = tmp[4];
-    g_recallInfo.Folder[6] = tmp[5];
-    g_recallInfo.Folder[7] = '\\';
+    // 160801161616
+    // 年
+    memcpy(g_recallInfo.Folder, tmp, 2);
+    // 月
+    g_recallInfo.Folder[2] = '\\';
+    g_recallInfo.Folder[3] = tmp[2];
+    g_recallInfo.Folder[4] = tmp[3];
+    
+    g_recallInfo.Folder[5] = '\\';
+    g_recallInfo.Folder[6] = tmp[4];
+    g_recallInfo.Folder[7] = tmp[5];
+    g_recallInfo.Folder[8] = '\\';
     
     if (cmd == 81 || cmd == 83)
     {

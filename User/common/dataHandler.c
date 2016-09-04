@@ -2,6 +2,9 @@
 #include "moduleStatus.h"
 #include "crc.h"
 #include "gpsAnalyser.h"
+#include "dataRecord.h"
+#include "gps.h"
+#include "config.h"
 
 /* 站号 */
 /* 出厂唯一编号 */
@@ -32,13 +35,18 @@ MSG_HEAD_t g_head;
 /* 用于发送缓冲 */
 SEND_BUF_t g_sendBuf;
 
+/* 用于记录数据到TF卡 */
+SEND_BUF_t g_recordBuf;
+
+/* 拷贝到缓冲区，供写入到文件中 */
+
 /* 用于接收数据回应的缓冲区，避免block接收 */
 SEND_BUF_t g_sendResponse;
 
 /* 回调应答的数据缓冲 */
 SEND_BIG_BUF_t g_sendRecallData;
 
-
+extern RECORD_INFO_t g_recordInfo;
 
 
 /* 用于测试填充数据 */
@@ -473,6 +481,16 @@ void ContructDataUp()
     offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
     
     /* date*/
+    /*
+    if (IsClockSynced())
+    {
+        RTC_GetTime(&g_stime);
+        RTC_GetDate(&g_sdate);
+        sprintf(gps.utc.strTime + 2, "%02d%02d%02d%02d%02d%02d", 
+                g_sdate.Year, g_sdate.Month, g_sdate.Date, 
+                g_stime.Hours, g_stime.Minutes, g_stime.Seconds);
+    }*/
+    
     offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
     
     /* 写入模块状态 */ 
@@ -591,8 +609,6 @@ void ContructDataUp()
     SEND_BUF_SET_LEN(offset + 2);
 
     GSM_LOG_P1("Date: %s\r\n", gps.utc.strTime);
-    GSM_LOG_P3("YYMMSS: %04d%02d%02d\r\n", gps.utc.year, gps.utc.month, gps.utc.date);
-    GSM_LOG_P3("HHMMSS: %02d%02d%02d\r\n", gps.utc.hour, gps.utc.min, gps.utc.sec);
     GSM_LOG_P4("Long:Lati %d : %d, TmpO:WetO %d:%d", 
                  GetCoordLong(), GetCoordLati(), GetTempOut(), GetWetOut());
     GSM_LOG_P4("TmpI:WetI %d:%d, pm25:%d, pm10:%d", 
@@ -603,6 +619,60 @@ void ContructDataUp()
     SEND_BUF_FLAG_SET();
     
     SEND_BUF_RESP_FALG_SET(1);
+    
+    /* 准备记录到TF卡 */
+    /* 需要判断时间是否同步 */
+    if (g_recordBuf.sendFlag == 0)
+    {
+        /*
+        memcpy(g_recordBuf.buf, SEND_BUF_OFFSET(LEN_HEAD), offset - LEN_HEAD);
+        g_recordBuf.useLen = offset - LEN_HEAD;
+        sprintf(g_recordInfo.newNameMon, "%02d%02d", g_sdate.Year, g_sdate.Month);
+        sprintf(g_recordInfo.newNameDay, "%02d%02d\\%02d", g_sdate.Year, g_sdate.Month,
+                g_sdate.Date);
+        sprintf(g_recordInfo.newNameHour, "%02d%02d\\%02d\\%02d.txt",
+                g_sdate.Year, g_sdate.Month, g_sdate.Date, g_stime.Hours);
+
+        g_recordBuf.sendFlag == 1;
+        
+        GSM_LOG_P3("Record data ready! \r\n%s\r\n%s\r\n%s", 
+                   g_recordInfo.newNameMon, 
+                   g_recordInfo.newNameDay, 
+                   g_recordInfo.newNameHour);
+      */
+        //  20160801161616
+        memcpy(g_recordBuf.buf, SEND_BUF_OFFSET(LEN_HEAD), offset - LEN_HEAD);
+        g_recordBuf.useLen = offset - LEN_HEAD;
+        
+        // 16
+        memcpy(g_recordInfo.newNameYear, gps.utc.strTime+2, 2);
+        
+        // 16/08
+        memcpy(g_recordInfo.newNameMon, g_recordInfo.newNameYear, 2);
+        g_recordInfo.newNameMon[2] = '\\';
+        memcpy(g_recordInfo.newNameMon + 3, gps.utc.strTime+4, 2);
+        
+        // 16/08/01
+        memcpy(g_recordInfo.newNameDay, g_recordInfo.newNameMon, 5);
+        g_recordInfo.newNameDay[5] = '\\';
+        memcpy(g_recordInfo.newNameDay + 6, gps.utc.strTime+6, 2);
+        
+        // 16/08/01/16.txt
+        memcpy(g_recordInfo.newNameHour, g_recordInfo.newNameDay, 8);
+        g_recordInfo.newNameHour[8] = '\\';
+        memcpy(g_recordInfo.newNameHour + 9, gps.utc.strTime+8, 2);
+        g_recordInfo.newNameHour[11] = '.';
+        g_recordInfo.newNameHour[12] = 't';
+        g_recordInfo.newNameHour[13] = 'x';
+        g_recordInfo.newNameHour[14] = 't';
+
+        g_recordBuf.sendFlag = 1;
+        
+        GSM_LOG_P3("Record data ready! \r\n%s\r\n%s\r\n%s", 
+                   g_recordInfo.newNameMon, 
+                   g_recordInfo.newNameDay, 
+                   g_recordInfo.newNameHour);
+    }
 
 }
 
@@ -620,8 +690,6 @@ u8 ConstructRecordData(u8 *data)
 {
     STATUS_e ret = STU_ERROR;
     u16 offset = 0;
-    
-    SEND_BUF_FLAG_CLEAR();
     
     /* date*/
     offset += FormatTime(&gps.utc.strTime[2], data+offset);
@@ -737,7 +805,6 @@ u8 ConstructRecordData(u8 *data)
 */
 u8 ConstructRecordDataToSend(u8 *data, u8 *cmd)
 {
-    STATUS_e ret = STU_ERROR;
     u16 offset = 0;
     u32 crc = 0;
     u8 *buf = g_sendRecallData.buf + g_sendRecallData.useLen;
