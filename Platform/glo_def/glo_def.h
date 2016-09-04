@@ -57,6 +57,10 @@ typedef enum EStatus_t {
 
 
 
+#define MAKECHAR(R)     #R
+
+
+
 #ifdef __cplusplus
 }
 #endif

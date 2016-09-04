@@ -13,6 +13,9 @@ extern "C" {
 #include "config.h"
 #include "ff.h"
 #include "osa_file.h"
+#include <stdbool.h>
+#include "feature_name.h"
+
 
 #define LOCAL_BIG_ENDIAN 在编译器中定义
 #ifdef LOCAL_BIG_ENDIAN

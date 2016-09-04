@@ -77,6 +77,7 @@ u8 CCSDeamonCEInit()
     AaSysLogProcessPrintRegister(AaSysLogStoreBipBufferByPolling);
 
     // alternative CCS service initialization
+    AaSysComCEInit();
     AaTagCEInit();
     //AaShellCEInit();
 
@@ -84,14 +85,14 @@ u8 CCSDeamonCEInit()
     AaSysLogCreateDeamon();
     AaTagCreateDeamon();
     // start application task
-    StartDataRecordTask();
+//    StartDataRecordTask();
     //StartTFCardTask();
     StartRunLedTask();
-    StartGpsTask();
-    StartGsmTask();
-    StartCP15Task();
+//    StartGpsTask();
+//    StartGsmTask();
+//    StartCP15Task();
     //StartRunAm2302Task();
-    StartAlphaSenseTask();
+//    StartAlphaSenseTask();
     
     /* Init Fan */
     // FanStart();

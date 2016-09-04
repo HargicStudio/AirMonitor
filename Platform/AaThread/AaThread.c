@@ -4,6 +4,8 @@
 History:
 [2015-09-30 Ted]: Create
 [2016-04-21 Ted]: merge code to FreeRTOS platform as stdio usart
+[2016-08-26 Ted]: optimize the code
+[2016-09-02 Ted]: optimize the code
 
 */
 
@@ -19,7 +21,9 @@ History:
 #define AATHREAD_MAX_NAME_LENGTH    configMAX_TASK_NAME_LEN
 
 
-typedef struct SAaThread_t {
+
+typedef struct SAaThread_t
+{
     /*!
      *  @brief  
      */
@@ -43,12 +47,12 @@ typedef struct SAaThread_t {
 } SAaThread;
 
 
+
 /** mutex for AaThread */  
-SAaThread* _aathread_mng_head_ptr = NULL;
+SAaThread* _aathread_mng_header_ptr = NULL;
 
 
 /** mutex for AaThread */  
-static osMutexDef(aathread_mutex);
 osMutexId _aathread_mutex_id;
 
 
@@ -58,68 +62,101 @@ static SAaThread* AaThreadFindMngPtr(osThreadId t_id);
 
 
 /** 
- * This is a brief description. 
- * This function should first been called after AaMemInit
+ * CCS Platform AaThread service Computer Environment initialization. 
+ * AaThread service initialize after AaMemInit service.
  * @param[in]   inArgName input argument description. 
  * @param[out]  outArgName output argument description.  
- * @retval  
+ * @retval      return error code.
+ *              0 is ok otherwise failed.
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function
  */  
 u8 AaThreadCEInit()
 {
+    osMutexDef(aathread_mutex);
     _aathread_mutex_id = osMutexCreate(osMutex(aathread_mutex));
-    if(_aathread_mutex_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureThread, "%s %d: AaThread mutex initialize failed",
+    if(_aathread_mutex_id == NULL) 
+    {
+        AaSysLogPrintF(LOGLEVEL_ERR, FeatureAaThread, "%s %d: AaThread mutex initialize failed",
                 __FUNCTION__, __LINE__);
-        return 2;
+        return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureThread, "create aathread_mutex success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureAaThread, "create aathread_mutex success");
 
     return 0;
 }
 
 /** 
- * This is a brief description. 
- * This function should first been called after AaMemInit
- * @param[in]   inArgName input argument description. 
- * @param[out]  outArgName output argument description.  
- * @retval  
- * @retval  
+ * Create thread. 
+ * This function should first been called after AaMemInit, and also after start scheduler.
+ * @param[in]   t_def: thread definition referenced with \ref osThread. 
+ * @param[in]   arg: pointer that is passed to the thread function as start argument.
+ * @param[in]   timeout: timeout for waiting creation if it is blocked by other creation.
+ *                       osWaitForever or specific time
+ * @param[out]  
+ * @retval      return thread ID for reference by other functions or NULL in case of error.
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function
+ *      2016-09-02 Ted: fix recycling when create thread failed
  */  
-osThreadId AaThreadCreateStartScheduler(const osThreadDef_t *t_def, void *arg)
+osThreadId AaThreadCreateScheduler(const osThreadDef_t *t_def, void *arg, u32 timeout)
 {
-    osMutexWait(_aathread_mutex_id, osWaitForever);
+    osMutexWait(_aathread_mutex_id, timeout);
 
     SAaThread* new_ptr;
     SAaThread* cur_ptr;
 
     osThreadId t_id = osThreadCreate(t_def, arg);
-    if(t_id == NULL) {
+    if(t_id == NULL) 
+    {
         osMutexRelease(_aathread_mutex_id);
+
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: create thread failed, Reason: system creation call failed",
+                        __FUNCTION__, __LINE__);
         return NULL;
     }
     
-    cur_ptr = _aathread_mng_head_ptr;
+    cur_ptr = _aathread_mng_header_ptr;
     
-    if(cur_ptr == NULL) {    // this is the first thread
-        new_ptr = AaMemMalloc(sizeof(SAaThread));
-        if(new_ptr == NULL) {
+    if(cur_ptr == NULL)     // this is the first thread
+    {    
+        new_ptr = AaMemCalloc(1, sizeof(SAaThread));
+        if(new_ptr == NULL)
+        {
+            // recycling thread resources
+            osStatus err = osThreadTerminate(t_id);
+            if(osOK != err)
+            {
+                AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: terminate thread failed with errcode %d, Reason: system terminate call failed",
+                                __FUNCTION__, __LINE__, err);
+            }
+            
             osMutexRelease(_aathread_mutex_id);
+
+            AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: create thread failed, Reason: calloc memory failed",
+                            __FUNCTION__, __LINE__);
             return NULL;
         }
-        strcpy(new_ptr->name, t_def->name);
+
+        // get the thread name
+        if (strlen(t_def->name) < AATHREAD_MAX_NAME_LENGTH)
+        {
+            strncpy(new_ptr->name, t_def->name, strlen(t_def->name));
+        }
+        else
+        {
+            strncpy(new_ptr->name, t_def->name, AATHREAD_MAX_NAME_LENGTH);
+        }
+        
         new_ptr->pthread = t_def->pthread;
         new_ptr->tpriority = t_def->tpriority;
         new_ptr->instances = t_def->instances;
@@ -128,21 +165,45 @@ osThreadId AaThreadCreateStartScheduler(const osThreadDef_t *t_def, void *arg)
         new_ptr->next = NULL;
         new_ptr->prev = NULL;
 
-        _aathread_mng_head_ptr = new_ptr;
+        _aathread_mng_header_ptr = new_ptr;
     }
-    else {
-        
-        while(cur_ptr->next != NULL) {
+    else 
+    {    
+        while(cur_ptr->next != NULL)
+        {
             cur_ptr = cur_ptr->next;
         }
 
         // get the last mng_ptr
-        new_ptr = AaMemMalloc(sizeof(SAaThread));
-        if(new_ptr == NULL) {
+        new_ptr = AaMemCalloc(1, sizeof(SAaThread));
+        if(new_ptr == NULL)
+        {
+            // recycling thread resources
+            osStatus err = osThreadTerminate(t_id);
+            if(osOK != err)
+            {
+                AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: terminate thread failed with errcode %d, Reason: system terminate call failed",
+                                __FUNCTION__, __LINE__, err);
+            }
+            
             osMutexRelease(_aathread_mutex_id);
+
+            AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: create thread failed, Reason: calloc memory failed",
+                            __FUNCTION__, __LINE__);
+            
             return NULL;
         }
-        strcpy(new_ptr->name, t_def->name);
+
+        // get the thread name
+        if (strlen(t_def->name) < AATHREAD_MAX_NAME_LENGTH)
+        {
+            strncpy(new_ptr->name, t_def->name, strlen(t_def->name));
+        }
+        else
+        {
+            strncpy(new_ptr->name, t_def->name, AATHREAD_MAX_NAME_LENGTH);
+        }
+        
         new_ptr->pthread = t_def->pthread;
         new_ptr->tpriority = t_def->tpriority;
         new_ptr->instances = t_def->instances;
@@ -156,22 +217,26 @@ osThreadId AaThreadCreateStartScheduler(const osThreadDef_t *t_def, void *arg)
 
     osMutexRelease(_aathread_mutex_id);
 
+    AaSysLogPrintF( LOGLEVEL_DBG, FeatureAaThread, "%s %d: create thread %s success with tpriority %d instances %d stacksize %d",
+                    __FUNCTION__, __LINE__, new_ptr->name, new_ptr->tpriority, new_ptr->instances, new_ptr->stacksize);
+
     return t_id;
 }
 
 /** 
- * This is a brief description. 
- * This function should first been called after AaMemInit
- * @param[in]   inArgName input argument description. 
- * @param[out]  outArgName output argument description.  
- * @retval  
- * @retval  
+ * Create thread. 
+ * This function should first been called after AaMemInit, and also before start scheduler.
+ * @param[in]   t_def: thread definition referenced with \ref osThread. 
+ * @param[in]   arg: pointer that is passed to the thread function as start argument.
+ * @param[out]  
+ * @retval      return thread ID for reference by other functions or NULL in case of error.
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function
+ *      2016-09-02 Ted: fix recycling when create thread failed
  */  
 osThreadId AaThreadCreateStartup(const osThreadDef_t *t_def, void *arg)
 {
@@ -179,18 +244,34 @@ osThreadId AaThreadCreateStartup(const osThreadDef_t *t_def, void *arg)
     SAaThread* cur_ptr;
 
     osThreadId t_id = osThreadCreate(t_def, arg);
-    if(t_id == NULL) {
+    if(t_id == NULL)
+    {
         return NULL;
     }
     
-    cur_ptr = _aathread_mng_head_ptr;
+    cur_ptr = _aathread_mng_header_ptr;
     
-    if(cur_ptr == NULL) {    // this is the first thread
-        new_ptr = AaMemMalloc(sizeof(SAaThread));
-        if(new_ptr == NULL) {
+    if(cur_ptr == NULL)     // this is the first thread
+    {
+        new_ptr = AaMemCalloc(1, sizeof(SAaThread));
+        if(new_ptr == NULL)
+        {
+            // recycling thread resources
+            osThreadTerminate(t_id);
+
             return NULL;
         }
-        strcpy(new_ptr->name, t_def->name);
+        
+        // get the thread name
+        if (strlen(t_def->name) < AATHREAD_MAX_NAME_LENGTH)
+        {
+            strncpy(new_ptr->name, t_def->name, strlen(t_def->name));
+        }
+        else
+        {
+            strncpy(new_ptr->name, t_def->name, AATHREAD_MAX_NAME_LENGTH);
+        }
+        
         new_ptr->pthread = t_def->pthread;
         new_ptr->tpriority = t_def->tpriority;
         new_ptr->instances = t_def->instances;
@@ -199,20 +280,35 @@ osThreadId AaThreadCreateStartup(const osThreadDef_t *t_def, void *arg)
         new_ptr->next = NULL;
         new_ptr->prev = NULL;
 
-        _aathread_mng_head_ptr = new_ptr;
+        _aathread_mng_header_ptr = new_ptr;
     }
-    else {
-        
-        while(cur_ptr->next != NULL) {
+    else
+    {
+        while(cur_ptr->next != NULL) 
+        {
             cur_ptr = cur_ptr->next;
         }
 
         // get the last mng_ptr
-        new_ptr = AaMemMalloc(sizeof(SAaThread));
-        if(new_ptr == NULL) {
+        new_ptr = AaMemCalloc(1, sizeof(SAaThread));
+        if(new_ptr == NULL)
+        {
+            // recycling thread resources
+            osThreadTerminate(t_id);
+            
             return NULL;
         }
-        strcpy(new_ptr->name, t_def->name);
+
+        // get the thread name
+        if (strlen(t_def->name) < AATHREAD_MAX_NAME_LENGTH)
+        {
+            strncpy(new_ptr->name, t_def->name, strlen(t_def->name));
+        }
+        else
+        {
+            strncpy(new_ptr->name, t_def->name, AATHREAD_MAX_NAME_LENGTH);
+        }
+        
         new_ptr->pthread = t_def->pthread;
         new_ptr->tpriority = t_def->tpriority;
         new_ptr->instances = t_def->instances;
@@ -228,27 +324,30 @@ osThreadId AaThreadCreateStartup(const osThreadDef_t *t_def, void *arg)
 }
 
 /** 
- * This is a brief description. 
- * This is a detail description. 
- * @param[in]   inArgName input argument description. 
+ * Kill thread. 
+ * Should be called after scheduler. 
+ * @param[in]   t_id: thread ID.
+ * @param[in]   timeout: timeout for waiting killing if it is blocked by other killing.
+ *                       osWaitForever or specific time
  * @param[out]  outArgName output argument description.  
- * @retval  
- * @retval  
+ * @retval      return osOK if terminate success or other error code if failed.
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-22 Huang Shengda
+ *      2016-05-22 Ted: create function
+ *      2016-09-02 Ted: little modification
  */  
-osStatus AaThreadKill(osThreadId t_id)
+osStatus AaThreadKill(osThreadId t_id, u32 timeout)
 {
-    osMutexWait(_aathread_mutex_id, osWaitForever);
+    osMutexWait(_aathread_mutex_id, timeout);
     
     osStatus err = osThreadTerminate(t_id);
-    if(err != osOK ) {
-        osMutexRelease(_aathread_mutex_id);
-        return err;
+    if(err != osOK )
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureAaThread, "%s %d: terminate thread failed with errcode %d, Reason: system terminate call failed",
+                        __FUNCTION__, __LINE__, err);
     }
 
     SAaThread* cur_ptr = AaThreadFindMngPtr(t_id);
@@ -257,6 +356,9 @@ osStatus AaThreadKill(osThreadId t_id)
 
     pre_ptr->next = nxt_ptr;
     nxt_ptr->prev = pre_ptr;
+
+    AaSysLogPrintF( LOGLEVEL_DBG, FeatureAaThread, "%s %d: thread %s will be killed",
+                    __FUNCTION__, __LINE__, cur_ptr->name);
     
     AaMemFree(cur_ptr);
 
@@ -265,23 +367,10 @@ osStatus AaThreadKill(osThreadId t_id)
     return err;
 }
 
-/** 
- * This is a brief description. 
- * This is a detail description. 
- * @param[in]   inArgName input argument description. 
- * @param[out]  outArgName output argument description.  
- * @retval  
- * @retval  
- * @par 
- *      
- * @par 
- *      
- * @par History
- *      2016-5-22 Huang Shengda
- */  
+
 static SAaThread* AaThreadFindMngPtr(osThreadId t_id)
 {
-    SAaThread* cur_ptr = _aathread_mng_head_ptr;
+    SAaThread* cur_ptr = _aathread_mng_header_ptr;
     
     if(cur_ptr == NULL) {    // thread manage is empty
         return NULL;
@@ -305,23 +394,23 @@ static SAaThread* AaThreadFindMngPtr(osThreadId t_id)
 }
 
 /** 
- * This is a brief description. 
- * This is a detail description. 
- * @param[in]   inArgName input argument description. 
+ * Get the designated thread name. 
+ * @param[in]   t_id: thread ID. 
  * @param[out]  outArgName output argument description.  
- * @retval  
+ * @retval      return the thread name pointer.
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-22 Huang Shengda
+ *      2016-05-22 Ted: create function
  */  
 char* AaThreadGetName(osThreadId t_id)
 {
     SAaThread* cur_ptr = AaThreadFindMngPtr(t_id);
-    if(cur_ptr == NULL) {
+    if(cur_ptr == NULL)
+    {
         return NULL;
     }
     

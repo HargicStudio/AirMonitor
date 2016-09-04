@@ -1,9 +1,10 @@
 /***
 
 History:
-[2015-09-30 Ted]: Create
-[2016-04-21 Ted]: merge code to FreeRTOS platform as stdio usart
-[2016-05-21 Ted]: support BipBuffer and DMA for uart tx debug
+[2015-09-30 Ted]: Create file.
+[2016-04-21 Ted]: merge code to FreeRTOS platform as stdio usart.
+[2016-05-21 Ted]: support BipBuffer and DMA for uart tx debug.
+[2016-09-02 Ted]: optimize code.
 
 */
 
@@ -42,11 +43,9 @@ SAaSysLog _aasyslog_mng = { .processGetBip_callback = NULL, .processPrint_callba
 
 
 /** mutex for AaSysLog process */  
-static osMutexDef(aasyslog_mutex);
 osMutexId _aasyslog_mutex_id;
 
 /** signal for DMA/IT that data send complete */  
-static osSemaphoreDef(aasyslog_sendcplt_sem);
 osSemaphoreId _aasyslog_sendcplt_sem_id;
 
 
@@ -71,7 +70,7 @@ static void AaSysLogDeamon(void const *arg);
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-5-21 Ted
  */  
 static void AaSysLogDeamon(void const *arg)
 {
@@ -80,30 +79,33 @@ static void AaSysLogDeamon(void const *arg)
     u32 block_size;
     char* block_addr;
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "AaSysLogDeamon started");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "AaSysLogDeamon started");
 
-    for(;;) {
+    for(;;)
+    {
         // should not call AaSysLogPrintF during bip buffer data is sending
 
-//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "waiting tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
+//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "waiting tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
         evt = osSignalWait(SIG_BIT_TX, osWaitForever);
-//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "get tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
+//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "get tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
         
-        if(evt.status == osEventSignal && evt.value.signals == SIG_BIT_TX) {
-            
+        if(evt.status == osEventSignal && evt.value.signals == SIG_BIT_TX)
+        {
             block_addr = CBipBuffer_Get(_p_bip_buffer, &block_size);
-            if(block_addr == NULL || block_size == 0) {
+            if(block_addr == NULL || block_size == 0) 
+            {
                 continue;
             }
 
-            if(_aasyslog_mng.processGetBip_callback == NULL) {
+            if(_aasyslog_mng.processGetBip_callback == NULL) 
+            {
                 continue;
             }
             _aasyslog_mng.processGetBip_callback(block_addr, block_size);
 
-//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "waiting tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
+//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "waiting tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
 //            evt = osSignalWait(SIG_BIT_TX_CPLT, osWaitForever);
-//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "get tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
+//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "get tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
 
             osSemaphoreWait(_aasyslog_sendcplt_sem_id, osWaitForever);
             
@@ -128,7 +130,7 @@ static void AaSysLogDeamon(void const *arg)
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-5-21 Ted
  */ 
 u8 AaSysLogGetBipRegister(void(*function)(char*, u32))
 {
@@ -149,14 +151,14 @@ u8 AaSysLogGetBipRegister(void(*function)(char*, u32))
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-5-21 Ted
  */ 
 u8 AaSysLogSendCplt()
 {
     // should not call AaSysLogPrintF during bip buffer data is sending and interrupt trigger
     
 //    osSignalSet(_aasyslogdaemon_id, SIG_BIT_TX_CPLT);
-//    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "set tx_cplt signal");
+//    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "set tx_cplt signal");
 
     osSemaphoreRelease(_aasyslog_sendcplt_sem_id);
 
@@ -164,129 +166,134 @@ u8 AaSysLogSendCplt()
 }
 
 /** 
- * This is a brief description. 
- * This AaSysLogInit should depand on AaMemInit
+ * CCS Platform AaSysLog service computer environment initialization. 
+ * AaSysLog service computer environment initialize should depand on AaMemInit.
  * @param[in]   inArgName input argument description. 
- * @param[out]  always 0 
- * @retval  
+ * @param[out]  outArgName 
+ * @retval      return error code. 0 is ok otherwise failed.
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function.
+ *      2016-09-02 Ted: optimize code.
  */  
 u8 AaSysLogCEInit()
 {
-    _p_bip_buffer = AaMemMalloc(AASYSLOG_BIPBUFFER_SIZE);
-    if(_p_bip_buffer == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureLog, "%s %d: AaSysLog Bip buffer init failed",
-                __FUNCTION__, __LINE__);
+    _p_bip_buffer = AaMemCalloc(1, AASYSLOG_BIPBUFFER_SIZE);
+    if(_p_bip_buffer == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysLog, "%s %d: AaSysLog CE initialize failed, Reason: Bip buffer calloc failed",
+                        __FUNCTION__, __LINE__);
 
         return 1;
     }
     
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "get _p_bip_buffer pointer %p", _p_bip_buffer);
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "get _p_bip_buffer pointer %p", _p_bip_buffer);
     CBipBuffer_Construct(_p_bip_buffer, AASYSLOG_BIPBUFFER_SIZE);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "create _p_bip_buffer success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "create _p_bip_buffer success");
 
 
+    osMutexDef(aasyslog_mutex);
     _aasyslog_mutex_id = osMutexCreate(osMutex(aasyslog_mutex));
-    if(_aasyslog_mutex_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureLog, "%s %d: aasyslog_mutex initialize failed",
-                __FUNCTION__, __LINE__);
+    if(_aasyslog_mutex_id == NULL) 
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysLog, "%s %d: AaSysLog CE initialize failed, Reason: aasyslog_mutex initialize failed",
+                        __FUNCTION__, __LINE__);
         return 2;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "create aasyslog_mutex success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "create aasyslog_mutex success");
 
 
+    osSemaphoreDef(aasyslog_sendcplt_sem);
     _aasyslog_sendcplt_sem_id = osSemaphoreCreate(osSemaphore(aasyslog_sendcplt_sem), 1);
-    if(_aasyslog_sendcplt_sem_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureLog, "%s %d: aasyslog_sendcplt_sem initialize failed",
-                __FUNCTION__, __LINE__);
+    if(_aasyslog_sendcplt_sem_id == NULL)
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysLog, "%s %d: AaSysLog CE initialize failed, Reason: aasyslog_sendcplt_sem initialize failed",
+                        __FUNCTION__, __LINE__);
         return 3;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "create aasyslog_sendcplt_sem success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "create aasyslog_sendcplt_sem success");
 
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "AaSysLog initialize success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "AaSysLog CE initialize success");
 
     return 0;
 }
 
 
 /** 
- * This is a brief description. 
- * This AaSysLogInit should depand on AaMemInit
+ * Create AaSysLog service daemon. 
+ * It should be called after AaSysLog CE initialized.
  * @param[in]   inArgName input argument description. 
- * @param[out]  always 0 
- * @retval  
+ * @param[out]  outArgName
+ * @retval      return error code. 0 is ok otherwise failed.
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function.
+ *      2016-09-02 Ted: optimize code.
  */  
 u8 AaSysLogCreateDeamon()
 {
     osThreadDef(AaSysLogDeamon, AaSysLogDeamon, osPriorityHigh, 0, AASYSLOGDEAMON_STACK_SIZE);
-    
     _aasyslogdaemon_id = AaThreadCreateStartup(osThread(AaSysLogDeamon), NULL);
-    if(_aasyslogdaemon_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureLog, "%s %d: AaSysLog Daemon initialize failed",
-                __FUNCTION__, __LINE__);
+    if(_aasyslogdaemon_id == NULL) 
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureSysLog, "%s %d: create AaSysLog service daemon failed",
+                        __FUNCTION__, __LINE__);
         return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "create aasyslog daemon success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureSysLog, "create AaSysLog service daemon success");
 
     return 0;
 }
 
 /** 
- * This is a brief description. 
- * This AaSysLogInit should depand on AaMemInit
+ * Print AaSysLog service bip buffer memory information.
  * @param[in]   inArgName input argument description. 
- * @param[out]  always 0 
- * @retval  
+ * @param[out]  outArgName
+ * @retval      
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-07-18 Huang Shengda
+ *      2016-07-18 Ted: create function.
  */  
 void AaSysLogBipBufferList(void)
 {
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "******************************");
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "total syslog buffer size: %d", AASYSLOG_BIPBUFFER_SIZE);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "used syslog buffer size : %d", CBipBuffer_HowMuchData(_p_bip_buffer));
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "maximum allocated syslog buffer size: %d", _aasyslog_max_bipbuf_used);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "******************************");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "******************************");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "total syslog buffer size: %d", AASYSLOG_BIPBUFFER_SIZE);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "used syslog buffer size : %d", CBipBuffer_HowMuchData(_p_bip_buffer));
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "maximum allocated syslog buffer size: %d", _aasyslog_max_bipbuf_used);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "******************************");
 }
 
 /** 
- * This is a brief description. 
- * 
- * @param[in]   inArgName input argument description. 
- * @param[out]  always 0 
- * @retval  
+ * Register syslog print process function. 
+ * @param[in]   void (*function)(char*, u32): the process function should processing
+ *                                            these log data. 
+ * @param[out]  outArgName
+ * @retval      
  * @retval  
  * @par 
  *      
  * @par 
  *      
  * @par History
- *      2016-05-21 Huang Shengda
-        2016-07-17 Huang Shengda
+ *      2016-05-21 Ted: create function.
+        2016-07-17 Ted: optimize code.
  */  
-u8 AaSysLogProcessPrintRegister(void (*function)(char*, u32))
+void AaSysLogProcessPrintRegister(void (*function)(char*, u32))
 {
     _aasyslog_mng.processPrint_callback = function;
-    return 0;
 }
 
 /** 
@@ -301,11 +308,11 @@ u8 AaSysLogProcessPrintRegister(void (*function)(char*, u32))
  * @par 
  *      
  * @par History
- *      2016-5-21 Huang Shengda
+ *      2016-05-21 Ted: create function.
  */  
 void AaSysLogPrintByPolling(char* str, u32 len)
 {
-    if (str == NULL) {
+    if (str == NULL || len == 0) {
         return;
     }
 
@@ -324,21 +331,21 @@ void AaSysLogPrintByPolling(char* str, u32 len)
  * @par 
  *      
  * @par History
- *      2016-07-17 Huang Shengda
+ *      2016-07-17 Ted
  */  
 void AaSysLogStoreBipBufferByPolling(char* str, u32 len)
 {
-    if (str == NULL) {
+    if (str == NULL || len == 0) {
         return;
     }
 
-    if (len > AASYSLOG_BIPBUFFER_SIZE) {
+    if (len > (AASYSLOG_BIPBUFFER_SIZE - CBipBuffer_HowMuchData(_p_bip_buffer))) {
         return ;
     }
 
     char* bip_buf_addr = CBipBuffer_Reserve(_p_bip_buffer, len);
-    if (bip_buf_addr == NULL) {
-        osMutexRelease(_aasyslog_mutex_id);
+    if (bip_buf_addr == NULL)
+    {
         return;
     }
     memcpy(bip_buf_addr, str, len);
@@ -369,15 +376,15 @@ void AaSysLogStoreBipBufferByPolling(char* str, u32 len)
  * @par 
  *      
  * @par History
- *      2016-07-17 Huang Shengda
+ *      2016-07-17 Ted
  */  
 void AaSysLogStoreBipBufferNormal(char* str, u32 len)
 {
-    if (str == NULL) {
+    if (str == NULL || len == 0) {
         return;
     }
 
-    if (len > AASYSLOG_BIPBUFFER_SIZE) {
+    if (len > (AASYSLOG_BIPBUFFER_SIZE - CBipBuffer_HowMuchData(_p_bip_buffer))) {
         return ;
     }
 

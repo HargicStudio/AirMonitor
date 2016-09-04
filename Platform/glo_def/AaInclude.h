@@ -21,8 +21,9 @@ History:
 #include "AaThread.h"
 #include "AaTag.h"
 #include "AaShell.h"
-#include "feature_id.h"
-#include "stdbool.h"
+#include "AaSysCom.h"
+#include "feature_ccs.h"
+
 
 
 

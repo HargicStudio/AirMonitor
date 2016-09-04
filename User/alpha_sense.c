@@ -13,6 +13,7 @@ History:
 #include "ads1222.h"
 #include "dataHandler.h"
 #include "PingPang.h"
+#include "feature_name.h"
 
 
 #define ALPHASENSE_SamplePerChannel     PINGPANG_BUFFER_DEEP

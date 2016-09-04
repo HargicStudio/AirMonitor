@@ -167,8 +167,6 @@ static struct SHeapMem *heap_end;
 static struct SHeapMem *lfree;   /* pointer to the lowest free block */
 
 
-
-static osSemaphoreDef(heap_sem);
 static osSemaphoreId _heap_sem_id;
 
 
@@ -266,6 +264,7 @@ void AaMemHeapCEInit(void *begin_addr, void *end_addr)
     heap_end->next  = mem_size_aligned + SIZEOF_STRUCT_MEM;
     heap_end->prev  = mem_size_aligned + SIZEOF_STRUCT_MEM;
 
+    osSemaphoreDef(heap_sem);
     _heap_sem_id = osSemaphoreCreate (osSemaphore(heap_sem), 1);
 
     /* initialize the lowest-free pointer to the start of the heap */
@@ -294,9 +293,9 @@ void *AaMemMalloc(u32 size)
         return NULL;
 
     if (size != RT_ALIGN(size, RT_ALIGN_SIZE)) {
-        // AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "malloc size %d, but align to %d", size, RT_ALIGN(size, RT_ALIGN_SIZE));
+        // AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "malloc size %d, but align to %d", size, RT_ALIGN(size, RT_ALIGN_SIZE));
     } else {
-        // AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "malloc size %d", size);
+        // AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "malloc size %d", size);
     }
 
     /* alignment size */
@@ -304,7 +303,7 @@ void *AaMemMalloc(u32 size)
 
     if (size > mem_size_aligned)
     {
-        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureMem, "no memory");
+        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysMem, "no memory");
 
         return NULL;
     }
@@ -396,7 +395,7 @@ void *AaMemMalloc(u32 size)
             RT_ASSERT((u32)((u8 *)mem + SIZEOF_STRUCT_MEM) % RT_ALIGN_SIZE == 0);
             RT_ASSERT((((u32)mem) & (RT_ALIGN_SIZE-1)) == 0);
 
-            // AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "allocate memory at 0x%x, size: %d",
+            // AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "allocate memory at 0x%x, size: %d",
             //             (u32)((u8 *)mem + SIZEOF_STRUCT_MEM),
             //             (u32)(mem->next - ((u8 *)mem - heap_ptr)));
 
@@ -431,7 +430,7 @@ void *AaMemRealloc(void *rmem, u32 newsize)
     newsize = RT_ALIGN(newsize, RT_ALIGN_SIZE);
     if (newsize > mem_size_aligned)
     {
-        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureMem, "realloc: out of memory");
+        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysMem, "realloc: out of memory");
         return NULL;
     }
 
@@ -547,14 +546,14 @@ void AaMemFree(void *rmem)
     if ((u8 *)rmem < (u8 *)heap_ptr ||
         (u8 *)rmem >= (u8 *)heap_end)
     {
-        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureMem, "illegal memory");
+        // AaSysLogPrintF(LOGLEVEL_WRN, FeatureSysMem, "illegal memory");
         return;
     }
 
     /* Get the corresponding struct SHeapMem ... */
     mem = (struct SHeapMem *)((u8 *)rmem - SIZEOF_STRUCT_MEM);
 
-    // AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "release memory 0x%x, size: %d",
+    // AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "release memory 0x%x, size: %d",
     //               (u32)rmem,
     //               (u32)(mem->next - ((u8 *)mem - heap_ptr)));
 
@@ -598,11 +597,11 @@ void AaMemInfo(u32 *total, u32 *used, u32 *max_used)
 
 void AaMemList(void)
 {
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "******************************");
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "total memory: %d", mem_size_aligned);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "used memory : %d", used_mem);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "maximum allocated memory: %d", max_mem);
-    AaSysLogPrintF(LOGLEVEL_DBG, FeatureMem, "******************************");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "******************************");
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "total memory: %d", mem_size_aligned);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "used memory : %d", used_mem);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "maximum allocated memory: %d", max_mem);
+    AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysMem, "******************************");
 }
 #endif
 

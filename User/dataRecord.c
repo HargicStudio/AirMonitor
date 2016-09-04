@@ -76,7 +76,7 @@ static void DataRecordThread(void const *argument)
     /* 获取SD卡容量信息 */
     if (OSA_getSdSize(&sdSizeInfo) == OSA_OK)
     {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "SD totalSize=%dM availableSize=%dM\n\r",
+        AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "SD totalSize=%dM availableSize=%dM\n\r",
                        sdSizeInfo.totalSize, sdSizeInfo.availableSize);
     }
     else

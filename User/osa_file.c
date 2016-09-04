@@ -24,6 +24,7 @@
 #include "cmsis_os.h"
 #include "AaInclude.h"
 #include "main.h"
+#include "feature_name.h"
 
 /* ========================================================================== */
 /*                           宏和类型定义区                                   */
@@ -109,7 +110,7 @@ static void StartThread(void const *argument)
   /* 获取SD卡容量信息 */
   if (OSA_getSdSize(&sdSizeInfo) == OSA_OK)
   {
-      AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "SD totalSize=%dM availableSize=%dM\n\r",
+      AaSysLogPrintF(LOGLEVEL_INF, FeatureFatFS, "SD totalSize=%dM availableSize=%dM\n\r",
                      sdSizeInfo.totalSize, sdSizeInfo.availableSize);
   }
   
@@ -145,7 +146,7 @@ static void StartThread(void const *argument)
           else
           {
               //printf("fatfs read: %s, len = %d\n\r",rtext, bytesread);
-              AaSysLogPrintF(LOGLEVEL_DBG, FeatureLog, "fatfs read: %s, len = %d\n\r",rtext, bytesread);
+              AaSysLogPrintF(LOGLEVEL_DBG, FeatureFatFS, "fatfs read: %s, len = %d\n\r",rtext, bytesread);
           }
 
           OSA_fileClose(hFile);

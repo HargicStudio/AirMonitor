@@ -16,7 +16,6 @@ History:
 #endif 
 
 
-#include "AaPlatform.h"
 #include <stdbool.h>
 
 
@@ -26,12 +25,17 @@ enum {
     
     
     // application layer from 0x2000
-
+    API_MESSAGE_ID_LED_INDICATION = 0x2345,
     
-    API_MESSAGE_ID_MAX = 0xFFFF,
+    API_MESSAGE_ID_MAX = 0x8FFF,
 };
 
 
+
+typedef struct 
+{
+    bool led_status;
+} SLedIndication;
 
 
 #ifdef __cplusplus

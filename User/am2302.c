@@ -422,7 +422,7 @@ static void RunAm2302Thread(void const *argument)
   
   AM2302_Data_TypeDef AM2302_Data;
   
-  AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "============AM2302_Init============\n\r");
+  AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "============AM2302_Init============\n\r");
   //初始化通道0
   AM2302_Init(AM2302_CH0);
   //初始化通道1
@@ -435,25 +435,25 @@ static void RunAm2302Thread(void const *argument)
        /* 通道0 */
       if(AM2302_Read_TempAndHumidity(AM2302_CH0, &AM2302_Data)==SUCCESS)
       {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
+        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
           AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
         
         StoreWetTempInfo(AM2302_Data.humidity, AM2302_Data.temperature, &g_tempWetIn);
       }
       else
       {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "[CH0]read AM2302 failed!\n");      
+        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 failed!\n");      
       }
       
       /* 通道1 */
       if(AM2302_Read_TempAndHumidity(AM2302_CH1, &AM2302_Data)==SUCCESS)
       {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "[CH1]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
+        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
            AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
       }
       else
       {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureLog, "[CH1]read AM2302 failed!\n");      
+        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 failed!\n");      
       }
 
       
