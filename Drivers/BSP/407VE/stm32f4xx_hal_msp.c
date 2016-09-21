@@ -174,7 +174,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == ADS1222_A_DOUT_PIN) {
-        HAL_GPIO_SenseA_EXTI_Callback(ADS1222_A_DOUT_PIN);
+        HAL_GPIO_SenseA_EXTI_Callback(GPIO_Pin);
+    } else if (GPIO_Pin == ADS1222_B_DOUT_PIN) {
+        HAL_GPIO_SenseB_EXTI_Callback(GPIO_Pin);
+    } else if (GPIO_Pin == (ADS1222_C_DOUT_PIN | ADS1222_D_DOUT_PIN)) {
+        HAL_GPIO_SenseCD_EXTI_Callback(GPIO_Pin);
     }
 }
 

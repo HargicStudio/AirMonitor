@@ -23,7 +23,11 @@ typedef enum
     SysCom_Unknow = 0,
     SysCom_RunLed1 = 1,
     SysCom_RunLed2,
+    SysCom_Ads1222,
+    SysCom_AlphaS,
+    
     SysCom_Auto,
+    
     SysCom_MAX = 1000,
 } ESysComID;
 

@@ -26,15 +26,106 @@
 #include "AaInclude.h"
 #include "main.h"
 #include "alpha_sense.h"
+#include "led_dev.h"
+
+
+
+#define ADS1222_A_SCLK_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
+#define ADS1222_A_SCLK_PORT                  GPIOC
+#define ADS1222_A_SCLK_PIN                   GPIO_PIN_0
+#define ADS1222_A_SCLK_LOW()          HAL_GPIO_WritePin(ADS1222_A_SCLK_PORT, ADS1222_A_SCLK_PIN, GPIO_PIN_RESET) 
+#define ADS1222_A_SCLK_HIGH()         HAL_GPIO_WritePin(ADS1222_A_SCLK_PORT, ADS1222_A_SCLK_PIN, GPIO_PIN_SET)
+
+#define ADS1222_B_SCLK_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
+#define ADS1222_B_SCLK_PORT                  GPIOC
+#define ADS1222_B_SCLK_PIN                   GPIO_PIN_2
+#define ADS1222_B_SCLK_LOW()          HAL_GPIO_WritePin(ADS1222_B_SCLK_PORT, ADS1222_B_SCLK_PIN, GPIO_PIN_RESET) 
+#define ADS1222_B_SCLK_HIGH()         HAL_GPIO_WritePin(ADS1222_B_SCLK_PORT, ADS1222_B_SCLK_PIN, GPIO_PIN_SET)
+
+#define ADS1222_C_SCLK_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_C_SCLK_PORT                  GPIOB
+#define ADS1222_C_SCLK_PIN                   GPIO_PIN_12
+#define ADS1222_C_SCLK_LOW()          HAL_GPIO_WritePin(ADS1222_C_SCLK_PORT, ADS1222_C_SCLK_PIN, GPIO_PIN_RESET) 
+#define ADS1222_C_SCLK_HIGH()         HAL_GPIO_WritePin(ADS1222_C_SCLK_PORT, ADS1222_C_SCLK_PIN, GPIO_PIN_SET)
+
+#define ADS1222_D_SCLK_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_D_SCLK_PORT                  GPIOB
+#define ADS1222_D_SCLK_PIN                   GPIO_PIN_14
+#define ADS1222_D_SCLK_LOW()          HAL_GPIO_WritePin(ADS1222_D_SCLK_PORT, ADS1222_D_SCLK_PIN, GPIO_PIN_RESET) 
+#define ADS1222_D_SCLK_HIGH()         HAL_GPIO_WritePin(ADS1222_D_SCLK_PORT, ADS1222_D_SCLK_PIN, GPIO_PIN_SET)
+
+#define ADS1222_A_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
+#define ADS1222_A_DOUT_LOW()        HAL_GPIO_WritePin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN, GPIO_PIN_RESET) 
+#define ADS1222_A_DOUT_HIGH()       HAL_GPIO_WritePin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN, GPIO_PIN_SET)
+#define ADS1222_A_DOUT_IN()	        HAL_GPIO_ReadPin(ADS1222_A_DOUT_PORT, ADS1222_A_DOUT_PIN)
+#define ADS1222_A_DOUT_EXTI_IRQn            EXTI1_IRQn
+
+#define ADS1222_B_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOC_CLK_ENABLE()
+#define ADS1222_B_DOUT_LOW()        HAL_GPIO_WritePin(ADS1222_B_DOUT_PORT, ADS1222_B_DOUT_PIN, GPIO_PIN_RESET) 
+#define ADS1222_B_DOUT_HIGH()       HAL_GPIO_WritePin(ADS1222_B_DOUT_PORT, ADS1222_B_DOUT_PIN, GPIO_PIN_SET)
+#define ADS1222_B_DOUT_IN()	        HAL_GPIO_ReadPin(ADS1222_B_DOUT_PORT, ADS1222_B_DOUT_PIN)
+#define ADS1222_B_DOUT_EXTI_IRQn            EXTI3_IRQn
+
+#define ADS1222_C_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_C_DOUT_LOW()        HAL_GPIO_WritePin(ADS1222_C_DOUT_PORT, ADS1222_C_DOUT_PIN, GPIO_PIN_RESET) 
+#define ADS1222_C_DOUT_HIGH()       HAL_GPIO_WritePin(ADS1222_C_DOUT_PORT, ADS1222_C_DOUT_PIN, GPIO_PIN_SET)
+#define ADS1222_C_DOUT_IN()	        HAL_GPIO_ReadPin(ADS1222_C_DOUT_PORT, ADS1222_C_DOUT_PIN)
+#define ADS1222_C_DOUT_EXTI_IRQn            EXTI15_10_IRQn
+
+#define ADS1222_D_DOUT_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_D_DOUT_LOW()        HAL_GPIO_WritePin(ADS1222_D_DOUT_PORT, ADS1222_D_DOUT_PIN, GPIO_PIN_RESET) 
+#define ADS1222_D_DOUT_HIGH()       HAL_GPIO_WritePin(ADS1222_D_DOUT_PORT, ADS1222_D_DOUT_PIN, GPIO_PIN_SET)
+#define ADS1222_D_DOUT_IN()	        HAL_GPIO_ReadPin(ADS1222_D_DOUT_PORT, ADS1222_D_DOUT_PIN)
+#define ADS1222_D_DOUT_EXTI_IRQn            EXTI15_10_IRQn
+
+#define ADS1222_CD_DOUT_EXTI_IRQn            EXTI15_10_IRQn
+
+#define ADS1222_MUX_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_MUX_PORT                  GPIOB
+#define ADS1222_MUX_PIN                   GPIO_PIN_0
+#define ADS1222_MUX_LOW()        HAL_GPIO_WritePin(ADS1222_MUX_PORT, ADS1222_MUX_PIN, GPIO_PIN_RESET) 
+#define ADS1222_MUX_HIGH()       HAL_GPIO_WritePin(ADS1222_MUX_PORT, ADS1222_MUX_PIN, GPIO_PIN_SET)
+#define ADS1222_MUX_TOGGLE()     HAL_GPIO_TogglePin(ADS1222_MUX_PORT, ADS1222_MUX_PIN);
+#define Ads1222_MUX_PinRead()       HAL_GPIO_ReadPin(ADS1222_MUX_PORT, ADS1222_MUX_PIN)
+
+#define ADS1222_TEMPEN_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_TEMPEN_PORT                  GPIOB
+#define ADS1222_TEMPEN_PIN                   GPIO_PIN_1
+#define ADS1222_TEMPEN_LOW()     HAL_GPIO_WritePin(ADS1222_TEMPEN_PORT, ADS1222_TEMPEN_PIN, GPIO_PIN_RESET) 
+#define ADS1222_TEMPEN_HIGH()    HAL_GPIO_WritePin(ADS1222_TEMPEN_PORT, ADS1222_TEMPEN_PIN, GPIO_PIN_SET)
+
+#define ADS1222_BUFEN_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
+#define ADS1222_BUFEN_PORT                  GPIOB
+#define ADS1222_BUFEN_PIN                   GPIO_PIN_2
+
+#define ADS1222_BUFEN_LOW()      HAL_GPIO_WritePin(ADS1222_BUFEN_PORT, ADS1222_BUFEN_PIN, GPIO_PIN_RESET) 
+#define ADS1222_BUFEN_HIGH()     HAL_GPIO_WritePin(ADS1222_BUFEN_PORT, ADS1222_BUFEN_PIN, GPIO_PIN_SET)
+
+
+
+
+static u8 _sense_exist_bit = 0x00;
+
+static u8 _sense_conv_cplt = 0x00;
 
 
 
 static void delay_us(uint16_t us);
 static void delay_10us(uint16_t _10us);
+static void ADS1222_DOUT_IPU(uint8_t chipId);
 
 static void Ads1222_SenseA_EXTIGpioConfig();
+static void Ads1222_SenseB_EXTIGpioConfig();
+static void Ads1222_SenseC_EXTIGpioConfig();
+static void Ads1222_SenseD_EXTIGpioConfig();
 static void Ads1222_SenseA_InputGpioConfig();
+static void Ads1222_SenseB_InputGpioConfig();
+static void Ads1222_SenseC_InputGpioConfig();
+static void Ads1222_SenseD_InputGpioConfig();
 static void Ads1222_SenseA_OutputGpioConfig();
+static void Ads1222_SenseB_OutputGpioConfig();
+static void Ads1222_SenseC_OutputGpioConfig();
+static void Ads1222_SenseD_OutputGpioConfig();
 
 
 
@@ -164,6 +255,7 @@ void ADS1222_Init(void)
  *      
  * @par History
  *      2016-08-10 Huang Shengda
+ *      2016-09-19 huang Shengda: support Sense A/B/C/D
  */  
 static void Ads1222_SenseA_EXTIGpioConfig()
 {
@@ -172,18 +264,81 @@ static void Ads1222_SenseA_EXTIGpioConfig()
     /* Enable /DRDY clock */
     ADS1222_A_DOUT_GPIO_CLK_ENABLE();
 
-    /* Configure PA0 pin as input floating */
+    /* Configure PC1 pin as input floating */
     GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Pin = ADS1222_A_DOUT_PIN;
     HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStructure);
 
-    /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+    /* Enable and set EXTI Line1 Interrupt to the HIGH2 priority */
     // !!! this is very important
     // !!! we must clear EXTI bit first or it will trigger next interrupt when IRQ enabled
     __HAL_GPIO_EXTI_CLEAR_IT(ADS1222_A_DOUT_PIN);
     HAL_NVIC_SetPriority(ADS1222_A_DOUT_EXTI_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_2, 0);
     HAL_NVIC_EnableIRQ(ADS1222_A_DOUT_EXTI_IRQn);
+}
+
+static void Ads1222_SenseB_EXTIGpioConfig()
+{
+    GPIO_InitTypeDef   GPIO_InitStructure;
+
+    /* Enable /DRDY clock */
+    ADS1222_B_DOUT_GPIO_CLK_ENABLE();
+
+    /* Configure PC3 pin as input floating */
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pin = ADS1222_B_DOUT_PIN;
+    HAL_GPIO_Init(ADS1222_B_DOUT_PORT, &GPIO_InitStructure);
+
+    /* Enable and set EXTI Line3 Interrupt to the HIGH2 priority */
+    // !!! this is very important
+    // !!! we must clear EXTI bit first or it will trigger next interrupt when IRQ enabled
+    __HAL_GPIO_EXTI_CLEAR_IT(ADS1222_B_DOUT_PIN);
+    HAL_NVIC_SetPriority(ADS1222_B_DOUT_EXTI_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_2, 0);
+    HAL_NVIC_EnableIRQ(ADS1222_B_DOUT_EXTI_IRQn);
+}
+
+static void Ads1222_SenseC_EXTIGpioConfig()
+{
+    GPIO_InitTypeDef   GPIO_InitStructure;
+
+    /* Enable /DRDY clock */
+    ADS1222_C_DOUT_GPIO_CLK_ENABLE();
+
+    /* Configure PB13 pin as input floating */
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pin = ADS1222_C_DOUT_PIN;
+    HAL_GPIO_Init(ADS1222_C_DOUT_PORT, &GPIO_InitStructure);
+
+    /* Enable and set EXTI Line15:10 Interrupt to the HIGH2 priority */
+    // !!! this is very important
+    // !!! we must clear EXTI bit first or it will trigger next interrupt when IRQ enabled
+    __HAL_GPIO_EXTI_CLEAR_IT(ADS1222_C_DOUT_PIN);
+    HAL_NVIC_SetPriority(ADS1222_C_DOUT_EXTI_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_2, 0);
+    HAL_NVIC_EnableIRQ(ADS1222_C_DOUT_EXTI_IRQn);
+}
+
+static void Ads1222_SenseD_EXTIGpioConfig()
+{
+    GPIO_InitTypeDef   GPIO_InitStructure;
+
+    /* Enable /DRDY clock */
+    ADS1222_D_DOUT_GPIO_CLK_ENABLE();
+
+    /* Configure PB15 pin as input floating */
+    GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pin = ADS1222_D_DOUT_PIN;
+    HAL_GPIO_Init(ADS1222_D_DOUT_PORT, &GPIO_InitStructure);
+
+    /* Enable and set EXTI Line15:10 Interrupt to the HIGH2 priority */
+    // !!! this is very important
+    // !!! we must clear EXTI bit first or it will trigger next interrupt when IRQ enabled
+    __HAL_GPIO_EXTI_CLEAR_IT(ADS1222_D_DOUT_PIN);
+    HAL_NVIC_SetPriority(ADS1222_D_DOUT_EXTI_IRQn, SYSTEM_IRQ_PRIORITY_HIGH_2, 0);
+    HAL_NVIC_EnableIRQ(ADS1222_D_DOUT_EXTI_IRQn);
 }
 
 /** 
@@ -199,6 +354,7 @@ static void Ads1222_SenseA_EXTIGpioConfig()
  *      
  * @par History
  *      2016-08-10 Huang Shengda
+ *      2016-09-19 huang Shengda: support Sense A/B/C/D
  */  
 static void Ads1222_SenseA_InputGpioConfig()
 {
@@ -214,6 +370,48 @@ static void Ads1222_SenseA_InputGpioConfig()
     HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct);
 }
 
+static void Ads1222_SenseB_InputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_B_DOUT_EXTI_IRQn);
+
+    // configuration as input
+    GPIO_InitStruct.Pin   = ADS1222_B_DOUT_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull  = GPIO_PULLUP;
+    HAL_GPIO_Init(ADS1222_B_DOUT_PORT, &GPIO_InitStruct);
+}
+
+static void Ads1222_SenseC_InputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_C_DOUT_EXTI_IRQn);
+
+    // configuration as input
+    GPIO_InitStruct.Pin   = ADS1222_C_DOUT_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull  = GPIO_PULLUP;
+    HAL_GPIO_Init(ADS1222_C_DOUT_PORT, &GPIO_InitStruct);
+}
+
+static void Ads1222_SenseD_InputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_D_DOUT_EXTI_IRQn);
+
+    // configuration as input
+    GPIO_InitStruct.Pin   = ADS1222_D_DOUT_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull  = GPIO_PULLUP;
+    HAL_GPIO_Init(ADS1222_D_DOUT_PORT, &GPIO_InitStruct);
+}
+
 /** 
  * This is a brief description. 
  * This is a detail description. 
@@ -227,6 +425,7 @@ static void Ads1222_SenseA_InputGpioConfig()
  *      
  * @par History
  *      2016-08-10 Huang Shengda
+ *      2016-09-19 huang Shengda: support Sense A/B/C/D
  */  
 static void Ads1222_SenseA_OutputGpioConfig()
 {
@@ -242,37 +441,157 @@ static void Ads1222_SenseA_OutputGpioConfig()
     HAL_GPIO_Init(ADS1222_A_DOUT_PORT, &GPIO_InitStruct); 
 }
 
-/**
-  * º¯Êý¹¦ÄÜ: Ê¹ADS1222_DOUTÒý½Å±äÎªÉÏÀ­ÊäÈëÄ£Ê½
-  * ÊäÈë²ÎÊý: chipId: ads1222Ð¾Æ¬±àºÅ
-  * ·µ »Ø Öµ: ÎÞ
-  * Ëµ    Ã÷£ºÎÞ
-  */
-void ADS1222_DOUT_IPU(uint8_t chipId)
+static void Ads1222_SenseB_OutputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_B_DOUT_EXTI_IRQn);
+
+    // configuration as output
+    GPIO_InitStruct.Pin = ADS1222_B_DOUT_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ADS1222_B_DOUT_PORT, &GPIO_InitStruct); 
+}
+
+static void Ads1222_SenseC_OutputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_C_DOUT_EXTI_IRQn);
+
+    // configuration as output
+    GPIO_InitStruct.Pin = ADS1222_C_DOUT_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ADS1222_C_DOUT_PORT, &GPIO_InitStruct); 
+}
+
+static void Ads1222_SenseD_OutputGpioConfig()
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    // disable exti
+    HAL_NVIC_DisableIRQ(ADS1222_D_DOUT_EXTI_IRQn);
+
+    // configuration as output
+    GPIO_InitStruct.Pin = ADS1222_D_DOUT_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ADS1222_D_DOUT_PORT, &GPIO_InitStruct); 
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-09-19 Huang Shengda
+ */  
+static void ADS1222_DOUT_IPU(u8 chipId)
 {    
-    switch(chipId) {
-        case ADS1222_CHIP_A: Ads1222_SenseA_InputGpioConfig(); break;
-        case ADS1222_CHIP_B: break;
-        case ADS1222_CHIP_C: break;
-        case ADS1222_CHIP_D: break;
-        default:break;
+    if ((chipId & ADS1222_CHIP_A) == ADS1222_CHIP_A)
+    {
+        Ads1222_SenseA_InputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_B) == ADS1222_CHIP_B)
+    {
+        Ads1222_SenseB_InputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_C) == ADS1222_CHIP_C)
+    {
+        Ads1222_SenseC_InputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_D) == ADS1222_CHIP_D)
+    {
+        Ads1222_SenseD_InputGpioConfig();
     }
 }
 
-/**
-  * º¯Êý¹¦ÄÜ: Ê¹ADS1222_DOUTÒý½Å±äÎªÍÆÍìÊä³öÄ£Ê½
-  * ÊäÈë²ÎÊý: chipId: ads1222Ð¾Æ¬±àºÅ
-  * ·µ »Ø Öµ: ÎÞ
-  * Ëµ    Ã÷£ºÎÞ
-  */
-void ADS1222_DOUT_Out_PP(uint8_t chipId)
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-09-19 Huang Shengda
+ */  
+static void ADS1222_DOUT_Out_PP(u8 chipId)
 {    
-     switch(chipId) {
-        case ADS1222_CHIP_A: Ads1222_SenseA_OutputGpioConfig(); break;
-        case ADS1222_CHIP_B: break;
-        case ADS1222_CHIP_C: break;
-        case ADS1222_CHIP_D: break;
-        default:break;
+    if ((chipId & ADS1222_CHIP_A) == ADS1222_CHIP_A)
+    {
+        Ads1222_SenseA_OutputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_B) == ADS1222_CHIP_B)
+    {
+        Ads1222_SenseB_OutputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_C) == ADS1222_CHIP_C)
+    {
+        Ads1222_SenseC_OutputGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_D) == ADS1222_CHIP_D)
+    {
+        Ads1222_SenseD_OutputGpioConfig();
+    }
+}
+
+/** 
+ * This is a brief description. 
+ * This is a detail description. 
+ * @param[in]   inArgName input argument description. 
+ * @param[out]  outArgName output argument description.  
+ * @retval  
+ * @retval  
+ * @par 
+ *      
+ * @par 
+ *      
+ * @par History
+ *      2016-08-10 Huang Shengda
+ *      2016-09-19 Huang Shengda: support Sense A/B/C/D
+ */  
+void Ads1222_EnableExti(u8 chipId)
+{
+    if ((chipId & ADS1222_CHIP_A) == ADS1222_CHIP_A)
+    {
+        Ads1222_SenseA_EXTIGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_B) == ADS1222_CHIP_B)
+    {
+        Ads1222_SenseB_EXTIGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_C) == ADS1222_CHIP_C)
+    {
+        Ads1222_SenseC_EXTIGpioConfig();
+    }
+
+    if ((chipId & ADS1222_CHIP_D) == ADS1222_CHIP_D)
+    {
+        Ads1222_SenseD_EXTIGpioConfig();
     }
 }
 
@@ -322,6 +641,11 @@ void Ads1222_SetChannel(u8 channel)
     }
 }
 
+void Ads1222_ExchangeChannel()
+{
+    ADS1222_MUX_TOGGLE();
+}
+
 /** 
  * This is a brief description. 
  * This is a detail description. 
@@ -334,11 +658,17 @@ void Ads1222_SetChannel(u8 channel)
  * @par 
  *      
  * @par History
- *      2016-08-10 Huang Shengda
- */  
-void Ads1222_EnableExti()
+ *      2016-09-19 Huang Shengda
+ */
+void Ads1222_SetExistSense(u8 chip)
 {
-    Ads1222_SenseA_EXTIGpioConfig();
+    _sense_exist_bit = 0x00;
+    _sense_exist_bit |= chip;
+}
+
+u8 Ads122_GetExistSense()
+{
+    return _sense_exist_bit;
 }
 
 /*******************************************************************************
@@ -349,10 +679,11 @@ void Ads1222_EnableExti()
 * Êä  ³ö  : ÎÞ
 * ·µ »Ø Öµ: ¶ÁÈ¡24bit Ô­Ê¼ADÖµ
 *******************************************************************************/
-unsigned long ADS1222_AdRead(uint8_t chipId)
+Ads1222Err ADS1222_AdRead(u32* data_a, u32* data_b, u32* data_c, u32* data_d)
 {
-    uint8_t i = 0;
-    unsigned long adValue = 0;
+    u8 i = 0;
+
+    ADS1222_DOUT_IPU(0x0f);
 
     // enter critical section
     // first will disable global interrupt
@@ -360,148 +691,69 @@ unsigned long ADS1222_AdRead(uint8_t chipId)
     // taskENTER_CRITICAL();
     osThreadSuspendAll();
 
-    // //Ñ¡Ôñ²É¼¯Í¨µÀ
-    // if (channel == ADS1222_CH0) {
-    //     ADS1222_MUX_LOW();  //AIN1
-    // } else if (channel == ADS1222_CH1) {
-    //     ADS1222_MUX_HIGH(); //AIN2
-    // }
-    // delay_us(2);
-    
-    switch(chipId) {
-        case ADS1222_CHIP_A:
+    *data_a = 0;
+    *data_b = 0;
+    *data_c = 0;
+    *data_d = 0;
+
+    for(i=0; i<24; i++)
+    {
+        // shift data
+        *data_a = *data_a << 1;
+        *data_b = *data_b << 1;
+        *data_c = *data_c << 1;
+        *data_d = *data_d << 1;
+
+        // sclk put high
+        ADS1222_A_SCLK_HIGH();
+        ADS1222_B_SCLK_HIGH();
+        ADS1222_C_SCLK_HIGH();
+        ADS1222_D_SCLK_HIGH();
+
+        delay_us(1);
+
+        // sclk put low
+        ADS1222_A_SCLK_LOW();
+        ADS1222_B_SCLK_LOW();
+        ADS1222_C_SCLK_LOW();
+        ADS1222_D_SCLK_LOW();
+
+        delay_us(1);
+
+        // read bit
+        if (ADS1222_A_DOUT_IN() == GPIO_PIN_SET)
         {
-            // ADS1222_A_SCLK_LOW();
-            // delay_10us(2); 
-
-            // ADS1222_DOUT_Out_PP(chipId); //DOUTÅäÖÃÊä³öÇ¿ÖÆÀ­¸ß
-            // ADS1222_A_DOUT_HIGH();
-            // delay_us(1);
-            
-            ADS1222_DOUT_IPU(chipId);
-            
-            // while(ADS1222_A_DOUT_IN() == GPIO_PIN_SET); //µÈ´ýADÊý¾Ý²É¼¯Íê³É
-            // ADS1222_DelayMs(200);
-            
-            for(i=0; i<24; i++) {
-                adValue = adValue << 1;
-                
-                ADS1222_A_SCLK_HIGH();
-                delay_us(2);
-                // sampling when low level
-                ADS1222_A_SCLK_LOW();
-                
-                if (ADS1222_A_DOUT_IN() == GPIO_PIN_SET) {
-                    adValue |= 0x00000001;  //or adValue+=1;     
-                }
-                delay_us(2);
-            }
-            /* ×îºóÒ»¸öÂö³å½áÊø */
-            ADS1222_A_SCLK_HIGH();
-            delay_us(2);
-            ADS1222_A_SCLK_LOW();
-            delay_us(1);
-            
-            break;
+            *data_a |= 0x00000001;  //or adValue+=1;     
         }
-        
-        case ADS1222_CHIP_B:
+        if (ADS1222_B_DOUT_IN() == GPIO_PIN_SET)
         {
-            // ADS1222_B_SCLK_LOW();
-            // delay_us(20); 
-
-            // ADS1222_DOUT_IPU(chipId);
-            
-            // while(ADS1222_B_DOUT_IN() == GPIO_PIN_SET); //µÈ´ýADÊý¾Ý²É¼¯Íê³É
-            // ADS1222_DelayMs(200);
-            
-            for(i=0; i<24; i++) {
-                adValue = adValue << 1;
-                
-                ADS1222_B_SCLK_HIGH();
-                delay_us(2);
-                ADS1222_B_SCLK_LOW();
-                
-                if (ADS1222_B_DOUT_IN() == GPIO_PIN_SET) {
-                    adValue |= 0x00000001;  //or adValue+=1;     
-                }
-                delay_us(2);
-            }
-            /* ×îºóÒ»¸öÂö³å½áÊø */
-            ADS1222_B_SCLK_HIGH();
-            delay_us(2);
-            ADS1222_B_SCLK_LOW();
-            delay_us(1);
-            
-            break;
+            *data_b |= 0x00000001;  //or adValue+=1;     
         }
-        
-        case ADS1222_CHIP_C:
+        if (ADS1222_C_DOUT_IN() == GPIO_PIN_SET)
         {
-            // ADS1222_C_SCLK_LOW();
-            // delay_us(20); 
-
-            // delay_us(20);
-            // ADS1222_DOUT_IPU(chipId);
-            
-            // while(ADS1222_C_DOUT_IN() == GPIO_PIN_SET); //µÈ´ýADÊý¾Ý²É¼¯Íê³É
-            // ADS1222_DelayMs(200);
-            
-            for(i=0; i<24; i++) {
-                adValue = adValue << 1;
-                
-                ADS1222_C_SCLK_HIGH();
-                delay_us(2);
-                ADS1222_C_SCLK_LOW();
-                
-                if (ADS1222_C_DOUT_IN() == GPIO_PIN_SET) {
-                    adValue |= 0x00000001;  //or adValue+=1;     
-                }
-                delay_us(2);
-            }
-            /* ×îºóÒ»¸öÂö³å½áÊø */
-            ADS1222_C_SCLK_HIGH();
-            delay_us(2);
-            ADS1222_C_SCLK_LOW();
-            delay_us(1);
-            
-            break;
+            *data_c |= 0x00000001;  //or adValue+=1;     
         }
-
-        case ADS1222_CHIP_D:
+        if (ADS1222_D_DOUT_IN() == GPIO_PIN_SET)
         {
-            // ADS1222_D_SCLK_LOW();
-            // delay_us(20); 
-
-            // delay_us(20);
-            // ADS1222_DOUT_IPU(chipId);
-            
-            // while(ADS1222_D_DOUT_IN() == GPIO_PIN_SET); //µÈ´ýADÊý¾Ý²É¼¯Íê³É
-            // ADS1222_DelayMs(200);
-            
-            for(i=0; i<24; i++) {
-                adValue = adValue << 1;
-                
-                ADS1222_D_SCLK_HIGH();
-                delay_us(2);
-                ADS1222_D_SCLK_LOW();
-                
-                if (ADS1222_D_DOUT_IN() == GPIO_PIN_SET) {
-                    adValue |= 0x00000001;  //or adValue+=1;     
-                }
-
-                delay_us(2);
-            }
-            /* ×îºóÒ»¸öÂö³å½áÊø */
-            ADS1222_D_SCLK_HIGH();
-            delay_us(2);
-            ADS1222_D_SCLK_LOW();
-            delay_us(1);
-            
-            break;
+            *data_d |= 0x00000001;  //or adValue+=1;     
         }
-        default: break;
     }
+
+    // sclk put high
+    ADS1222_A_SCLK_HIGH();
+    ADS1222_B_SCLK_HIGH();
+    ADS1222_C_SCLK_HIGH();
+    ADS1222_D_SCLK_HIGH();
+
+    delay_us(1);
+
+    // sclk put low
+    ADS1222_A_SCLK_LOW();
+    ADS1222_B_SCLK_LOW();
+    ADS1222_C_SCLK_LOW();
+    ADS1222_D_SCLK_LOW();
+
+    delay_us(1);
 
     // exit critical section
     // first will resume all threads
@@ -509,16 +761,83 @@ unsigned long ADS1222_AdRead(uint8_t chipId)
     osThreadResumeAll();
     // taskEXIT_CRITICAL();
 
-    return adValue;
+    return Ads1222Err_NoErr;
 }
 
 /**
-  * @brief EXTI line detection callbacks
+  * @brief EXTI line1 detection callbacks
   * @param GPIO_Pin: Specifies the pins connected EXTI line
   * @retval None
+  * @par History
+  *      2016-09-19 Huang Shengda
   */
 void HAL_GPIO_SenseA_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    Ads1222_ConvComplete();
+    if (GPIO_Pin != ADS1222_A_DOUT_PIN)
+    {
+        return ;
+    }
+
+    if ((_sense_exist_bit & ADS1222_CHIP_A) == 0x00)
+    {
+        return ;
+    }
+
+    _sense_conv_cplt |= ADS1222_CHIP_A;
+
+    if ((_sense_conv_cplt & _sense_exist_bit) == _sense_exist_bit)
+    {
+        Ads1222_ConvComplete();
+    }
 }
+
+void HAL_GPIO_SenseB_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin != ADS1222_B_DOUT_PIN)
+    {
+        return ;
+    }
+
+    if ((_sense_exist_bit & ADS1222_CHIP_B) == 0x00)
+    {
+        return ;
+    }
+
+    _sense_conv_cplt |= ADS1222_CHIP_B;
+
+    if ((_sense_conv_cplt & _sense_exist_bit) == _sense_exist_bit)
+    {
+        Ads1222_ConvComplete();
+    }
+}
+
+void HAL_GPIO_SenseCD_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin != (ADS1222_C_DOUT_PIN | ADS1222_D_DOUT_PIN))
+    {
+        return ;
+    }
+
+    if ((_sense_exist_bit & ADS1222_CHIP_C) == ADS1222_CHIP_C)
+    {
+        if (ADS1222_C_DOUT_IN() == GPIO_PIN_RESET)
+        {
+            _sense_conv_cplt |= ADS1222_CHIP_C;
+        }
+    }
+    
+    if ((_sense_exist_bit & ADS1222_CHIP_D) == ADS1222_CHIP_D)
+    {
+        if (ADS1222_D_DOUT_IN() == GPIO_PIN_RESET)
+        {
+            _sense_conv_cplt |= ADS1222_CHIP_D;
+        }
+    }
+
+    if ((_sense_conv_cplt & _sense_exist_bit) == _sense_exist_bit)
+    {
+        Ads1222_ConvComplete();
+    }
+}
+
 

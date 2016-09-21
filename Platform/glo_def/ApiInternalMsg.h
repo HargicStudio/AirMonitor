@@ -19,13 +19,16 @@ History:
 #include <stdbool.h>
 
 
+#define API_BASE_APPL       0x2000
+
 enum {
     API_MESSAGE_ID_NONE = 0x0000,
     // platform layer from 0x1000
     
     
     // application layer from 0x2000
-    API_MESSAGE_ID_LED_INDICATION = 0x2345,
+    API_MESSAGE_ID_LED_INDICATION = API_BASE_APPL + 1,
+    API_MESSAGE_ID_AIR_SAMPLE_INDICATION = API_BASE_APPL + 2,
     
     API_MESSAGE_ID_MAX = 0x8FFF,
 };

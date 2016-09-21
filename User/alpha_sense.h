@@ -1,7 +1,7 @@
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __LED_H
-#define __LED_H
+#ifndef __Alpha_sense_H
+#define __Alpha_sense_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +19,7 @@ void Ads1222_ConvComplete();
 }
 #endif
 
-#endif /* __LED_H */
+#endif /* __Alpha_sense_H */
 
 
 

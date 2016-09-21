@@ -10,6 +10,7 @@ History:
 #include <math.h>
 #include "cmsis_os.h"
 #include "alpha_sense.h"
+#include "alpha_sense_if.h"
 #include "ads1222.h"
 #include "dataHandler.h"
 #include "PingPang.h"
@@ -38,26 +39,17 @@ osThreadId _alphasense_id;
 static osSemaphoreDef(ads1222_convcplt_sem);
 osSemaphoreId _ads1222_convcplt_sem_id;
 
-/** signal for alpha that data collecting complete */  
-static osSemaphoreDef(alpha_sem);
-osSemaphoreId _alpha_sem_id;
-
 
 SSense alpha_co;
 // SSense alpha_o3;
 // SSense alpha_no2;
 // SSense alpha_so2;
 
-u8 g_chan = 0;
-
-
-u32 buf_worker[ALPHASENSE_SamplePerChannel];
-u32 buf_auxi[ALPHASENSE_SamplePerChannel];
-
 
 
 static void Ads1222Thread(void const *argument);
 static void AlphaSThread(void const *argument);
+static void HandleAdsSampleIndicationMsg(void* msg);
 static u32 GetAvg(u32* buf, u16 len);
 
 
@@ -69,55 +61,115 @@ static u32 GetAvg(u32* buf, u16 len);
 static void Ads1222Thread(void const *argument)
 {
     (void) argument;
-    u32 worker;
-    u32 auxi;
-    double volt;
-    u16 cnt = 0;
+    u32 sense_data[4];
+    u8 channel;
+    void* msg;
 
-    PingPangInit(&alpha_co.ppbuf);
-    alpha_co.adc_avg_worker = 0;
-    alpha_co.adc_avg_auxi = 0;
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s started", __FUNCTION__);
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "Ads1222Thread startup success");
+    // !!! should config the device according to board
+    u8 exit_sense = ADS1222_CHIP_A | ADS1222_CHIP_B | ADS1222_CHIP_C;
+    
+    Ads1222_SetExistSense(exit_sense);
+    AaSysLogPrintF( LOGLEVEL_INF, FeatureAlpha, "%s %d: set exist sense 0x%02x", 
+                    __FUNCTION__, __LINE__, exit_sense);
+
+    if(SysCom_Ads1222 != AaSysComRegister(SysCom_Ads1222, MAKECHAR(Ads1222Thread)"Queue", 8))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureAlpha, "%s %d: AaSysComRegister failed", __FUNCTION__, __LINE__);
+    }
+    else 
+    {
+        AaSysLogPrintF( LOGLEVEL_INF, FeatureAlpha, "%s %d: AaSysComRegister success", __FUNCTION__, __LINE__);
+    }
+    
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s startup success", __FUNCTION__);
 
     for (;;)
     {
-        Ads1222_EnableExti();
+        osDelay(1000);
+        Ads1222_EnableExti(exit_sense);
         osSemaphoreWait(_ads1222_convcplt_sem_id, osWaitForever);
 
-        // PingPangPut(&alpha_co.ppbuf, ADS1222_AdRead(ADS1222_CHIP_A));
+        channel = Ads1222_GetChannel();
+        if(Ads1222Err_NoErr != ADS1222_AdRead(&sense_data[0], &sense_data[1], &sense_data[2], &sense_data[3]))
+        {
+            continue;
+        }
 
-        if(Ads1222_GetChannel() == ADS1222_CH0) {
-            buf_worker[cnt] = ADS1222_AdRead(ADS1222_CHIP_A);
-        } else {
-            buf_auxi[cnt] = ADS1222_AdRead(ADS1222_CHIP_A);
+        if(IsChipExist(exit_sense, ADS1222_CHIP_A))
+        {
+            msg = AaSysComCreate(API_MESSAGE_ID_AIR_SAMPLE_INDICATION, SysCom_Ads1222, SysCom_AlphaS, sizeof(SAirSamp));
+            if(msg != NULL)
+            {
+                SAirSamp* pl = AaSysComGetPayload(msg);
+                if(pl != NULL)
+                {
+                    pl->chan = AS_TYPE_CO;
+                    pl->elec = (channel == ADS1222_CH0 ? AS_ELECTRODE_WORKER : AS_ELECTRODE_AUXILIARY);
+                    pl->ad_samp = sense_data[0];
+                    pl->volt = 5/(pow(2, 23) - 1) * sense_data[0] * 2;
+                }
+
+                AaSysComSend(msg, osWaitForever);
+            }
+        }
+
+        if(IsChipExist(exit_sense, ADS1222_CHIP_B))
+        {
+            msg = AaSysComCreate(API_MESSAGE_ID_AIR_SAMPLE_INDICATION, SysCom_Ads1222, SysCom_AlphaS, sizeof(SAirSamp));
+            if(msg != NULL)
+            {
+                SAirSamp* pl = AaSysComGetPayload(msg);
+                if(pl != NULL)
+                {
+                    pl->chan = AS_TYPE_NO2;
+                    pl->elec = (channel == ADS1222_CH0 ? AS_ELECTRODE_WORKER : AS_ELECTRODE_AUXILIARY);
+                    pl->ad_samp = sense_data[1];
+                    pl->volt = 5/(pow(2, 23) - 1) * sense_data[1] * 2;
+                }
+
+                AaSysComSend(msg, osWaitForever);
+            }
+        }
+
+        if(IsChipExist(exit_sense, ADS1222_CHIP_C))
+        {
+            msg = AaSysComCreate(API_MESSAGE_ID_AIR_SAMPLE_INDICATION, SysCom_Ads1222, SysCom_AlphaS, sizeof(SAirSamp));
+            if(msg != NULL)
+            {
+                SAirSamp* pl = AaSysComGetPayload(msg);
+                if(pl != NULL)
+                {
+                    pl->chan = AS_TYPE_O3;
+                    pl->elec = (channel == ADS1222_CH0 ? AS_ELECTRODE_WORKER : AS_ELECTRODE_AUXILIARY);
+                    pl->ad_samp = sense_data[2];
+                    pl->volt = 5/(pow(2, 23) - 1) * sense_data[2] * 2;
+                }
+
+                AaSysComSend(msg, osWaitForever);
+            }
+        }
+
+        if(IsChipExist(exit_sense, ADS1222_CHIP_D))
+        {
+            msg = AaSysComCreate(API_MESSAGE_ID_AIR_SAMPLE_INDICATION, SysCom_Ads1222, SysCom_AlphaS, sizeof(SAirSamp));
+            if(msg != NULL)
+            {
+                SAirSamp* pl = AaSysComGetPayload(msg);
+                if(pl != NULL)
+                {
+                    pl->chan = AS_TYPE_SO2;
+                    pl->elec = (channel == ADS1222_CH0 ? AS_ELECTRODE_WORKER : AS_ELECTRODE_AUXILIARY);
+                    pl->ad_samp = sense_data[3];
+                    pl->volt = 5/(pow(2, 23) - 1) * sense_data[3] * 2;
+                }
+
+                AaSysComSend(msg, osWaitForever);
+            }
         }
         
-        // change channel
-        if((++cnt % ALPHASENSE_SamplePerChannel) == 0) {
-            cnt = 0;
-            // change channel
-            // PingPangExchange(&alpha_co.ppbuf);
-            if(Ads1222_GetChannel() == ADS1222_CH0) {
-                worker = GetAvg(buf_worker, ALPHASENSE_SamplePerChannel);
-                volt = 5/(pow(2, 23) - 1) * worker * 2;
-                // AaSysLogPrintF(LOGLEVEL_DBG, FeatureAlpha, "get worker %d", worker);
-                AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "get co worker voltagte %lf", volt);
-
-                g_chan = 0;
-                Ads1222_SetChannel(ADS1222_CH1);
-            } else {
-                auxi = GetAvg(buf_auxi, ALPHASENSE_SamplePerChannel);
-                volt = 5/(pow(2, 23) - 1) * auxi * 2;
-                // AaSysLogPrintF(LOGLEVEL_DBG, FeatureAlpha, "get auxi %d", auxi);
-                AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "get co auxi voltagte %lf", volt);
-
-                g_chan = 1;
-                Ads1222_SetChannel(ADS1222_CH0);
-            }
-            // send signal that chan0 is ready
-            // osSemaphoreRelease(_alpha_sem_id);
-        }
+        Ads1222_ExchangeChannel();
     }
 }
 
@@ -130,42 +182,107 @@ void Ads1222_ConvComplete()
 static void AlphaSThread(void const *argument)
 {
     (void) argument;
-    u32* data;
-    u16 len;
-    double volt;
+    void* msg;
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "AlphaSThread startup success");
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s started", __FUNCTION__);
+    
+    if(SysCom_AlphaS != AaSysComRegister(SysCom_AlphaS, MAKECHAR(AlphaSThread)"Queue", 16))
+    {
+        AaSysLogPrintF( LOGLEVEL_ERR, FeatureAlpha, "%s %d: AaSysComRegister failed", __FUNCTION__, __LINE__);
+    }
+    else 
+    {
+        AaSysLogPrintF( LOGLEVEL_INF, FeatureAlpha, "%s %d: AaSysComRegister success", __FUNCTION__, __LINE__);
+    }
+
+    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s startup success", __FUNCTION__);
 
     for(;;)
     {
-        osSemaphoreWait(_alpha_sem_id, osWaitForever);
-        if(g_chan == 0) {
-            AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "worker collect complete");
-            PingPandPrint(&alpha_co.ppbuf);
-            data = PingPangGet(&alpha_co.ppbuf, &len);
-            if(data != NULL) {
-                alpha_co.adc_avg_worker = GetAvg(data, len);
-                volt = 5/(pow(2, 23) - 1) * alpha_co.adc_avg_worker * 2;
+        msg = AaSysComReceiveHandler(SysCom_AlphaS, osWaitForever);
+        if(msg != NULL)
+        {
+            if(AaSysComGetReceiver(msg) == SysCom_AlphaS)
+            {
+                SMsgHeader* header = (SMsgHeader*)msg;
+                switch(header->msg_id)
+                {
+                    case API_MESSAGE_ID_AIR_SAMPLE_INDICATION:
+                        HandleAdsSampleIndicationMsg(msg);
+                        break;
+                    default: 
+                        AaSysLogPrintF( LOGLEVEL_ERR, FeatureAlpha, "%s %d: get unknow msg id", 
+                                        __FUNCTION__, __LINE__, header->msg_id);
+                        break;
+                }
             }
-            AaSysLogPrintF(LOGLEVEL_DBG, FeatureAlpha, "get alpha_co.adc_avg_worker %d", alpha_co.adc_avg_worker);
-            AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "get co worker voltagte %lf", volt);
-            PingPandPrint(&alpha_co.ppbuf);
+            else 
+            {
+                AaSysLogPrintF( LOGLEVEL_ERR, FeatureAlpha, "%s %d: unknow msg wrong receiver", __FUNCTION__, __LINE__);
+            }
 
-        } else if(g_chan == 1) {
-            AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "auxi collect complete");
-            PingPandPrint(&alpha_co.ppbuf);
-            data = PingPangGet(&alpha_co.ppbuf, &len);
-            if(data != NULL) {
-                alpha_co.adc_avg_auxi = GetAvg(data, len);
-                volt = 5/(pow(2, 23) - 1) * alpha_co.adc_avg_auxi * 2;
-            }
-            AaSysLogPrintF(LOGLEVEL_DBG, FeatureAlpha, "get alpha_co.adc_avg_auxi %d", alpha_co.adc_avg_auxi);
-            AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "get co auxi voltagte %lf", volt);
-            PingPandPrint(&alpha_co.ppbuf);
+            AaSysComDestory(msg);
         }
     }
 }
 
+static void HandleAdsSampleIndicationMsg(void* msg)
+{
+    SAirSamp* pl = AaSysComGetPayload(msg);
+
+    if (pl->chan == AS_TYPE_CO)
+    {
+        if (pl->elec == AS_ELECTRODE_WORKER)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get CO worker voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+        else if (pl->elec == AS_ELECTRODE_AUXILIARY)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get CO auxiliary voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+    }
+    else if (pl->chan == AS_TYPE_NO2)
+    {
+        if (pl->elec == AS_ELECTRODE_WORKER)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get NO2 worker voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+        else if (pl->elec == AS_ELECTRODE_AUXILIARY)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get NO2 auxiliary voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+    }
+    else if (pl->chan == AS_TYPE_O3)
+    {
+        if (pl->elec == AS_ELECTRODE_WORKER)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get O3 worker voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+        else if (pl->elec == AS_ELECTRODE_AUXILIARY)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get O3 auxiliary voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+    }
+    else if (pl->chan == AS_TYPE_SO2)
+    {
+        if (pl->elec == AS_ELECTRODE_WORKER)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get SO2 worker voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+        else if (pl->elec == AS_ELECTRODE_AUXILIARY)
+        {
+            AaSysLogPrintF( LOGLEVEL_DBG, FeatureAlpha, "get SO2 auxiliary voltagte %lf sample 0x%08x", 
+                            pl->volt, pl->ad_samp);
+        }
+    }
+}
 
 static u32 GetAvg(u32* buf, u16 len)
 {
@@ -197,19 +314,11 @@ u8 StartAlphaSenseTask()
                 __FUNCTION__, __LINE__);
         return 1;
     }
+    osSemaphoreWait(_ads1222_convcplt_sem_id, osWaitForever);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "create ads1222_convcplt_sem success");
 
 
-    _alpha_sem_id = osSemaphoreCreate(osSemaphore(alpha_sem), 1);
-    if(_alpha_sem_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureAlpha, "%s %d: alpha_sem initialize failed",
-                __FUNCTION__, __LINE__);
-        return 2;
-    }
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "create alpha_sem success");
-
-
-    osThreadDef(Ads1222, Ads1222Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(Ads1222, Ads1222Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE*4);
     _ads1222_id = AaThreadCreateStartup(osThread(Ads1222), NULL);
     if(_ads1222_id == NULL) {
         AaSysLogPrintF(LOGLEVEL_ERR, FeatureAlpha, "%s %d: Ads1222Thread initialize failed",
@@ -219,7 +328,7 @@ u8 StartAlphaSenseTask()
     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "create Ads1222Thread success");
 
 
-    osThreadDef(AlphaS, AlphaSThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(AlphaS, AlphaSThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE*4);
     _alphasense_id = AaThreadCreateStartup(osThread(AlphaS), NULL);
     if(_alphasense_id == NULL) {
         AaSysLogPrintF(LOGLEVEL_ERR, FeatureAlpha, "%s %d: AlphaSThread initialize failed",
