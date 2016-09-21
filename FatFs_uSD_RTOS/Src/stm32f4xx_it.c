@@ -234,6 +234,18 @@ void ADS1222_A_DOUT_EXTI_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(ADS1222_A_DOUT_PIN);
 }
 
+void ADS1222_B_DOUT_EXTI_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ADS1222_B_DOUT_PIN);
+}
+
+void ADS1222_CD_DOUT_EXTI_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ADS1222_C_DOUT_PIN | ADS1222_D_DOUT_PIN);
+}
+
+
+
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None
