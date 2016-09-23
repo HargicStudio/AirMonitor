@@ -19,6 +19,7 @@ History:
 
 #include "syscom_cfg.h"
 #include "ApiInternalMsg.h"
+#include "AaSysLogInterface.h"
 
 
 
@@ -46,6 +47,9 @@ typedef enum
 } ESysComStatus;
 
 
+extern bool         _syscom_log_enable_flag;
+extern ELogLevel    _syscom_log_level;
+
 
 u8 AaSysComCEInit();
 ESysComID AaSysComRegister(ESysComID syscom, char* name, u32 q_size);
@@ -53,6 +57,7 @@ ESysComStatus AaSysComUnregister(ESysComID syscom);
 void* AaSysComCreate(SAaSysComMsgId msgid, ESysComID sender, ESysComID receiver, u16 pl_size);
 void AaSysComDestory(void* msg_ptr);
 void* AaSysComGetPayload(void* msg_ptr);
+SAaSysComMsgId AaSysComGetMsgID(void* msg_ptr);
 ESysComStatus AaSysComSend(void* msg_ptr, u32 timeout);
 ESysComID AaSysComGetSender(void* msg_ptr);
 ESysComStatus AaSysComSetSender(void* msg_ptr, ESysComID sender);
