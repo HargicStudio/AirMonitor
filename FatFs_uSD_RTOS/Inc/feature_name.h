@@ -26,7 +26,7 @@ History:
 #define FeatureAlpha        "AlphaSense"
 #define FeatureAm2303       "Am2303"
 #define FeatureFatFS        "FatFS"
-
+#define FeatureDn7c3        "Dn7c3"
 
 
 

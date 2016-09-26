@@ -82,36 +82,32 @@ static void AaSysLogDeamon(void const *arg)
 
     for(;;)
     {
-        // should not call AaSysLogPrintF during bip buffer data is sending
+        // !!! should not call AaSysLogPrintF during bip buffer data is sending
 
-//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "waiting tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
         evt = osSignalWait(SIG_BIT_TX, osWaitForever);
-//        AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "get tx signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
         
         if(evt.status == osEventSignal && evt.value.signals == SIG_BIT_TX)
         {
-            block_addr = CBipBuffer_Get(_p_bip_buffer, &block_size);
-            if(block_addr == NULL || block_size == 0) 
-            {
-                continue;
-            }
+            do {
+                if(_aasyslog_mng.processGetBip_callback == NULL) 
+                {
+                    break;
+                }
+                
+                block_addr = CBipBuffer_Get(_p_bip_buffer, &block_size);
+                if(block_addr == NULL || block_size == 0) 
+                {
+                    break;
+                }
+                
+                _aasyslog_mng.processGetBip_callback(block_addr, block_size);
 
-            if(_aasyslog_mng.processGetBip_callback == NULL) 
-            {
-                continue;
-            }
-            _aasyslog_mng.processGetBip_callback(block_addr, block_size);
-
-//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "waiting tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
-//            evt = osSignalWait(SIG_BIT_TX_CPLT, osWaitForever);
-//            AaSysLogPrintF(LOGLEVEL_DBG, FeatureSysLog, "get tx_cplt signal, evt.status %d, evt.value.signals %d\r\n", evt.status, evt.value.signals);
-
-            osSemaphoreWait(_aasyslog_sendcplt_sem_id, osWaitForever);
-            
-//          if(evt.status == osEventSignal && evt.value.signals == SIG_BIT_TX_CPLT) {
+                // !!! we test failed in our local when using signal to detect sending complete
+                // !!! so we use Semaphore instead
+                osSemaphoreWait(_aasyslog_sendcplt_sem_id, osWaitForever);
                 
                 CBipBuffer_Decommit(_p_bip_buffer, block_size);
-//          }
+            } while(block_addr == NULL || block_size == 0);
         }
     }
 }

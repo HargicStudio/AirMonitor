@@ -10,30 +10,52 @@ extern "C" {
 
 
 #include "stm32f4xx_hal.h"
+#include "AaInclude.h"
 
 
-/** Description of the macro */ 
-#define DN7C3_FAN_CTRL_PIN              GPIO_PIN_3
-#define DN7C3_FAN_CTRL_PORT             GPIOE
+/* Definition for ADCx clock resources */
+#define ADCx                            ADC1
+#define ADCx_CLK_ENABLE()               __HAL_RCC_ADC1_CLK_ENABLE();
+#define ADCx_CHANNEL_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
+     
+#define ADCx_FORCE_RESET()              __HAL_RCC_ADC_FORCE_RESET()
+#define ADCx_RELEASE_RESET()            __HAL_RCC_ADC_RELEASE_RESET()
 
-#define DN7C3_FAN_CTRL_CLK_ENABLE()     __HAL_RCC_GPIOE_CLK_ENABLE()
+/* Definition for ADCx Channel Pin */
+#define ADCx_CHANNEL_PIN                GPIO_PIN_4
+#define ADCx_CHANNEL_GPIO_PORT          GPIOA
 
-/** Description of the macro */ 
-#define DN7C3_FAN_DET_PIN               GPIO_PIN_4
-#define DN7C3_FAN_DET_PORT              GPIOE
+/* Definition for ADCx's Channel */
+#define ADCx_CHANNEL                    ADC_CHANNEL_4
 
-#define DN7C3_FAN_DET_CLK_ENABLE()      __HAL_RCC_GPIOE_CLK_ENABLE()
+/* Definition for ADCx's NVIC */
+#define ADCx_IRQn                       ADC_IRQn
 
-/** Description of the macro */ 
-#define DN7C3_PWM_PIN                   GPIO_PIN_9
-#define DN7C3_PWM_PORT                  GPIOE
 
-/** Description of the macro */ 
-#define DN7C3_SCL_PIN                   GPIO_PIN_10
-#define DN7C3_SCL_PORT                  GPIOB
 
-#define DN7C3_SDA_PIN                   GPIO_PIN_11
-#define DN7C3_SDA_PORT                  GPIOB
+/* User can use this section to tailor TIMx instance used and associated 
+   resources */
+/* Definition for TIMx clock resources */
+#define TIMx                            TIM8
+#define TIMx_CLK_ENABLE()               __HAL_RCC_TIM8_CLK_ENABLE();
+
+#define TIMx_FORCE_RESET()              __HAL_RCC_TIM8_FORCE_RESET()
+#define TIMx_RELEASE_RESET()            __HAL_RCC_TIM8_RELEASE_RESET()
+
+/* Definition for USARTx Pins */
+#define TIMx_CHANNEL_GPIO_PORT()       __HAL_RCC_GPIOC_CLK_ENABLE()
+#define GPIO_PIN_CHANNEL1              GPIO_PIN_6
+#define GPIO_PIN_CHANNEL2              GPIO_PIN_7
+
+
+
+u8 Dnc3Init();
+u8 Dnc3Start();
+u16 AdcGet();
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle);
+void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc);
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc);
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim);
 
 
 

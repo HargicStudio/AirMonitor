@@ -39,6 +39,8 @@ extern UART_HandleTypeDef UartHandle_gps;
 extern UART_HandleTypeDef UartHandle_gsm;
 extern UART_HandleTypeDef UartHandle_cp15;
 
+extern ADC_HandleTypeDef AdcHandle;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -244,6 +246,15 @@ void ADS1222_CD_DOUT_EXTI_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(ADS1222_C_DOUT_PIN | ADS1222_D_DOUT_PIN);
 }
 
+/**
+  * @brief  This function handles ADC interrupt request.
+  * @param  None
+  * @retval None
+  */
+void ADC_IRQHandler(void)
+{
+  HAL_ADC_IRQHandler(&AdcHandle);
+}
 
 
 /**
