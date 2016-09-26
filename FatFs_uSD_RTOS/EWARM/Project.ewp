@@ -315,6 +315,7 @@
           <state>$PROJ_DIR$\..\..\Platform\Common\BipBuffer</state>
           <state>$PROJ_DIR$\..\..\Platform\Common\RingBuffer</state>
           <state>$PROJ_DIR$\..\..\Platform\Common\PingPangBuffer</state>
+          <state>$PROJ_DIR$\..\..\Platform\include</state>
           <state>$PROJ_DIR$\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include</state>
           <state>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Inc</state>
           <state>$PROJ_DIR$\..\..\Drivers\BSP\407VE</state>
@@ -973,9 +974,6 @@
         <name>$PROJ_DIR$\..\..\Platform\Common\BipBuffer\BipBuffer.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\Platform\Common\PingPangBuffer\PingPang.c</name>
-      </file>
-      <file>
         <name>$PROJ_DIR$\..\..\Platform\Common\RingBuffer\RingBufferUtils.c</name>
       </file>
     </group>
@@ -1039,7 +1037,13 @@
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\am2302_dev.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\cp15_dev.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\dnc3_dev.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\BSP\407VE\gps_dev.c</name>
@@ -1073,6 +1077,12 @@
       <name>STM32F4xx_HAL_Driver</name>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc_ex.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cortex.c</name>
@@ -1236,6 +1246,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\dataRecord.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\User\dn7c3.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\User\fan.c</name>

@@ -11,6 +11,7 @@ History:
 #include "dnc3_dev.h"
 #include "dn7c3.h"
 #include <stdio.h>
+#include <math.h>
 #include "cmsis_os.h"
 #include "AaInclude.h"
 #include "feature_name.h"
@@ -33,6 +34,7 @@ static void Dn7c3Thread(void const *argument)
 {
     (void) argument;
     u16 adc = 0;
+    double volt;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "%s started", __FUNCTION__);
 
@@ -42,7 +44,8 @@ static void Dn7c3Thread(void const *argument)
     {
         osDelay(1000);
         adc = AdcGet();
-        AaSysLogPrintF(LOGLEVEL_DBG, FeatureDn7c3, "%s: get adc 0x%x", __FUNCTION__, adc);
+        volt = 2.5/pow(2, 12)*adc*2;
+        AaSysLogPrintF(LOGLEVEL_DBG, FeatureDn7c3, "%s: get adc 0x%x, volt %lf", __FUNCTION__, adc, volt);
     }
 }
 

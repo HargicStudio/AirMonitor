@@ -4,9 +4,9 @@
   <Desktop>
     <Static>
       <Debug-Log>
-        <ColumnWidth0>20</ColumnWidth0>
-        <ColumnWidth1>1861</ColumnWidth1>
-      </Debug-Log>
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1861</ColumnWidth1></Debug-Log>
       <Build>
         <ColumnWidth0>20</ColumnWidth0>
         <ColumnWidth1>1395</ColumnWidth1>
@@ -15,80 +15,85 @@
       </Build>
       <Workspace>
         <ColumnWidths>
-          <Column0>124</Column0>
-          <Column1>27</Column1>
-          <Column2>27</Column2>
-          <Column3>27</Column3>
-        </ColumnWidths>
+          
+          
+          
+          
+        <Column0>213</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
       </Workspace>
       <Disassembly>
         <col-names>
-          <item>Disassembly</item>
-          <item>_I0</item>
-        </col-names>
+          
+          
+        <item>Disassembly</item><item>_I0</item></col-names>
         <col-widths>
-          <item>500</item>
-          <item>20</item>
-        </col-widths>
+          
+          
+        <item>500</item><item>20</item></col-widths>
         <DisasmHistory/>
-        <ShowCodeCoverage>1</ShowCodeCoverage>
-        <ShowInstrProfiling>1</ShowInstrProfiling>
-      </Disassembly>
+        
+        
+      <PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>CallStack</Factory></Window></Windows></PreferedWindows><ShowCodeCoverage>1</ShowCodeCoverage><ShowInstrProfiling>1</ShowInstrProfiling></Disassembly>
       <CallStack>
         <col-names>
-          <item>Frame</item>
-          <item>_I0</item>
-        </col-names>
+          
+          
+        <item>Frame</item><item>_I0</item></col-names>
         <col-widths>
-          <item>3500</item>
-          <item>20</item>
-        </col-widths>
-      </CallStack>
+          
+          
+        <item>3500</item><item>20</item></col-widths>
+      <PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Disassembly</Factory></Window></Windows></PreferedWindows></CallStack>
       <Locals>
         <col-names>
-          <item>Location</item>
-          <item>Type</item>
-          <item>Value</item>
-          <item>Variable</item>
-        </col-names>
+          
+          
+          
+          
+        <item>Location</item><item>Type</item><item>Value</item><item>Variable</item></col-names>
         <col-widths>
-          <item>97</item>
-          <item>100</item>
-          <item>182</item>
-          <item>100</item>
-        </col-widths>
+          
+          
+          
+          
+        <item>97</item><item>100</item><item>147</item><item>174</item></col-widths>
       </Locals>
       <WATCH_1>
         <expressions>
-          <item>_syscom_mng</item>
-          <item/>
-        </expressions>
+          
+          
+        <item>_syscom_mng</item><item>_gsm_rx_ringbuf</item><item>UartHandle_gsm</item><item>_ads1222_convcplt_sem_id</item><item>_sense_conv_cplt</item><item>_ads1222_convcplt_sem_id</item><item>_aathread_mng_header_ptr</item><item>TimHandle</item><item>AdcHandle</item><item>uhADCxConvertedValue</item><item></item></expressions>
         <col-names>
-          <item>Expression</item>
-          <item>Location</item>
-          <item>Type</item>
-          <item>Value</item>
-        </col-names>
+          
+          
+          
+          
+        <item>Expression</item><item>Location</item><item>Type</item><item>Value</item></col-names>
         <col-widths>
-          <item>100</item>
-          <item>150</item>
-          <item>100</item>
-          <item>100</item>
-        </col-widths>
+          
+          
+          
+          
+        <item>191</item><item>150</item><item>100</item><item>155</item></col-widths>
       </WATCH_1>
       <Breakpoints>
         <col-names>
-          <item>Breakpoint</item>
-          <item>_I0</item>
-        </col-names>
+          
+          
+        <item>Breakpoint</item><item>_I0</item></col-names>
         <col-widths>
-          <item>500</item>
-          <item>35</item>
-        </col-widths>
+          
+          
+        <item>500</item><item>35</item></col-widths>
       </Breakpoints>
-    </Static>
+    <Register/></Static>
     <Windows>
-      <Wnd0>
+      
+      
+      
+      
+      
+    <Wnd0>
         <Tabs>
           <Tab>
             <Identity>TabID-28812-6861</Identity>
@@ -103,55 +108,20 @@
             <Session/>
           </Tab>
         </Tabs>
-        <SelectedTab>0</SelectedTab>
-      </Wnd0>
-      <Wnd4>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd1>
         <Tabs>
           <Tab>
             <Identity>TabID-6792-6864</Identity>
             <TabName>Workspace</TabName>
             <Factory>Workspace</Factory>
             <Session>
-              <NodeDict>
-                <ExpandedNode>Project</ExpandedNode>
-              </NodeDict>
-            </Session>
+              
+            <NodeDict><ExpandedNode>Project</ExpandedNode><ExpandedNode>Project/Application</ExpandedNode><ExpandedNode>Project/Application/User</ExpandedNode><ExpandedNode>Project/Drivers</ExpandedNode><ExpandedNode>Project/Drivers/BSP</ExpandedNode><ExpandedNode>Project/Drivers/STM32F4xx_HAL_Driver</ExpandedNode><ExpandedNode>Project/User</ExpandedNode></NodeDict></Session>
           </Tab>
         </Tabs>
-        <SelectedTab>0</SelectedTab>
-      </Wnd4>
-      <Wnd5>
-        <Tabs>
-          <Tab>
-            <Identity>TabID-17541-6868</Identity>
-            <TabName>Disassembly</TabName>
-            <Factory>Disassembly</Factory>
-            <Session/>
-          </Tab>
-          <Tab>
-            <Identity>TabID-29460-7668</Identity>
-            <TabName>Call Stack</TabName>
-            <Factory>CallStack</Factory>
-          </Tab>
-        </Tabs>
-        <SelectedTab>1</SelectedTab>
-      </Wnd5>
-      <Wnd6>
-        <Tabs>
-          <Tab>
-            <Identity>TabID-20144-5964</Identity>
-            <TabName>Locals</TabName>
-            <Factory>Locals</Factory>
-          </Tab>
-          <Tab>
-            <Identity>TabID-16422-10742</Identity>
-            <TabName>Watch 1</TabName>
-            <Factory>WATCH_1</Factory>
-          </Tab>
-        </Tabs>
-        <SelectedTab>0</SelectedTab>
-      </Wnd6>
-      <Wnd7>
+        
+      <SelectedTab>0</SelectedTab></Wnd1><Wnd3>
         <Tabs>
           <Tab>
             <Identity>TabID-20145-11081</Identity>
@@ -159,400 +129,29 @@
             <Factory>Breakpoints</Factory>
           </Tab>
         </Tabs>
-        <SelectedTab>0</SelectedTab>
-      </Wnd7>
-    </Windows>
+        
+      <SelectedTab>0</SelectedTab></Wnd3><Wnd4><Tabs><Tab><Identity>TabID-21673-22852</Identity><TabName>Register</TabName><Factory>Register</Factory><Session><REG1>0</REG1><REG2>0</REG2><Group>53</Group><States>2</States><State0>RTC__DR</State0><State1>RTC__TR</State1></Session></Tab><Tab>
+            <Identity>TabID-20144-5964</Identity>
+            <TabName>Locals</TabName>
+            <Factory>Locals</Factory>
+          </Tab><Tab>
+            <Identity>TabID-16422-10742</Identity>
+            <TabName>Watch 1</TabName>
+            <Factory>WATCH_1</Factory>
+          </Tab><Tab><Identity>TabID-650-2976</Identity><TabName>Register</TabName><Factory>Register</Factory><Session><REG1>0</REG1><REG2>0</REG2><Group>58</Group><States>22</States><State0>TIM8__ARR</State0><State1>TIM8__BDTR</State1><State2>TIM8__CCER</State2><State3>TIM8__CCMR1_Input</State3><State4>TIM8__CCMR1_Output</State4><State5>TIM8__CCMR2_Input</State5><State6>TIM8__CCMR2_Output</State6><State7>TIM8__CCR1</State7><State8>TIM8__CCR2</State8><State9>TIM8__CCR3</State9><State10>TIM8__CCR4</State10><State11>TIM8__CNT</State11><State12>TIM8__CR1</State12><State13>TIM8__CR2</State13><State14>TIM8__DCR</State14><State15>TIM8__DIER</State15><State16>TIM8__DMAR</State16><State17>TIM8__EGR</State17><State18>TIM8__PSC</State18><State19>TIM8__RCR</State19><State20>TIM8__SMCR</State20><State21>TIM8__SR</State21></Session></Tab></Tabs><SelectedTab>2</SelectedTab></Wnd4><Wnd7><Tabs><Tab><Identity>TabID-7283-11713</Identity><TabName>Call Stack</TabName><Factory>CallStack</Factory></Tab><Tab><Identity>TabID-29280-5016</Identity><TabName>Disassembly</TabName><Factory>Disassembly</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd7></Windows>
     <Editor>
-      <Pane>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\doc\infocenter\index.ENU.html</Filename>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\AaSysLog\AaSysLogSystem.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>276</YPos2>
-          <SelStart2>8769</SelStart2>
-          <SelEnd2>8769</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\common\common.h</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>109</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\am2302.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>401</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\common\config.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>240</YPos2>
-          <SelStart2>4437</SelStart2>
-          <SelEnd2>4447</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\cp15.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>111</YPos2>
-          <SelStart2>3773</SelStart2>
-          <SelEnd2>3773</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\osa_file.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>88</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\gsm.h</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>21</YPos2>
-          <SelStart2>1833</SelStart2>
-          <SelEnd2>1833</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\gsm.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>64</YPos2>
-          <SelStart2>2352</SelStart2>
-          <SelEnd2>2352</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\dataRecord.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>48</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\AirMonitor\List\AirMonitor.map</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>1071</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\Src\main.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>31</YPos2>
-          <SelStart2>1975</SelStart2>
-          <SelEnd2>1975</SelEnd2>
-        </Tab>
-        <ActiveTab>11</ActiveTab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\queue.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>1356</YPos2>
-          <SelStart2>46790</SelStart2>
-          <SelEnd2>46810</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\CCSDaemon\CCSDaemon.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>80</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\tasks.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>2669</YPos2>
-          <SelStart2>92259</SelStart2>
-          <SelEnd2>92259</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\AaSysCom\AaSysCom.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>278</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\AaSysCom\AaSysCom.h</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>3</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\glo_def\ApiInternalMsg.h</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>0</YPos2>
-          <SelStart2>22</SelStart2>
-          <SelEnd2>22</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\User\led.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>51</YPos2>
-          <SelStart2>0</SelStart2>
-          <SelEnd2>0</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\AaSysLog\AaSysLogInterface.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>113</YPos2>
-          <SelStart2>3379</SelStart2>
-          <SelEnd2>3379</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Platform\AaThread\AaThread.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>69</YPos2>
-          <SelStart2>2076</SelStart2>
-          <SelEnd2>2076</SelEnd2>
-        </Tab>
-        <Tab>
-          <Factory>TextEditor</Factory>
-          <Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.c</Filename>
-          <XPos>0</XPos>
-          <YPos>0</YPos>
-          <SelStart>0</SelStart>
-          <SelEnd>0</SelEnd>
-          <XPos2>0</XPos2>
-          <YPos2>187</YPos2>
-          <SelStart2>7946</SelStart2>
-          <SelEnd2>7946</SelEnd2>
-        </Tab>
-      </Pane>
-      <ActivePane>0</ActivePane>
-      <Sizes>
-        <Pane>
-          <X>1000000</X>
-          <Y>1000000</Y>
-        </Pane>
-      </Sizes>
-      <SplitMode>1</SplitMode>
-    </Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\doc\infocenter\index.ENU.html</Filename></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\common\common.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>109</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\common\config.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>240</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\cp15.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>111</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\osa_file.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>88</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\gsm.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>21</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\dataRecord.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>48</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\gsm.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>118</YPos2><SelStart2>4698</SelStart2><SelEnd2>4698</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\led.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>38</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\rtc_dev.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>205</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\rtc_dev.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>0</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>675</YPos2><SelStart2>27444</SelStart2><SelEnd2>27444</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>798</YPos2><SelStart2>30734</SelStart2><SelEnd2>30777</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\am2302.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>34</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\common\common.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>0</YPos2><SelStart2>302</SelStart2><SelEnd2>302</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\am2302_dev.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>195</YPos2><SelStart2>7508</SelStart2><SelEnd2>7508</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\IAR\ARM_CM4F\portasm.s</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>69</YPos2><SelStart2>4840</SelStart2><SelEnd2>4840</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>416</YPos2><SelStart2>18082</SelStart2><SelEnd2>18082</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\ads1222.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>791</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\portable\IAR\ARM_CM4F\port.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>350</YPos2><SelStart2>14930</SelStart2><SelEnd2>14930</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Src\stm32f4xx_it.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>46</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\list.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>188</YPos2><SelStart2>10460</SelStart2><SelEnd2>10460</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Platform\AaSysCom\AaSysCom.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>54</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Platform\AaSysLog\AaSysLogInterface.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>138</YPos2><SelStart2>3713</SelStart2><SelEnd2>3713</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\alpha_sense.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>167</YPos2><SelStart2>5517</SelStart2><SelEnd2>5517</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Platform\AaSysLog\AaSysLogSystem.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>223</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>187</YPos2><SelStart2>7946</SelStart2><SelEnd2>7946</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\AirMonitor\List\AirMonitor.map</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>1213</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\dnc3_dev.h</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>18</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\stm32f4xx_hal_msp.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>151</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\gps.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>117</YPos2><SelStart2>4492</SelStart2><SelEnd2>4492</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>1608</YPos2><SelStart2>60040</SelStart2><SelEnd2>60040</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>716</YPos2><SelStart2>30131</SelStart2><SelEnd2>30131</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Platform\AaThread\AaThread.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>226</YPos2><SelStart2>7497</SelStart2><SelEnd2>7497</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\User\dn7c3.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>37</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Platform\CCSDaemon\CCSDaemon.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>48</YPos2><SelStart2>1327</SelStart2><SelEnd2>1327</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Middlewares\Third_Party\FreeRTOS\Source\tasks.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>2669</YPos2><SelStart2>91953</SelStart2><SelEnd2>91953</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Src\main.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>42</YPos2><SelStart2>1975</SelStart2><SelEnd2>1975</SelEnd2></Tab><ActiveTab>37</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\BSP\407VE\dnc3_dev.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>192</YPos2><SelStart2>0</SelStart2><SelEnd2>0</SelEnd2></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>0</SelStart><SelEnd>0</SelEnd><XPos2>0</XPos2><YPos2>3121</YPos2><SelStart2>105323</SelStart2><SelEnd2>105323</SelEnd2></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
     <Positions>
-      <Top>
-        <Row0>
-          <Sizes>
-            <Toolbar-04579CB0>
-              <key>iaridepm.enu1</key>
-            </Toolbar-04579CB0>
-            <Toolbar-22A677D8>
-              <key>debuggergui.enu1</key>
-            </Toolbar-22A677D8>
-            <Toolbar-0B0FF940>
-              <key>armjlink.enu1</key>
-            </Toolbar-0B0FF940>
-          </Sizes>
-        </Row0>
-      </Top>
-      <Left>
-        <Row0>
-          <Sizes>
-            <Wnd4>
-              <Rect>
-                <Top>-2</Top>
-                <Left>-2</Left>
-                <Bottom>754</Bottom>
-                <Right>198</Right>
-                <x>-2</x>
-                <y>-2</y>
-                <xscreen>200</xscreen>
-                <yscreen>200</yscreen>
-                <sizeHorzCX>104167</sizeHorzCX>
-                <sizeHorzCY>200602</sizeHorzCY>
-                <sizeVertCX>104167</sizeVertCX>
-                <sizeVertCY>758275</sizeVertCY>
-              </Rect>
-            </Wnd4>
-          </Sizes>
-        </Row0>
-      </Left>
-      <Right>
-        <Row0>
-          <Sizes>
-            <Wnd5>
-              <Rect>
-                <Top>-2</Top>
-                <Left>-2</Left>
-                <Bottom>754</Bottom>
-                <Right>241</Right>
-                <x>-2</x>
-                <y>-2</y>
-                <xscreen>200</xscreen>
-                <yscreen>200</yscreen>
-                <sizeHorzCX>104167</sizeHorzCX>
-                <sizeHorzCY>200602</sizeHorzCY>
-                <sizeVertCX>126563</sizeVertCX>
-                <sizeVertCY>758275</sizeVertCY>
-              </Rect>
-            </Wnd5>
-          </Sizes>
-        </Row0>
-        <Row1>
-          <Sizes>
-            <Wnd6>
-              <Rect>
-                <Top>-2</Top>
-                <Left>239</Left>
-                <Bottom>754</Bottom>
-                <Right>668</Right>
-                <x>239</x>
-                <y>-2</y>
-                <xscreen>200</xscreen>
-                <yscreen>200</yscreen>
-                <sizeHorzCX>104167</sizeHorzCX>
-                <sizeHorzCY>200602</sizeHorzCY>
-                <sizeVertCX>223438</sizeVertCX>
-                <sizeVertCY>758275</sizeVertCY>
-              </Rect>
-            </Wnd6>
-          </Sizes>
-        </Row1>
-      </Right>
-      <Bottom>
-        <Row0>
-          <Sizes>
-            <Wnd7>
-              <Rect>
-                <Top>-2</Top>
-                <Left>-2</Left>
-                <Bottom>198</Bottom>
-                <Right>584</Right>
-                <x>-2</x>
-                <y>-2</y>
-                <xscreen>586</xscreen>
-                <yscreen>200</yscreen>
-                <sizeHorzCX>305208</sizeHorzCX>
-                <sizeHorzCY>200602</sizeHorzCY>
-                <sizeVertCX>104167</sizeVertCX>
-                <sizeVertCY>200602</sizeVertCY>
-              </Rect>
-            </Wnd7>
-            <Wnd0>
-              <Rect>
-                <Top>0</Top>
-                <Left>0</Left>
-                <Bottom>68</Bottom>
-                <Right>15</Right>
-                <x>582</x>
-                <y>-2</y>
-                <xscreen>1340</xscreen>
-                <yscreen>200</yscreen>
-                <sizeHorzCX>697917</sizeHorzCX>
-                <sizeHorzCY>200602</sizeHorzCY>
-                <sizeVertCX>104167</sizeVertCX>
-                <sizeVertCY>200602</sizeVertCY>
-              </Rect>
-            </Wnd0>
-          </Sizes>
-        </Row0>
-      </Bottom>
-      <Float>
-        <Sizes/>
-      </Float>
-    </Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-04A99CB0><key>iaridepm.enu1</key></Toolbar-04A99CB0><Toolbar-12314868><key>debuggergui.enu1</key></Toolbar-12314868><Toolbar-123158D0><key>armjlink.enu1</key></Toolbar-123158D0></Sizes></Row0></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>754</Bottom><Right>304</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200602</sizeHorzCY><sizeVertCX>159375</sizeVertCX><sizeVertCY>758275</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes><Wnd4><Rect><Top>-2</Top><Left>-2</Left><Bottom>754</Bottom><Right>569</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200602</sizeHorzCY><sizeVertCX>297396</sizeVertCX><sizeVertCY>758275</sizeVertCY></Rect></Wnd4></Sizes></Row0><Row1><Sizes><Wnd7><Rect><Top>-2</Top><Left>567</Left><Bottom>754</Bottom><Right>807</Right><x>567</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200602</sizeHorzCY><sizeVertCX>125000</sizeVertCX><sizeVertCY>758275</sizeVertCY></Rect></Wnd7></Sizes></Row1></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>198</Bottom><Right>584</Right><x>-2</x><y>-2</y><xscreen>586</xscreen><yscreen>200</yscreen><sizeHorzCX>305208</sizeHorzCX><sizeHorzCY>200602</sizeHorzCY><sizeVertCX>104167</sizeVertCX><sizeVertCY>200602</sizeVertCY></Rect></Wnd3><Wnd0><Rect><Top>0</Top><Left>0</Left><Bottom>0</Bottom><Right>7</Right><x>582</x><y>-2</y><xscreen>1340</xscreen><yscreen>200</yscreen><sizeHorzCX>697917</sizeHorzCX><sizeHorzCY>200602</sizeHorzCY><sizeVertCX>104167</sizeVertCX><sizeVertCY>200602</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
   </Desktop>
 </Project>
 

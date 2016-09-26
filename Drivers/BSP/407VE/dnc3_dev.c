@@ -139,7 +139,8 @@ static u8 TIM_PWM_Config()
 {
   TIM_MasterConfigTypeDef sMasterConfig;
   /* Timer Output Compare Configuration Structure declaration */
-  TIM_OC_InitTypeDef sConfig;
+  // !!! should be initialized
+  TIM_OC_InitTypeDef sConfig = {0};
   /* Counter Prescaler value */
   uint32_t uhPrescalerValue = 0;
     
