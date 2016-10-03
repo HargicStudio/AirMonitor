@@ -321,6 +321,9 @@ void HAL_UART_DBG_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_DBG_ErrorCallback(UART_HandleTypeDef *huart)
 {
+    HAL_UART_DBG_MspDeInit(&UartHandle_dbg);
+    StdUsartInit();
+    HAL_UART_DBG_MspInit(&UartHandle_dbg);
 }
 
 

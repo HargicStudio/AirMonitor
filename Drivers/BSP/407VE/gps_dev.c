@@ -56,6 +56,8 @@
 // Uart type
 UART_HandleTypeDef UartHandle_gps;
 
+extern char recv_char_gps;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -194,6 +196,8 @@ void HAL_UART_GPS_MspDeInit(UART_HandleTypeDef *huart)
   HAL_GPIO_DeInit(USART_GPS_TX_GPIO_PORT, USART_GPS_TX_PIN);
   /* Configure UART Rx as alternate function  */
   HAL_GPIO_DeInit(USART_GPS_RX_GPIO_PORT, USART_GPS_RX_PIN);
+  
+  HAL_NVIC_DisableIRQ(USART_GPS_IRQn);
 }
 
 
@@ -206,7 +210,7 @@ void HAL_UART_GPS_MspDeInit(UART_HandleTypeDef *huart)
   */
 void HAL_UART_GPS_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    GpsWaitForSendCplt();
+    //GpsWaitForSendCplt();
 }
 
 /**
@@ -230,6 +234,10 @@ void HAL_UART_GPS_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_GPS_ErrorCallback(UART_HandleTypeDef *huart)
 {
+    HAL_UART_GPS_MspDeInit(&UartHandle_gps);
+    GpsUsartInit();
+    HAL_UART_GPS_MspInit(&UartHandle_gps);
+    HAL_UART_Receive_IT(&UartHandle_gps, (u8*)&recv_char_gps, 1);
 }
 
 

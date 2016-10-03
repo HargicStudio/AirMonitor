@@ -56,6 +56,8 @@
 // Uart type
 UART_HandleTypeDef UartHandle_gsm;
 
+extern char recv_char_gsm;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -188,6 +190,8 @@ void HAL_UART_GSM_MspDeInit(UART_HandleTypeDef *huart)
   HAL_GPIO_DeInit(USART_GSM_TX_GPIO_PORT, USART_GSM_TX_PIN);
   /* Configure UART Rx as alternate function  */
   HAL_GPIO_DeInit(USART_GSM_RX_GPIO_PORT, USART_GSM_RX_PIN);
+  
+  HAL_NVIC_DisableIRQ(USART_GSM_IRQn);
 }
 
 
@@ -224,6 +228,22 @@ void HAL_UART_GSM_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_GSM_ErrorCallback(UART_HandleTypeDef *huart)
 {
+    HAL_UART_GSM_MspDeInit(&UartHandle_gsm);
+    GsmUsartInit();
+    HAL_UART_GSM_MspInit(&UartHandle_gsm);
+    HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char_gsm, 1);
+}
+
+void GSMSetIRQ(bool opt)
+{
+    if (true == opt)
+    {
+        HAL_NVIC_EnableIRQ(USART_GSM_IRQn);
+    }
+    else
+    {
+        HAL_NVIC_DisableIRQ(USART_GSM_IRQn);
+    }
 }
 
 

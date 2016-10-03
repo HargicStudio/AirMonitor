@@ -56,6 +56,8 @@
 // Uart type
 UART_HandleTypeDef UartHandle_cp15;
 
+extern char recv_char_cp15;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -256,6 +258,8 @@ void HAL_UART_CP15_MspDeInit(UART_HandleTypeDef *huart)
   HAL_GPIO_DeInit(UART_CP15_TX_GPIO_PORT, UART_CP15_TX_PIN);
   /* Configure UART Rx as alternate function  */
   HAL_GPIO_DeInit(UART_CP15_RX_GPIO_PORT, UART_CP15_RX_PIN);
+  
+  HAL_NVIC_DisableIRQ(UART_CP15_IRQn);
 }
 
 
@@ -292,6 +296,10 @@ void HAL_UART_CP15_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_CP15_ErrorCallback(UART_HandleTypeDef *huart)
 {
+    HAL_UART_CP15_MspDeInit(&UartHandle_cp15);
+    CP15UsartInit();
+    HAL_UART_CP15_MspInit(&UartHandle_cp15);
+    HAL_UART_Receive_IT(&UartHandle_cp15, (u8*)&recv_char_cp15, 1);
 }
 
 

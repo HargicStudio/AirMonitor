@@ -20,8 +20,8 @@ extern "C" {
 #define USART_GSM_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
 #define USART_GSM_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE() 
     
-#define USART_GSM_FORCE_RESET()             __HAL_RCC_USART1_FORCE_RESET()
-#define USART_GSM_RELEASE_RESET()           __HAL_RCC_USART1_RELEASE_RESET()
+#define USART_GSM_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
+#define USART_GSM_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
     
 /* Definition for USARTx Pins */
 #define USART_GSM_TX_PIN                    GPIO_PIN_2
@@ -50,6 +50,7 @@ void HAL_UART_GSM_MspDeInit(UART_HandleTypeDef *huart);
 void HAL_UART_GSM_TxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_GSM_RxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_GSM_ErrorCallback(UART_HandleTypeDef *huart);
+void GSMSetIRQ(bool opt);
 
 
 
