@@ -83,31 +83,33 @@ u8 CCSDeamonCEInit()
 
     // alternative CCS service initialization
     AaSysComCEInit();
-    AaTagCEInit();
+    //AaTagCEInit();
     //AaShellCEInit();
 
-    CCSDaemonCreateThread();
+    //CCSDaemonCreateThread();     // for test
     AaSysLogCreateDeamon();
-    AaTagCreateDeamon();
+    //AaTagCreateDeamon();         // no need
+    ////StartTFCardTask();           // This task for test
     // start application task
-//    StartDataRecordTask();
-    //StartTFCardTask();
+    StartDataRecordTask();
     StartRunLedTask();
-//    StartGpsTask();
-//    StartGsmTask();
-//    StartCP15Task();
-//    StartRunAm2302Task();
+    StartGpsTask();
+    StartGsmTask();
+    StartCP15Task();
     StartAlphaSenseTask();
-    StartDn7c3Task();
     
+    StartDn7c3Task();
+
     /* Init Fan */
-    // FanStart();
+    FanStart();
+    
+    StartRunAm2302Task();
 
     // create global tag
-    AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
-    AaTagCreate(AATAG_CCS_STARTUP, 0);
+    //AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
+    //AaTagCreate(AATAG_CCS_STARTUP, 0);
 
-    AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "System started");
+    //AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "System started");
 
     // as scheduler started, print can be print into bipbuffer and send out by DMA
     AaSysLogGetBipRegister(GetBipAndSendByDMA);
@@ -133,7 +135,7 @@ u8 CCSDeamonCEInit()
  */  
 static u8 CCSDaemonCreateThread()
 {
-    osThreadDef(CCSDaemon, CCSDaemonThread, osPriorityHigh, 0, CCSDEAMON_STACK_SIZE);
+    osThreadDef(CCSDaemon, CCSDaemonThread, osPriorityNormal, 0, CCSDEAMON_STACK_SIZE);
     
     _ccsdaemon_id = AaThreadCreateStartup(osThread(CCSDaemon), NULL);
     if(_ccsdaemon_id == NULL) {

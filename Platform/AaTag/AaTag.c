@@ -140,7 +140,7 @@ u8 AaTagCEInit()
 
 u8 AaTagCreateDeamon()
 {
-    osThreadDef(AaTagDaemon, AaTagDeamonThread, osPriorityHigh, 0, AATAGDEAMON_STACK_SIZE);
+    osThreadDef(AaTagDaemon, AaTagDeamonThread, osPriorityNormal, 0, AATAGDEAMON_STACK_SIZE);
     
     _aatagdaemon_id = AaThreadCreateStartup(osThread(AaTagDaemon), _aatag_mng);
     if(_aatagdaemon_id == NULL) {

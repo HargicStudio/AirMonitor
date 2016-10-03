@@ -29,7 +29,7 @@ History:
 static u8 _aasyslog_index = 0;
 
 /** log level for input filter */
-static ELogLevel _aasyslog_input_level = LOGLEVEL_ALL;
+static ELogLevel _aasyslog_input_level = LOGLEVEL_INF;
 
 
 extern SAaSysLog _aasyslog_mng;

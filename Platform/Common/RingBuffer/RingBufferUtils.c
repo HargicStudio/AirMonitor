@@ -66,6 +66,7 @@ u8 ring_buffer_consume( ring_buffer_t* ring_buffer, u32 bytes_consumed )
   return 0;
 }
 
+#if 0
 u32 ring_buffer_write( ring_buffer_t* ring_buffer, const u8* data, u32 data_length )
 {
   u32 tail_to_end = ring_buffer->size - ring_buffer->tail;
@@ -87,6 +88,54 @@ u32 ring_buffer_write( ring_buffer_t* ring_buffer, const u8* data, u32 data_leng
   
   return amount_to_copy;
 }
+#endif
+
+u32 ring_buffer_write( ring_buffer_t* ring_buffer, const u8* data, u32 data_length )
+{
+  u16 freespace = 0;
+  u16 toCopy = 0;
+  
+  if (ring_buffer->head <= ring_buffer->tail)
+  {
+      freespace = (ring_buffer->size - ring_buffer->tail) + ring_buffer->head - 1;
+      if (freespace < data_length)
+      {
+          return 0;
+      }
+      
+      toCopy = ring_buffer->size - ring_buffer->tail;
+      if (data_length <= toCopy)
+      {
+          memcpy(&ring_buffer->buffer[ring_buffer->tail],
+                 data, data_length);
+          
+      }
+      else
+      {
+          memcpy(&ring_buffer->buffer[ring_buffer->tail],
+                 data, toCopy);
+          
+          memcpy(ring_buffer->buffer, data + toCopy, data_length - toCopy);
+
+      }      
+
+  }
+  else
+  {
+      freespace = ring_buffer->head - ring_buffer->tail - 1;
+      if (freespace < data_length)
+      {
+          return 0;
+      }
+      
+      memcpy(&ring_buffer->buffer[ring_buffer->tail],
+                 data, data_length);
+  }
+  
+  ring_buffer->tail = (ring_buffer->tail + data_length) % ring_buffer->size;
+  
+  return data_length;
+}
 
 /* 用于串口每次接收一个字节的情况 */
 u32 ring_buffer_write_c(ring_buffer_t* ring_buffer, u8 data)
@@ -105,7 +154,7 @@ u8 ring_buffer_consume_enter( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len)
   
   *len = 0;
   
-  if (ring_buffer->head < ring_buffer->tail)
+  if (ring_buffer->head <= ring_buffer->tail)
   {
     while(count < ring_buffer->tail)
     {
@@ -159,7 +208,7 @@ u8 ring_buffer_consume_str( ring_buffer_t* ring_buffer,  u8 *buf, u16 *len)
   
   *len = 0;
   
-  if (ring_buffer->head < ring_buffer->tail)
+  if (ring_buffer->head <= ring_buffer->tail)
   {
     while(count < ring_buffer->tail)
     {
