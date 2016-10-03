@@ -187,6 +187,10 @@ Reset_Handler
         PUBWEAK NMI_Handler
         SECTION .text:CODE:REORDER:NOROOT(1)
 NMI_Handler
+        TST LR, #4
+        ITE EQ
+        MRSEQ R0, MSP
+        MRSNE R0, PSP
         B NMI_Handler
 
         PUBWEAK HardFault_Handler
