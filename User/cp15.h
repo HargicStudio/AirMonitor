@@ -42,6 +42,8 @@ void CP15RecvDataFromISR(UART_HandleTypeDef *huart);
 
 void SetAutoInterval(u16 interval);
 void OpenAutoOutput();
+bool CheckCP15Crc(u8 *buf, u16 size);
+void CalcuteCp15Crc(u8 *buf, u16 size);
 
 
 

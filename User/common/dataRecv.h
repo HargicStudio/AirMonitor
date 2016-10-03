@@ -28,16 +28,21 @@ void ProcessGetSoftVersion(u8 *buf);
 void ProcessGetHardVersion(u8 *buf);
 void ProcessAdjust(u8 *buf);
 void ProcessConfig(u8 *buf);
+void ProcessReboot(u8 *buf);
 
 void ProcessServerResp(u8 *buf);
 
-void ProcessRecall(u8 *buf, u16 cmd);
+void ProcessRecall(u8 *buf);
 
 void ProcessServerTime(u8 *buf);
 
 void ProcessGetPosition(u8 *buf);
 
-void ConstructResponse(u8 *cmd, u8* addr, u8 type);
+void ConstructResponse(u8 *cmd, u8* addr, u16 type);
+
+void ConstructCommonResponse(u8 *cmd, u8* addr, u8 *opt, u8 optLen);
+
+void ProcessStopRecall(u8 *buf);
 
   
 #ifdef __cplusplus

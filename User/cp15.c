@@ -31,7 +31,7 @@ static osSemaphoreDef(cp15_recvcplt_sem);
 osSemaphoreId _cp15_recvcplt_sem_id;
 
 /** Description of the macro */  
-static char recv_char;
+char recv_char_cp15;
 
 #define MAX_CP15_BUFF_SIZE              256
 #define MAX_CP15_RECV_SZIE              50
@@ -43,6 +43,8 @@ u8 _cp15_ringbuf_data[MAX_CP15_BUFF_SIZE];
 /* 接收buffer */
 u8 _cp15_buf[MAX_CP15_RECV_SZIE];
 
+/* 中断接收buf */
+u8 _cp15_int_buf[35];
 
 extern UART_HandleTypeDef UartHandle_cp15;
 
@@ -73,33 +75,31 @@ static void CP15Thread(void const *argument)
     u16 val25 = 0;
     u16 val10 = 0;
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "CP15Thread started");
+    CP15_LOG_P0("CP15Thread started");
 
     for (;;)
     {
         osSemaphoreWait(_cp15_recvcplt_sem_id, osWaitForever);
         
-        ring_buffer_consume_enter(&_cp15_ringbuf, _cp15_buf, &len);
+        ring_buffer_consume_str(&_cp15_ringbuf, _cp15_buf, &len);
+        
+        //CP15_LOG_P2("Handle CP15: head: %d, tail: %d", _cp15_ringbuf.head, _cp15_ringbuf.tail);
 
-        if (_cp15_buf[0] != 0 || _cp15_buf[1] != 0x1c)
+        if (_cp15_buf[0] != 0x32 || _cp15_buf[1] != 0x3D ||
+            _cp15_buf[2] != 0 || _cp15_buf[3] != 0x1c)
         {
             continue;
         }
-        val25 = _cp15_buf[4]<<8 | _cp15_buf[5];
+        val25 = _cp15_buf[6]<<8 | _cp15_buf[7];
         
         StorePmInfo(val25, &g_pm25);
         
         /* 计算益杉德PM10*/
-        val10 = _cp15_buf[6]<<8 | _cp15_buf[7];
+        val10 = _cp15_buf[8]<<8 | _cp15_buf[9];
         
         StorePmInfo(val10, &g_pm10);
         
-        /*
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "PM2.5 %02x %02x %02x %02x %02x %02x %02x %02x \r\n", 
-                       _cp15_buf[0], _cp15_buf[1], _cp15_buf[2], _cp15_buf[3], _cp15_buf[4], _cp15_buf[5],
-                       _cp15_buf[6], _cp15_buf[7]);
-        */
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "received PM2.5 : %d PM10 : %d\r\n", val25, val10);
+        CP15_LOG_P2("received PM2.5 : %d PM10 : %d\r\n", val25, val10);
     }
 }
 
@@ -108,14 +108,15 @@ static void CP15SendTestThread(void const *argument)
 {
     (void) argument;
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s started", __FUNCTION__);
+    CP15_LOG_P1("%s started", __FUNCTION__);
 
     for(;;)
     {
-        OpenAutoOutput();
-        osDelay(5000);
         SetAutoInterval(10);
+        osDelay(5000);
+        OpenAutoOutput();
         osDelay(50000);
+        
         //GSM_LOG_P0("**Hello, CP15**");
         
         /* 设置完成退出线程 */
@@ -132,40 +133,40 @@ u8 StartCP15Task()
     CP15DeviceInit();
 
     ring_buffer_init(&_cp15_ringbuf, _cp15_ringbuf_data, MAX_CP15_BUFF_SIZE);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create CP 15 ringbuffer success");
+    CP15_LOG_P0("create CP 15 ringbuffer success");
 
     _cp15_sendcplt_sem_id = osSemaphoreCreate(osSemaphore(cp15_sendcplt_sem), 1);
     if(_cp15_sendcplt_sem_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureCP15, "%s %d: cp15_sendcplt_sem initialize failed",
+        CP15_LOG_P2("%s %d: cp15_sendcplt_sem initialize failed",
                     __FUNCTION__, __LINE__);
         return 1;
     }
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "create cp15_sendcplt_sem success");
+    CP15_LOG_P0("create cp15_sendcplt_sem success");
 
 
     _cp15_recvcplt_sem_id = osSemaphoreCreate(osSemaphore(cp15_recvcplt_sem), 1);
     if(_cp15_recvcplt_sem_id == NULL) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureCP15, "%s %d: cp15_recvcplt_sem initialize failed",
+        CP15_LOG_P2("ERROR: %s %d: cp15_recvcplt_sem initialize failed",
                     __FUNCTION__, __LINE__);
         return 2;
     }
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "create cp15_recvcplt_sem success");
+    CP15_LOG_P0("create cp15_recvcplt_sem success");
     
     // will always receive one data from serial and save the data into ringbuffer.
-    if(HAL_OK != HAL_UART_Receive_IT(&UartHandle_cp15, (u8*)&recv_char, 1)) {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d: HAL_UART_Receive_IT initialize failed",
+    if(HAL_OK != HAL_UART_Receive_IT(&UartHandle_cp15, (u8*)&recv_char_cp15, 1)) {
+        CP15_LOG_P2("ERROR: %s %d: HAL_UART_Receive_IT initialize failed",
                     __FUNCTION__, __LINE__);
         return 3;
     }
 
     osThreadDef(CP15, CP15Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _cp15_id = AaThreadCreateStartup(osThread(CP15), NULL);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "create CP15Thread success");
+    CP15_LOG_P0("create CP15Thread success");
 
 
     osThreadDef(CP15Test, CP15SendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _cp15_send_test_id = AaThreadCreateStartup(osThread(CP15Test), NULL);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "create CP15SendTestThread success");
+    CP15_LOG_P0("create CP15SendTestThread success");
 
 
     return 0;
@@ -177,7 +178,7 @@ static void CP15DeviceInit()
     CP15UsartInit();
     //CP15GpioInit();
 
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "cp15 device initialize success");
+    CP15_LOG_P0("cp15 device initialize success");
 }
 
 /** 
@@ -211,36 +212,63 @@ void CP15WaitForSendCplt()
 void CP15RecvDataFromISR(UART_HandleTypeDef *huart)
 {
     static u8 flag = 0;
-    static u8 count = 0;
+    static u8 count = 2;
+    static u8 freqCtr = 0;
     
-    HAL_UART_Receive_IT(&UartHandle_cp15, (u8*)&recv_char, 1);
-    if (recv_char == 0x32 && flag == 0)
+    if (recv_char_cp15 == 0x32 && flag == 0)
     {
         flag = 1;
-        return;
+        goto GO_OUT;
     }
     
-    if (flag == 1 && recv_char == 0x3D)
+    if (flag == 1 && recv_char_cp15 == 0x3D)
     {
         flag = 2;
-        return;
+        goto GO_OUT;
     }
     
     if (flag != 2)
     {
         flag = 0;
-        return;
+        count = 2;
+        goto GO_OUT;
     }
     
+    _cp15_int_buf[count] = recv_char_cp15;
     count++;
-    ring_buffer_write_c(&_cp15_ringbuf, recv_char);
-    if (count == 18)
+    
+    if (count == 32)
     {
         count = 0;
         flag = 0;
-        ring_buffer_write_c(&_cp15_ringbuf, '\n');
-        osSemaphoreRelease(_cp15_recvcplt_sem_id);
+        
+        _cp15_int_buf[0] = 0x32;
+        _cp15_int_buf[1] = 0x3D;
+        if (CheckCP15Crc(_cp15_int_buf, 32))
+        {
+            freqCtr++;
+            if (freqCtr < 5)
+            {
+                goto GO_OUT;
+            }
+            
+            _cp15_int_buf[32] = 0xff;
+            _cp15_int_buf[33] = 0xff;
+            _cp15_int_buf[34] = 0xff;
+            ring_buffer_write(&_cp15_ringbuf, _cp15_int_buf, sizeof(_cp15_int_buf));
+            osSemaphoreRelease(_cp15_recvcplt_sem_id);
+            
+            //CP15_LOG_P2("CP15 head: %d, tail:%d", _cp15_ringbuf.head, _cp15_ringbuf.tail);
+        }
+        else
+        {
+            //CP15_LOG_P0("_+_+_+_+_+_+ CP15 CRC error! _+_+_+_+_+_+");
+        }
+                
     }
+    
+GO_OUT:
+    HAL_UART_Receive_IT(&UartHandle_cp15, (u8*)&recv_char_cp15, 1);
 }
 
 
@@ -250,20 +278,50 @@ void CP15RecvDataFromISR(UART_HandleTypeDef *huart)
 */
 void OpenAutoOutput()
 {
-  u8 cmd[20] = {0x33, 0x3e, 0x00, 0x0c, 0xa2, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x20};
+  u8 cmd[16] = {0x33, 0x3e, 0x00, 0x0c, 0xa2, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x20};
+  
+  CalcuteCp15Crc(cmd, 16);
   
   CP15DataSendByIT(cmd, 16);
 }
 
 void SetAutoInterval(u16 interval)
 {
-  u8 cmd[20] = {0x33, 0x3e, 0x00, 0x0c, 0xa3, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x25};
+  u8 cmd[16] = {0x33, 0x3e, 0x00, 0x0c, 0xa3, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x2A};
   
   cmd[6] = interval >> 8;
   cmd[7] = interval & 0xff;
   
+  CalcuteCp15Crc(cmd, 16);
+  
   CP15DataSendByIT(cmd, 16);
 }
 
+
+bool CheckCP15Crc(u8 *buf, u16 size)
+{
+     u16 i = 0;
+     u16 sum = 0;
+     for (i=0; i<size - 2; i++)
+     {
+         sum += buf[i];
+     }
+     
+     return ((buf[size-2] << 8 | buf[size-1]) == sum);
+}
+
+void CalcuteCp15Crc(u8 *buf, u16 size)
+{
+    u16 i = 0;
+    u16 sum = 0;
+    
+    for (i=0; i<size - 2; i++)
+    {
+       sum += buf[i];
+    }
+    
+    buf[size-2] = (sum>>8) & 0xff;
+    buf[size -1] = (sum) & 0xff;
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

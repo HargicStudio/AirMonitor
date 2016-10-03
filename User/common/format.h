@@ -22,6 +22,7 @@ typedef struct SEND_BUF_t
     u16 sendFlag;         // 数据是否准备好的标识
     u16 respFlag;         // 这条消息是否需要回应
     u16 useLen;
+    u8 resetFlag;         // 回应后是否重启
     u8 buf[MAX_SEND_BUFF_LEN];
     
 }SEND_BUF_t;
@@ -58,6 +59,9 @@ extern SEND_BIG_BUF_t g_sendRecallData;
 #define SEND_RESPONSE_RESP_FALG_SET(x)       (g_sendResponse.respFlag = x)
 #define SEND_RESPONSE_RESP_FALG_GET()        (g_sendResponse.respFlag)
 #define IsSendResponseReady()                (g_sendResponse.sendFlag == SEND_FLAG_YES)
+#define IsSendRest()                         (g_sendResponse.resetFlag == SEND_FLAG_YES)
+#define SEDN_RESPONSE_SET_RESET_SYSTEM_FLAG()  (g_sendResponse.resetFlag = SEND_FLAG_YES)
+#define SEDN_RESPONSE_CLEAR_RESET_SYSTEM_FLAG()  (g_sendResponse.resetFlag = SEND_FLAG_NO)
 
 
 #define SEND_BUF_OFFSET(x)              (g_sendBuf.buf + (x))

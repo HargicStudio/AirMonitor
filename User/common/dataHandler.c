@@ -5,6 +5,7 @@
 #include "dataRecord.h"
 #include "gps.h"
 #include "config.h"
+#include "common.h"
 
 /* 站号 */
 /* 出厂唯一编号 */
@@ -16,6 +17,8 @@ TEMP_WET_t g_tempWetOut;
 PM_t g_pm25;
 /* PM10 */
 PM_t g_pm10;
+/* 夏普传感器获得的PM10 */
+PM_t g_pm10sharp;
 /* CO */
 GAS_t g_co;
 /* NO2 */
@@ -42,6 +45,9 @@ SEND_BUF_t g_recordBuf;
 
 /* 用于接收数据回应的缓冲区，避免block接收 */
 SEND_BUF_t g_sendResponse;
+
+/* 用于构造直接发送的数据 */
+SEND_BUF_t g_sendDirt;
 
 /* 回调应答的数据缓冲 */
 SEND_BIG_BUF_t g_sendRecallData;
@@ -127,7 +133,7 @@ double GetNno2Value(void)
     return 0.7;
 }
 
-double GetNcoValue(double temp)
+double GetNcoValue(float temp)
 {
     double n = 0;
     double v1 = 0;
@@ -179,7 +185,7 @@ double GetNcoValue(double temp)
     return n;
 }
 
-double GetNoxValue(double temp)
+double GetNoxValue(float temp)
 {
     double n = 0;
     double v1 = 0;
@@ -229,14 +235,19 @@ double GetNoxValue(double temp)
 *  gasType : 0: CO   1: SO2   2: NO2    3: O3
 *  return : -1 温度异常  正常单位  ppb
 */
-s32 CalGasVal(u32 Vw, u32 Va, u8 gasType)
+s32 CalGasVal(u32 Vw, u32 Va, EASType gasType)
 {
     double n = 0;
     double rst;
     s16 Vw0;
     s16 Va0;
     s16 S;
-    double temp = 0;
+    float temp = 0;
+    
+    if (Vw > 6000 || Va > 6000)
+    {
+        return -1;
+    }
     
     temp = GetTempIn()/10.0;
     if (temp < -30 || temp > 50)
@@ -246,37 +257,50 @@ s32 CalGasVal(u32 Vw, u32 Va, u8 gasType)
     
     switch (gasType)
     {
-    case 0:
+    case AS_TYPE_CO:
       GetCoZero(&Vw0, &Va0, &S);
       n = GetNcoValue(temp);
+      AFX_LOG_P3("CalGasVal: CO  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
-    case 1:
+    case AS_TYPE_SO2:
       GetSo2Zero(&Vw0, &Va0, &S);
       n = GetNso2Value();
+      AFX_LOG_P3("CalGasVal: SO2  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
-    case 2:
+    case AS_TYPE_NO2:
       GetNo2Zero(&Vw0, &Va0, &S);
       n = GetNno2Value();
+      AFX_LOG_P3("CalGasVal: NO2  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
-    case 3:
+    case AS_TYPE_O3:
       GetO3Zero(&Vw0, &Va0, &S);
       n = GetNoxValue(temp);
+      AFX_LOG_P3("CalGasVal: O3  W: %d, A:%d, N:%lf", Vw, Va, n);
+      break;
+    default:
+      AFX_LOG_P1("Warning: Error gas type: %d", gasType);
       break;
     }
     
     rst = ((Vw - Vw0) - n * (Va - Va0))/ S;
     
     /* PPM to PPB */
-    rst = rst * 1000;
+    rst = rst * 1000.0;
     
-    return rst;
+    if (rst < 0.0)
+      rst = 0;
+    
+    AFX_LOG_P4("CalGasVal: Vw0: %d, Va0: %d, S: %d, rst: %lf", 
+               Vw0, Va0, S, rst);
+    
+    return (u32)(rst+0.5);
 }
 
 /* 存储气体浓度 */
 s8 StoreGasInfo(u32 val, GAS_t *bag)
 {
     /* 数据有效性在外部判断 */
-
+    AFX_LOG_P1("Store Gas value: %d", val);
     /* 达到采样个数才开始计算 */
     if (!IsReachSamples(bag->validNum, SAMPLE_GAS_NUM))
     {
@@ -420,6 +444,11 @@ u16 GetPm10()
     return g_pm10.curData;
 }
 
+u16 GetPm10Sharp()
+{
+    return g_pm10sharp.curData;
+}
+
 /* CO */
 u32 GetCo()
 {
@@ -481,15 +510,13 @@ void ContructDataUp()
     offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
     
     /* date*/
-    /*
     if (IsClockSynced())
     {
-        RTC_GetTime(&g_stime);
-        RTC_GetDate(&g_sdate);
+        RTC_GetCalendar((struct tm *)&(gps.time));
         sprintf(gps.utc.strTime + 2, "%02d%02d%02d%02d%02d%02d", 
-                g_sdate.Year, g_sdate.Month, g_sdate.Date, 
-                g_stime.Hours, g_stime.Minutes, g_stime.Seconds);
-    }*/
+                gps.time.tm_year - 2000, gps.time.tm_mon, gps.time.tm_mday, 
+                gps.time.tm_hour, gps.time.tm_min, gps.time.tm_sec);
+    }
     
     offset += FormatTime(&gps.utc.strTime[2], SEND_BUF_OFFSET(offset));
     
@@ -544,7 +571,7 @@ void ContructDataUp()
     ret = GetModuleStu(MDU_PM10_SHARP);
     if (STU_NORMAL == ret)
     {
-        offset += Format16(GetPm10(), SEND_BUF_OFFSET(offset));
+        offset += Format16(GetPm10Sharp(), SEND_BUF_OFFSET(offset));
     }
     else
     {
@@ -604,15 +631,17 @@ void ContructDataUp()
     
     SEND_BUF_SET_BYTE('\r', offset);
     SEND_BUF_SET_BYTE('\n', offset + 1);
+    offset += 2;
     
     /* 数据总长度 */
-    SEND_BUF_SET_LEN(offset + 2);
+    SEND_BUF_SET_LEN(offset);
 
     GSM_LOG_P1("Date: %s\r\n", gps.utc.strTime);
     GSM_LOG_P4("Long:Lati %d : %d, TmpO:WetO %d:%d", 
                  GetCoordLong(), GetCoordLati(), GetTempOut(), GetWetOut());
-    GSM_LOG_P4("TmpI:WetI %d:%d, pm25:%d, pm10:%d", 
-                 GetTempIn(), GetWetIn(), GetPm25(), GetPm10());
+    GSM_LOG_P4("TmpI:WetI %d:%d, pm25:%d, pm10Sharp:%d", 
+                 GetTempIn(), GetWetIn(), GetPm25(), GetPm10Sharp());
+    GSM_LOG_P1("pm10:%d", GetPm10());
     GSM_LOG_P4("CO:%d, SO2:%d, O3:%d, No2: %d", 
                  GetCo(), GetSo2(), GetO3(), GetNo2());
     
@@ -641,30 +670,30 @@ void ContructDataUp()
                    g_recordInfo.newNameHour);
       */
         //  20160801161616
-        memcpy(g_recordBuf.buf, SEND_BUF_OFFSET(LEN_HEAD), offset - LEN_HEAD);
-        g_recordBuf.useLen = offset - LEN_HEAD;
+        memcpy(g_recordBuf.buf, SEND_BUF_OFFSET(LEN_HEAD + LEN_ADDR_CMD), offset - LEN_HEAD - LEN_ADDR_CMD);
+        g_recordBuf.useLen = offset - LEN_HEAD - LEN_ADDR_CMD;
         
-        // 16
-        memcpy(g_recordInfo.newNameYear, gps.utc.strTime+2, 2);
+        // 2016
+        memcpy(g_recordInfo.newNameYear, gps.utc.strTime, 4);
         
-        // 16/08
-        memcpy(g_recordInfo.newNameMon, g_recordInfo.newNameYear, 2);
-        g_recordInfo.newNameMon[2] = '\\';
-        memcpy(g_recordInfo.newNameMon + 3, gps.utc.strTime+4, 2);
+        // 2016/08
+        memcpy(g_recordInfo.newNameMon, g_recordInfo.newNameYear, 4);
+        g_recordInfo.newNameMon[4] = '\\';
+        memcpy(g_recordInfo.newNameMon + 5, gps.utc.strTime+4, 2);
         
-        // 16/08/01
-        memcpy(g_recordInfo.newNameDay, g_recordInfo.newNameMon, 5);
-        g_recordInfo.newNameDay[5] = '\\';
-        memcpy(g_recordInfo.newNameDay + 6, gps.utc.strTime+6, 2);
+        // 2016/08/01
+        memcpy(g_recordInfo.newNameDay, g_recordInfo.newNameMon, 7);
+        g_recordInfo.newNameDay[7] = '\\';
+        memcpy(g_recordInfo.newNameDay + 8, gps.utc.strTime+6, 2);
         
-        // 16/08/01/16.txt
-        memcpy(g_recordInfo.newNameHour, g_recordInfo.newNameDay, 8);
-        g_recordInfo.newNameHour[8] = '\\';
-        memcpy(g_recordInfo.newNameHour + 9, gps.utc.strTime+8, 2);
-        g_recordInfo.newNameHour[11] = '.';
-        g_recordInfo.newNameHour[12] = 't';
-        g_recordInfo.newNameHour[13] = 'x';
+        // 2016/08/01/16.txt
+        memcpy(g_recordInfo.newNameHour, g_recordInfo.newNameDay, 10);
+        g_recordInfo.newNameHour[10] = '\\';
+        memcpy(g_recordInfo.newNameHour + 11, gps.utc.strTime+8, 2);
+        g_recordInfo.newNameHour[13] = '.';
         g_recordInfo.newNameHour[14] = 't';
+        g_recordInfo.newNameHour[15] = 'x';
+        g_recordInfo.newNameHour[16] = 't';
 
         g_recordBuf.sendFlag = 1;
         
@@ -802,46 +831,60 @@ u8 ConstructRecordData(u8 *data)
 
 /*
 *  构造回调数据
+*  onoff: 1: 开始     2 : 结束
 */
-u8 ConstructRecordDataToSend(u8 *data, u8 *cmd)
+bool ConstructRecordDataToSend(u8 *data, u8 onoff, u16 cnt)
 {
     u16 offset = 0;
     u32 crc = 0;
-    u8 *buf = g_sendRecallData.buf + g_sendRecallData.useLen;
+    u8 *buf = NULL;
     
     g_sendRecallData.sendFlag = 0;
-   
-    if (MAX_SEND_BIG_BUFF_LEN - g_sendRecallData.useLen < LEN_REPORT_DATA + 2)
+    
+    if (onoff == 1)
     {
-       GSM_LOG_P1("Send buffer is full!", g_sendRecallData.useLen);
-       return 0;
+        g_sendRecallData.useLen = LEN_HEAD + LEN_ADDR + LEN_CMD + 2;
+        return true;
     }
     
-    /* 写入地址 */
-    offset = LEN_HEAD;
-    memcpy(buf+offset, ConfigGetStrAddr(), MAX_ADDR_LEN);
-    offset += MAX_ADDR_LEN;
-    /* cmd */
-    memcpy(buf+offset, cmd, 3);
+    /* 代表结束 */
+    if (onoff == 2)
+    {
+        u8 num[3] = {0};
+        
+        buf = g_sendRecallData.buf;
+        /* 写入地址 */
+        offset = LEN_HEAD;
+        memcpy(buf+offset, ConfigGetStrAddr(), MAX_ADDR_LEN);
+        offset += MAX_ADDR_LEN;
+        /* cmd */
+        memcpy(buf+offset, "218", 3);
+        offset += 3;
+        
+        sprintf(num, "%02d", cnt);
+        memcpy(buf+offset, num, 2);
+        
+        /* 计算CRC */
+        crc = usMBCRC16( buf + LEN_HEAD , g_sendRecallData.useLen - LEN_HEAD );
+        
+        /* 赋值头部 */
+        FormatHead(crc, offset - LEN_HEAD, buf);
+        
+        return true;
+    }
+   
+    if (MAX_SEND_BIG_BUFF_LEN - g_sendRecallData.useLen < LEN_REPORT_DATA_ONLY)
+    {
+       GSM_LOG_P1("Send buffer is full!", g_sendRecallData.useLen);
+       return false;
+    }
     
-    offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
+    buf = g_sendRecallData.buf + g_sendRecallData.useLen;
     
-    memcpy(buf+offset, data, LEN_REPORT_DATA_WO_HEAD);
-    offset = LEN_REPORT_DATA;
+    memcpy(buf, data, LEN_REPORT_DATA_ONLY);
+    g_sendRecallData.useLen += LEN_REPORT_DATA_ONLY;
     
-    
-    /* 计算CRC */
-    crc = usMBCRC16( buf + LEN_HEAD , offset - LEN_HEAD );
-    
-    /* 赋值头部 */
-    FormatHead(crc, offset - LEN_HEAD, buf);
-    
-    buf[offset] = '\r';
-    buf[offset + 1] = '\n';
-    
-    g_sendRecallData.useLen += offset + 2;
-    
-    return offset + 2;
+    return true;
 
 }
 
@@ -850,6 +893,44 @@ void InitSendRecallData()
     g_sendRecallData.sendFlag = 0;
     g_sendRecallData.useLen = 0;
 }
+
+/*
+typedef struct SEND_BUF_t
+{
+    u16 sendFlag;         // 数据是否准备好的标识
+    u16 respFlag;         // 这条消息是否需要回应
+    u16 useLen;
+    u8 buf[MAX_SEND_BUFF_LEN];
+    
+}SEND_BUF_t;
+*/
+/* 在发送线程中使用的函数，直接构造数据并发送 */
+void ConstructDataAndSend(u8 *cmd, u8* addr, u8 *opt, u8 optLen)
+{
+    u16 offset = 0;
+    u32 crc = 0;
+    u8 *buf = g_sendDirt.buf;
+    
+    offset = LEN_HEAD;
+    memcpy((s8 *)(buf + offset), addr, MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy((s8 *)(buf + offset), cmd, LEN_CMD);
+    offset += LEN_CMD;
+    
+    /* opt */
+    memcpy((s8 *)(s8 *)(buf + offset), opt, optLen);
+    offset += optLen;
+    
+    /* HEAD */
+    /* CRC */
+    crc = usMBCRC16( (u8 *)(buf + LEN_HEAD) , offset - LEN_HEAD );
+    
+    FormatHead(crc, offset - LEN_HEAD, (u8 *)buf);
+    
+    g_sendDirt.useLen = offset;
+}
+
 
 
 

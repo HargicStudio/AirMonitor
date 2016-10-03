@@ -37,27 +37,15 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-/* ÓÃÓÚ¼ÆËãºÍ±£´æÐÅÏ¢ */
+/* ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ */
 extern gps_process_data gps;
 #define IsClockSynced()         gps.utc.syncFlag
-#define SetClockSynced(flag)    gps.utc.syncFlag = (flag)
-    
-#define GPS_SERIAL_RX_BUFFER_NUM        (2)
-#define GPS_SERIAL_RX_BUFFER_SIZE       (256)
+#define SetClockSynced(flag)    {gps.utc.syncFlag = (flag); \
+                                  GSM_LOG_P1("System time set! type:%d", flag);}
 
-typedef struct GPS_BUF_t
-{
-    u8 bufData[GPS_SERIAL_RX_BUFFER_NUM][GPS_SERIAL_RX_BUFFER_SIZE];
-    u8 *curWriteBuf;
-    u8 *curReadBuf;
-    u16 curWriteNum;
-    u16 curReadNum;
-    u8 switchFlag;
-    
-}GPS_BUF_t;
 
 u8 StartGpsTask();
-void GpsWaitForSendCplt();
+// void GpsWaitForSendCplt();
 void GpsRecvDataFromISR(UART_HandleTypeDef *huart);
 
 

@@ -1,5 +1,3 @@
-
-/* Includes ------------------------------------------------------------------*/
 #include "gsm.h"
 #include "gsm_dev.h"
 #include "RingBufferUtils.h"
@@ -11,6 +9,7 @@
 #include "dataRecord.h"
 //#include "rtc.h"
 #include "gps.h"
+#include "dataHandler.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -41,7 +40,7 @@ u8 _gsm_rx_ringbuf_data[GSM_SERIAL_RX_RINGBUFFER_SIZE];
 u8 _gsm_rx_buf[GSM_SERIAL_RX_RINGBUFFER_SIZE];
 
 /** Description of the macro */  
-static char recv_char;
+char recv_char_gsm;
 
 /* 发送 ringbuf */
 /*
@@ -81,7 +80,7 @@ static void GsmThread(void const *argument)
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GsmThread started");
     
-    testFillData();
+    //testFillData();
 
     for (;;)
     {
@@ -139,6 +138,7 @@ static void GsmSendTestThread(void const *argument)
     *  每到发送时间间隔上报数据到服务器
     *  50 ms次数计数，为免GPS没信号，上报数据，以50ms和UTC时间两个做参考
     */
+    osDelay(20000);
     for(;;)
     {
         osDelay(500);
@@ -154,18 +154,16 @@ static void GsmSendTestThread(void const *argument)
             Interval = 2 * RepInt;
         }
 
-       /* if (IsClockSynced())
+        if (IsClockSynced())
         {
-            RTC_GetTime(&g_stime);
+            RTC_GetCalendar((struct tm *)&(gps.time));
         
-            g_stime.Minutes >= min ? (minIntval = g_stime.Minutes - min) : (minIntval = 60 - min + g_stime.Minutes);
+            gps.time.tm_min >= min ? (minIntval = gps.time.tm_min - min) : (minIntval = 60 - min + gps.time.tm_min);
         }
         else
         {
-            gps.utc.min >= min ? (minIntval = utc.min - min) : (minIntval = 60 - min + utc.min);
-        }*/
-        
         gps.utc.min >= min ? (minIntval = gps.utc.min - min) : (minIntval = 60 - min + gps.utc.min);
+        }
         
         
         /* 间隔时间到 */
@@ -174,7 +172,7 @@ static void GsmSendTestThread(void const *argument)
             times = 0;
             if (IsClockSynced())
             {
-                min = g_stime.Minutes;
+                min = gps.time.tm_min;
             }
             else
             {
@@ -191,7 +189,15 @@ static void GsmSendTestThread(void const *argument)
         /* 发送应答服务器的数据 */
         if (IsSendResponseReady())
         {
+            GSM_LOG_P0("^^^^^^^^Send response!^^^^^^^^^^^");
             SendResponseToServer();
+            
+            if (IsSendResetSys())
+            {
+                /* 关闭GSM */
+                GsmPowerUpDownOpt(1);
+                HAL_NVIC_SystemReset();
+            }
             SEND_RESPONSE_FLAG_CLEAR();
         }
         
@@ -203,6 +209,13 @@ static void GsmSendTestThread(void const *argument)
             /* 清除回调标志 */
             if (g_recallInfo.continueFlag == 0)
             {
+                GSM_LOG_P0 ("##### Send Recall END! #####");
+                ConstructDataAndSend("216", ConfigGetStrAddr(), "02", 2);
+                
+                if ( !SendData(g_sendDirt.buf, g_sendDirt.useLen, 0) )
+                {
+                    GSM_LOG_P0("Send start recall fail!");
+                }
                 ClearRecallFlag();
             }
             
@@ -259,22 +272,30 @@ u8 StartGsmTask()
         return 2;
     }
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create gsm_recvcplt_sem success");
-
+    
+    /* 接收和发送的同步 */
+    osMutexDef(gsm_ctrl_mutex);
+    _gsm_ctrl_mutex_id = osMutexCreate(osMutex(gsm_ctrl_mutex));
+    if(_gsm_ctrl_mutex_id == NULL) 
+    {
+        printf("Create gsm ctrl mutex fail!\r\n");
+        return 4;
+    }
 
     // will always receive one data from serial and save the data into ringbuffer.
-    if(HAL_OK != HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1)) {
+    if(HAL_OK != HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char_gsm, 1)) {
         AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d: HAL_UART_Receive_IT initialize failed",
                     __FUNCTION__, __LINE__);
         return 3;
     }
 
 
-    osThreadDef(Gsm, GsmThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(Gsm, GsmThread, osPriorityHigh, 0, configMINIMAL_STACK_SIZE*2);
     _gsm_id = AaThreadCreateStartup(osThread(Gsm), NULL);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmThread success");
 
 
-    osThreadDef(GsmTest, GsmSendTestThread, /*osPriorityNormal8*/osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(GsmTest, GsmSendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE*2);
     _gsm_send_test_id = AaThreadCreateStartup(osThread(GsmTest), NULL);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "create GsmSendTestThread success");
 
@@ -291,6 +312,11 @@ static void GsmDeviceInit()
     GsmPowerGpioInit();
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "gsm device initialize success");
+}
+
+void StartReceiveIRQ(void)
+{
+    HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char_gsm, 1);
 }
 
 /** 
@@ -316,11 +342,12 @@ void GsmWaitForSendCplt()
 
 void GsmSendToUSART(u8 * data, u16 len)
 {
-    GsmDataSendByIT(data, len);
     if (osOK != osSemaphoreWait(_gsm_sendcplt_sem_id, 1000))
     {
       GSM_LOG_P2("Send Failed: len : %d, %s", len, data);
     }
+    
+    GsmDataSendByIT(data, len);
 }
 
 /*
@@ -330,20 +357,19 @@ void GsmSendToUSART(u8 * data, u16 len)
 */
 void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
 {
-    
-    HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char, 1);
-    
-    //GSM_LOG_P1("*********** %02x", recv_char);
+    //GSM_LOG_P1("*********** %02x", recv_char_gsm);
     
     /* 透明传输模式开启 */
     if (GSM_TCP_CONNECTED == GsmStatusGet())
     {
-        ReceiveTransparentData(recv_char);
+        ReceiveTransparentData(recv_char_gsm);
     }
     else
     {
-        ReceiveNormalData(recv_char);
+        ReceiveNormalData(recv_char_gsm);
     }
+    
+    HAL_UART_Receive_IT(&UartHandle_gsm, (u8*)&recv_char_gsm, 1);
     
     return;
 }
@@ -407,7 +433,7 @@ void ReceiveTransparentData(u8 data)
                 /* 错误的格式，初始化 */
                 flag = 0xff;
                 pos = 0;
-                //GSM_LOG_P0("TEST: Error format!");
+                GSM_LOG_P0("TEST: Error format!");
                 return;
             }
         }
@@ -421,7 +447,7 @@ void ReceiveTransparentData(u8 data)
                 /* 不支持的命令，初始化 */
                 flag = 0xff;
                 pos = 0;
-                //GSM_LOG_P0("TEST: Didn't support the cmd!");
+                GSM_LOG_P0("TEST: Didn't support the cmd!");
                 return;
             }
             else
@@ -433,7 +459,7 @@ void ReceiveTransparentData(u8 data)
                     /* 数据长度错误, 初始化*/
                     flag = 0xff;
                     pos = 0;
-                    //GSM_LOG_P2("TEST: Wrong length! Len in cmd: %d, len: %d", dataLen, more_len + LEN_ADDR_CMD);
+                    GSM_LOG_P2("TEST: Wrong length! Len in cmd: %d, len: %d", dataLen, more_len + LEN_ADDR_CMD);
                     return;
                 }
                 
@@ -566,10 +592,25 @@ bool SendResponseToServer(void)
 
 bool SendRecallDataToServer(void)
 {
+    if (g_recallInfo.sendStartFlag == 0)
+    {
+        GSM_LOG_P0("***** Send Recall start! *****");
+        g_recallInfo.sendStartFlag = 1;
+        
+        ConstructDataAndSend("216", ConfigGetStrAddr(), "01", 2);
+        
+        if ( !SendData(g_sendDirt.buf, g_sendDirt.useLen, 0) )
+        {
+            GSM_LOG_P0("Send start recall fail!");
+            return false;
+        }
+    }
+    
+    GSM_LOG_P1("+++++ Send Recall data of %d +++++", g_sendRecallData.useLen);
     // osSemaphoreWait(_gsm_send_test_id, osWaitForever);
     if ( !SendData(g_sendRecallData.buf, g_sendRecallData.useLen, g_sendRecallData.respFlag) )
     {
-        GSM_LOG_P0("Send Response fail!");
+        GSM_LOG_P0("SendRecallDataToServer fail!");
         return false;
     }
     //osSemaphoreRelease(_gsm_send_test_id);

@@ -1,11 +1,12 @@
 #ifndef __GPS_ANALYSER_H_
 #define __GPS_ANALYSER_H_
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <time.h>
+  
 /********************************************************************************************
 ������Ϣ
 ********************************************************************************************/
@@ -39,6 +40,7 @@ __packed typedef struct  gps_process_data
 
 	gps_satellite satellite[12];			//���12������
 	gps_utc_time utc;									//UTCʱ��
+        struct tm time;                                    
 	unsigned char svnum;							//�ɼ�������
 	unsigned long int latitude;			//γ�� ������100000��,ʵ��Ҫ����100000
 	unsigned char nshemi;						//��γ/��γ,N:��γ;S:��γ

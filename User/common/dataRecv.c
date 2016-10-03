@@ -101,6 +101,9 @@ void ProcessRecvData(u8 *buf, int cmd)
     case 33:
       ProcessGetHardVersion(buf);
       break;
+    case 97:
+      ProcessReboot(buf);
+      break;
       /* 应答处理 */
     case 500:
       ProcessServerResp(buf);
@@ -110,18 +113,19 @@ void ProcessRecvData(u8 *buf, int cmd)
       ProcessAdjust(buf);
       break;
       /* 配置参数 */
-    case 502:
+    case 503:
       ProcessConfig(buf);
       break;
       /* 请求经纬度 */
-    case 503:
+    case 505:
       ProcessGetPosition(buf);
       break;
       /* 回调 */
-    case 81:
-    case 83:
-    case 85:
-      ProcessRecall(buf, cmd);
+    case 215:
+      ProcessRecall(buf);
+      break;
+    case 217:
+      ProcessStopRecall(buf);
       break;
         
     }
@@ -156,8 +160,10 @@ void ProcessServerTime(u8 *buf)
         GSM_LOG_P0("Error time format!");
         return;
     }
-      
-    memcpy(gps.utc.strTime, buf + LEN_ADDR + LEN_CMD, 12);
+    
+    gps.utc.strTime[0] = '2';
+    gps.utc.strTime[1] = '0';
+    memcpy(gps.utc.strTime+2, buf + LEN_ADDR + LEN_CMD, 12);
     
     gps.utc.year = y + 2000;
     gps.utc.month = m;
@@ -167,7 +173,7 @@ void ProcessServerTime(u8 *buf)
     gps.utc.sec = s;
     
     /* 设置时间到RTC */
-    if (false == CpnfigSetRTCTime(y, m, d, h, min, s))
+    if (0 != ConfigSetRTCTime(gps.utc.year, m, d, h, min, s))
     {
         GSM_LOG_P0("Time config error!");
         return;
@@ -335,6 +341,42 @@ void ProcessGetHardVersion(u8 *buf)
     SEND_RESPONSE_RESP_FALG_SET(0);
 }
 
+void ProcessReboot(u8 *buf)
+{
+    GSM_LOG_P0("Reboot!");
+    
+    u16 offset = 0;
+    u32 crc = 0;
+    //u16 ver = 0;
+    
+    SEND_RESPONSE_FLAG_CLEAR();
+    
+    offset = LEN_HEAD;
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), buf, MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), "098", LEN_CMD);
+    offset += LEN_CMD;
+    
+    /* HEAD */
+    /* CRC */
+    crc = usMBCRC16( (u8 *)SEND_RESPONSE_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
+    
+    FormatHead(crc, offset - LEN_HEAD, (u8 *)SEND_RESPONSE_OFFSET(0));
+    
+    SEND_RESPONSE_SET_BYTE('\r', offset);
+    SEND_RESPONSE_SET_BYTE('\n', offset + 1);
+    
+    /* 设置包含回车的长度，用于发送 */
+    SEND_RESPONSE_SET_LEN(offset+2);
+    
+    /* 设置发送标志，发送程序开始发送 */
+    SEND_RESPONSE_FLAG_SET();
+    
+    /* 需要回应 */
+    SEND_RESPONSE_RESP_FALG_SET(0);
+}
+
 /*
 *  上行消息的应答需要设置应答成功标志，发送thread接到成功指示才不会关闭
 *
@@ -428,7 +470,7 @@ void ProcessAdjust(u8 *buf)
     /* 更新到配置文件 */
     ConfigSetUpdate(1);
     
-    ConstructResponse("500", buf, REPLY_501);
+    ConstructResponse("502", buf, 0xff);
 }
 
 void ProcessConfig(u8 *buf)
@@ -485,7 +527,7 @@ void ProcessConfig(u8 *buf)
     /* 更新到配置文件 */
     ConfigSetUpdate(1);
     
-    ConstructResponse("500", buf, REPLY_502);
+    ConstructResponse("504", buf, 0xff);
 }
 
 void ProcessGetPosition(u8 *buf)
@@ -502,7 +544,7 @@ void ProcessGetPosition(u8 *buf)
     memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), buf, MAX_ADDR_LEN);
     offset += MAX_ADDR_LEN;
     /* cmd */
-    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), "602", LEN_CMD);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), "506", LEN_CMD);
     offset += LEN_CMD;
     
     /* version */
@@ -538,17 +580,27 @@ void ProcessGetPosition(u8 *buf)
 /*
 typedef struct RECALL_INFO_t
 {
-    u8 flag;                    /是否需要回调的标志/
+    u8 flag;                    / 是否需要回调的标志 /
+    u8 continueFlag;            / 对于天回调，要构造多次数据 /
     u16 type;                   / 回调类型 /
-    u8 startTime[11];           / 1608100828 /
-    u8 Folder[9];               / 16/08/10/ /
-    u8 file[7];                 / 小时： 00- 23.txt /
+    u8 startTime[15];           / 1608100828 /
+    u8 endTime[15];             / 1608100829 /
+    u16 startyear;
+    u8 startmon;
+    u8 startday;
+    u8 starthour;
+    u16 endyear;
+    u8 endmon;
+    u8 endday;
+    u8 endhour;
     
 }RECALL_INFO_t;
 */
-void ProcessRecall(u8 *buf, u16 cmd)
+void ProcessRecall(u8 *buf)
 {
-    u8 *tmp = buf + LEN_ADDR + LEN_CMD;
+    u8 offset = 0;
+    u16 cnt = 0;
+    u16 y, m;
     
     if (IsInRecall())
     {
@@ -558,63 +610,95 @@ void ProcessRecall(u8 *buf, u16 cmd)
     
     memset(&g_recallInfo, 0, sizeof(g_recallInfo));
     
-    if (cmd == 81)
+    offset = LEN_ADDR + LEN_CMD;
+    memcpy(g_recallInfo.startTime, buf + offset, 14);
+    offset += 14;
+    
+    memcpy(g_recallInfo.endTime, buf + offset, 14);
+    offset += 14;
+    
+    // start time
+    offset = LEN_ADDR + LEN_CMD;
+    g_recallInfo.startyear = (u16)stringToInt(buf + offset, 4);
+    offset += 4;
+    g_recallInfo.startmon = (u8)stringToInt(buf + offset, 2);
+    offset += 2;
+    g_recallInfo.startday = (u8)stringToInt(buf + offset, 2);
+    offset += 2;
+    g_recallInfo.starthour = (u8)stringToInt(buf + offset, 2);
+    offset += 2;
+    
+    // now time
+    g_recallInfo.nowyear = g_recallInfo.startyear;
+    g_recallInfo.nowmon = g_recallInfo.startmon;
+    g_recallInfo.nowday = g_recallInfo.startday;
+    g_recallInfo.nowhour = g_recallInfo.starthour;
+    
+    // end time
+    offset += 4;
+    g_recallInfo.endyear = (u16)stringToInt(buf + offset, 4);
+    offset += 4;
+    g_recallInfo.endmon = (u8)stringToInt(buf + offset, 2);
+    offset += 2;
+    g_recallInfo.endday = (u8)stringToInt(buf + offset, 2);
+    offset += 2;
+    g_recallInfo.endhour = (u8)stringToInt(buf + offset, 2);
+    
+    /* 最多回调6个月的数据 */
+    m = g_recallInfo.startmon;
+    
+    for (y = g_recallInfo.startyear; y < g_recallInfo.endyear; y++)
     {
-        g_recallInfo.type = cmd;
-        memcpy(g_recallInfo.startTime, tmp, 10);
+        for (; m <= 12; m++)
+        {
+            cnt++;
+        }
+        
+        m = 1;
     }
-    else if (cmd == 83)
+    
+    /* 跨年的情况 */
+    if (cnt)
     {
-        g_recallInfo.type = cmd;
-        memcpy(g_recallInfo.startTime, tmp, 8);
+        m = 1;
     }
-    else if (cmd == 85)
+    
+    for (; m <= g_recallInfo.endmon; m++)
     {
-        g_recallInfo.type = cmd;
-        memcpy(g_recallInfo.startTime, tmp, 6);
+        cnt++;
     }
-    else
+    
+    /* 只计算月，不计算天，实际会多于6个月数据 */
+    if (cnt > 6)
     {
-        g_recallInfo.type = 0;
+        ConstructCommonResponse("216", buf, "04", 2);
         return;
     }
-    
-    // 160801161616
-    // 年
-    memcpy(g_recallInfo.Folder, tmp, 2);
-    // 月
-    g_recallInfo.Folder[2] = '\\';
-    g_recallInfo.Folder[3] = tmp[2];
-    g_recallInfo.Folder[4] = tmp[3];
-    
-    g_recallInfo.Folder[5] = '\\';
-    g_recallInfo.Folder[6] = tmp[4];
-    g_recallInfo.Folder[7] = tmp[5];
-    g_recallInfo.Folder[8] = '\\';
-    
-    if (cmd == 81 || cmd == 83)
-    {
-        g_recallInfo.file[0] = tmp[6];
-        g_recallInfo.file[1] = tmp[7];  
-    }
-    else
-    {
-        /* 回调天数据，从00开始 */
-        g_recallInfo.file[0] = '0';
-        g_recallInfo.file[1] = '0';
-    }
-    
-    g_recallInfo.file[2] = '.';
-    g_recallInfo.file[3] = 't';
-    g_recallInfo.file[4] = 'x';
-    g_recallInfo.file[5] = 't';
     
     g_recallInfo.flag = 1;
     g_recallInfo.continueFlag = 0;
     
     GSM_LOG_P1("Recall startTime: %s", g_recallInfo.startTime);
-    GSM_LOG_P1("Recall Folder: %s", g_recallInfo.Folder);
-    GSM_LOG_P1("Recall file: %s", g_recallInfo.file);
+    GSM_LOG_P1("Recall EndTime: %s", g_recallInfo.endTime);
+    GSM_LOG_P4("StartValue: %04d%02d%02d %02d", 
+               g_recallInfo.startyear, g_recallInfo.startmon, 
+               g_recallInfo.startday, g_recallInfo.starthour);
+    GSM_LOG_P4("EndValue: %04d%02d%02d %02d", 
+               g_recallInfo.endyear, g_recallInfo.endmon, 
+               g_recallInfo.endday, g_recallInfo.endhour);
+   
+}
+
+/* 关闭回调 */
+void ProcessStopRecall(u8 *buf)
+{
+    if (!IsInRecall())
+    {
+        GSM_LOG_P1("There is no recall! Ignored! %s", buf);
+        return;
+    }
+    
+    g_recallInfo.stopflag = 1;
 }
 
 /*
@@ -622,7 +706,7 @@ void ProcessRecall(u8 *buf, u16 cmd)
 *  For Type != 0xff, will be put into buffer
 *  所有的回应用下发时的地址，避免服务器修改地址后用新的地址回应
 */ 
-void ConstructResponse(u8 *cmd, u8* addr, u8 type)
+void ConstructResponse(u8 *cmd, u8* addr, u16 type)
 {
     u16 offset = 0;
     u32 crc = 0;
@@ -640,6 +724,48 @@ void ConstructResponse(u8 *cmd, u8* addr, u8 type)
         SEND_RESPONSE_SET_BYTE(type, offset);
         offset += 1;
     }
+    
+    /* HEAD */
+    /* CRC */
+    crc = usMBCRC16( (u8 *)SEND_RESPONSE_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
+    
+    FormatHead(crc, offset - LEN_HEAD, (u8 *)SEND_RESPONSE_OFFSET(0));
+    
+    SEND_RESPONSE_SET_BYTE('\r', offset);
+    SEND_RESPONSE_SET_BYTE('\n', offset + 1);
+    
+    /* 设置包含回车的长度，用于发送 */
+    SEND_RESPONSE_SET_LEN(offset+2);
+    
+    /* 设置发送标志，发送程序开始发送 */
+    SEND_RESPONSE_FLAG_SET();
+    
+    /* 设置是否需要回应 */
+    SEND_RESPONSE_RESP_FALG_SET(0);
+}
+
+/*
+*  构造回应数据。 
+*  CC **** XX CC 60001 216 01
+*
+*/
+void ConstructCommonResponse(u8 *cmd, u8* addr, u8 *opt, u8 optLen)
+{
+    u16 offset = 0;
+    u32 crc = 0;
+    
+    SEND_RESPONSE_FLAG_CLEAR();
+    
+    offset = LEN_HEAD;
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), addr, MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), cmd, LEN_CMD);
+    offset += LEN_CMD;
+    
+    /* opt */
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), opt, optLen);
+    offset += optLen;
     
     /* HEAD */
     /* CRC */

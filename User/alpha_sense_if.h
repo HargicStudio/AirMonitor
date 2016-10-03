@@ -32,8 +32,16 @@ typedef struct
     EASType chan;
     EASElec elec;
     u32     ad_samp;
-    double  volt;
+    double  volt;        /* mv */
 } SAirSamp;
+
+typedef struct ADs1222Rst
+{
+    u8 flag_w;
+    u8 flag_a;
+    u32 w;
+    u32 a;
+}ADs1222Rst;
 
 
 

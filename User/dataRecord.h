@@ -9,28 +9,43 @@
 #include "AaInclude.h"
 #include "format.h"
    
-
-/* »Øµ÷·¢ËÍµÄbufffer ÊÇ 1024. ×î³¤Ìî³äÕâ¸ö³¤¶È·¢ËÍ */
+/* ï¿½ï¿½ï¿½Øµï¿½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+#define MAX_RECALL_MONTH        6
    
-/* »Øµ÷ÐÅÏ¢ */
+/* ï¿½Øµï¿½ï¿½ï¿½ï¿½Íµï¿½bufffer ï¿½ï¿½ 1024. ï¿½î³¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ */
+   
+/* ï¿½Øµï¿½ï¿½ï¿½Ï¢ */
 typedef struct RECALL_INFO_t
 {
-    u8 flag;                    /* ÊÇ·ñÐèÒª»Øµ÷µÄ±êÖ¾ */
-    u8 continueFlag;            /* ¶ÔÓÚÌì»Øµ÷£¬Òª¹¹Ôì¶à´ÎÊý¾Ý */
-    u16 type;                   /* »Øµ÷ÀàÐÍ */
-    u8 startTime[11];           /* 1608100828 */
-    u8 Folder[10];               /* 16/08/10/ */
-    u8 file[7];                 /* Ð¡Ê±£º 00- 23.txt*/
+    u8 flag;                    /* ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½Øµï¿½ï¿½Ä±ï¿½Ö¾ */
+    u8 continueFlag;            /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
+    u8 stopflag;                /* ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£Ö¹ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ */
+    u8 sendStartFlag;           /* 0: Î´ï¿½ï¿½ï¿½ï¿½×´Ì¬ 1: ï¿½Ñ·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ï¢ */
+    u16 type;                   /* ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ */
+    u8 startTime[15];           /* 201608100828 */
+    u8 endTime[15];             /* 201608100829 */
+    u16 startyear;
+    u8 startmon;
+    u8 startday;
+    u8 starthour;
+    u16 endyear;
+    u8 endmon;
+    u8 endday;
+    u8 endhour;
+    u16 nowyear;
+    u8 nowmon;
+    u8 nowday;
+    u8 nowhour;
     
 }RECALL_INFO_t;
 
-/* Ð´ÎÄ¼þÐÅÏ¢ */
+/* Ð´ï¿½Ä¼ï¿½ï¿½ï¿½Ï¢ */
 typedef struct RECORD_INFO_t
 {
-    u8 newNameYear[3];  /* 16 */
-    u8 newNameMon[6];   /* 16//08 */
-    u8 newNameDay[9];   /* 16//08//01 */
-    u8 newNameHour[16];  /* 16//08//01//10.txt */
+    u8 newNameYear[5];  /* 2016 */
+    u8 newNameMon[8];   /* 2016//08 */
+    u8 newNameDay[11];   /* 2016//08//01 */
+    u8 newNameHour[18];  /* 2016//08//01//10.txt */
   
 }RECORD_INFO_t;
    
@@ -56,10 +71,14 @@ void RecallDayData(void);
 
 void UpdateConfig(void);
 
-/* »Øµ÷Ó¦´ðµÄÊý¾Ý»º³å */
+bool UpdateNowHourAndCheckFinish(void);
+
+void RecallExcuter(void);
+
+/* ï¿½Øµï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ */
 extern SEND_BIG_BUF_t g_sendRecallData;
 
-/* »Øµ÷ÐÅÏ¢ */
+/* ï¿½Øµï¿½ï¿½ï¿½Ï¢ */
 extern RECALL_INFO_t g_recallInfo;
    
 #ifdef __cplusplus

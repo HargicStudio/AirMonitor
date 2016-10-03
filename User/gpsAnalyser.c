@@ -1,4 +1,4 @@
-#include "gpsAnalyser.h"							   								   
+#include "gpsAnalyser.h"
 #include "string.h"
 #include "gps.h"
 #include "common.h"
@@ -69,8 +69,10 @@ void GPGGA_Analysis(gps_process_data *gps_data,unsigned char *buf)
 ********************************************************************************************/
 void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
 {
+    static unsigned long syncCnt = 0;    // 计数同步时间，一天同步一次 8640 次 做一次同步
+    
     unsigned char *address_buf,end_buf,decimal_places;		 
-    unsigned long int temp;
+    unsigned long temp;
     float rs;  
     unsigned char flag = 0;
     address_buf =(unsigned char*)strstr((const char *)buf,"GPRMC");
@@ -82,7 +84,15 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
         return;
     }
     
-    if (end_buf != 0xFF && address_buf[end_buf] != ',' && !IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
+    syncCnt++;
+    if (8640 <= syncCnt)
+    {
+        SetClockSynced(0);
+        syncCnt = 0;
+    }
+    
+    // 加次数控制，一定次数后，同步时间
+    if (end_buf != 0xFF && address_buf[end_buf] != ',' && 2 != IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
     {
         unsigned char offset = end_buf;
         
@@ -107,7 +117,7 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
         temp=Data_Extraction(address_buf+end_buf,&decimal_places);		 	 
         gps_data->latitude=temp/MN_Process(10,decimal_places+2);
         rs=temp%MN_Process(10,decimal_places+2);
-        gps_data->latitude=gps_data->latitude*MN_Process(10,5)+(rs*MN_Process(10,5-decimal_places))/60;//�õ�γ��
+        gps_data->latitude=(unsigned long int)(gps_data->latitude*MN_Process(10,5)+(rs*MN_Process(10,5-decimal_places))/60);//�õ�γ��
     }
 
 
@@ -122,7 +132,7 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
         temp=Data_Extraction(address_buf+end_buf,&decimal_places);		 	 
         gps_data->longitude=temp/MN_Process(10,decimal_places+2);
         rs=temp%MN_Process(10,decimal_places+2); 
-        gps_data->longitude=gps_data->longitude*MN_Process(10,5)+(rs*MN_Process(10,5-decimal_places))/60;//�õ�����
+        gps_data->longitude=(unsigned long int)(gps_data->longitude*MN_Process(10,5)+(rs*MN_Process(10,5-decimal_places))/60);//�õ�����
     }
 
     end_buf=Data_Removal(address_buf,6);																			//����ȥ��
@@ -134,7 +144,7 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
     {
         return;
     }
-    if (end_buf != 0xFF && address_buf[end_buf] != ',' && !IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
+    if (end_buf != 0xFF && address_buf[end_buf] != ',' && 2 != IsClockSynced())       /* ��Ҫȷ����Ч���ݵ����� */
     {
         unsigned char offset = end_buf;
         
@@ -157,10 +167,10 @@ void GPRMC_Analysis(gps_process_data *gps_data,unsigned char *buf)
             (gps_data->utc.year  >= 2016 && 1 <= gps_data->utc.month && gps_data->utc.month <= 12 && 1 <= gps_data->utc.date && gps_data->utc.date <= 31 &&
              gps_data->utc.hour <= 23 && gps_data->utc.min <= 59 && gps_data->utc.sec <= 59))
         {
-            if (CpnfigSetRTCTime(gps_data->utc.year - 2000, gps_data->utc.month, gps_data->utc.date, 
+            if (0 == ConfigSetRTCTime(gps_data->utc.year, gps_data->utc.month, gps_data->utc.date, 
                              gps_data->utc.hour, gps_data->utc.min, gps_data->utc.sec))
             {
-                SetClockSynced(1);
+                SetClockSynced(2);
             }
         }
 

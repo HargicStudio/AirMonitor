@@ -7,6 +7,8 @@ extern "C" {
 
 #include "common.h"
 
+  
+extern osMutexId _gsm_ctrl_mutex_id;
 
 /* GSM Control */
 #define MAX_WAIT_TIMES          20
@@ -69,6 +71,10 @@ void IsAtSuss(u8 *buf, u8 *key);
 bool IsGsmWaitCloseFlag(void);
 void GsmWaitCloseFlagClear(void);
 void GsmWaitCloseFlagSet(void);
+
+void StartReceiveIRQ(void);
+void GsmSendToUSART(u8 * data, u16 len);
+bool SendDtuHeadData(void);
 
 #ifdef __cplusplus
 }

@@ -4,6 +4,8 @@
 #include "common.h"
 #include "gsmCtrl.h"
 
+osMutexId _gsm_ctrl_mutex_id;
+
 /* AT command 状态*/
 s32 _at_status;
 
@@ -25,6 +27,10 @@ static u8 s_testCIPCSGP[] = "AT+CIPCSGP=1,\"CMNET\"\r\n";
 static u8 s_testCLPORT[] = "AT+CLPORT=\"TCP\",\"2222\"\r\n";
 static u8 s_testCIPMODE[] = "AT+CIPMODE=1\r\n";
 static u8 s_testCIPSTART[] = "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\r\n";
+
+#define RESET_CTRL_MAX_TIMES       5
+/* 多次无法建立连接，重启 */
+static u8 resetCtrl;
 
 void GsmWaitCloseFlagSet(void)
 {
@@ -60,12 +66,18 @@ void AtValueInit()
 
 void SetAtStatus(s32 stu)
 {
+    osMutexWait(_gsm_ctrl_mutex_id, osWaitForever);
     _at_status = stu;
+    osMutexRelease(_gsm_ctrl_mutex_id);
 }
 
 s32 GetAtStatus(void)
 {
-    return _at_status;
+    s32 stu;
+    //osMutexWait(_gsm_ctrl_mutex_id, osWaitForever);
+    stu = _at_status;
+    //osMutexRelease(_gsm_ctrl_mutex_id);
+    return stu;
 }
 
 /*
@@ -79,6 +91,9 @@ u8 GetCmdDataLen(u16 cmd)
     case 5:  /* 掉电模式 */
     case 19: /* 请求软件版本 */
     case 21: /* 请求当前数据 */
+    case 33: /* 请求硬件版本号 */
+    case 97: /* 重启 */
+    case 217: /* 通知停止回调 */
       return 0;
     case 3:  /* 校时 */
       return 12;
@@ -87,6 +102,8 @@ u8 GetCmdDataLen(u16 cmd)
     case 11: /* 修改采集间隔 */
     case 13: /* 修改上报间隔 */
       return 2;
+    case 215: /* 新版回调请求 */
+      return 28;
     case 81: /* 回调数据1 */
       return 10;
     case 83: /* 回调数据2 */
@@ -95,9 +112,9 @@ u8 GetCmdDataLen(u16 cmd)
       return 6;
     case 501: /* 校准信息 */
       return 32;
-    case 502: /* 配置参数 */
+    case 503: /* 配置参数 */
       return 15;
-    case 503: /* 请求经纬度 */
+    case 505: /* 请求经纬度 */
       return 0;
     default: /* Don't support command */
       return 0xff;
@@ -149,11 +166,14 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
     
     while (rspType == GetAtStatus())
     {
-        osDelay(50);
+        osDelay(100);
     
         if (0 == waitTimes)
         {
-            GSM_LOG_P2("AT CMD fail: %s, Times: %d\r\n", cmd, temp - waitTimes);
+            //GSM_LOG_P2("AT CMD fail: %s, Times: %d\r\n", cmd, temp - waitTimes);
+            
+            GSM_LOG_E_P4("%s %d: Cmd over try %s Fail! With %d",
+                    __FUNCTION__, __LINE__, cmd, temp - waitTimes);
             SetAtStatus(AT_INVALID);
             return false;
         }
@@ -162,7 +182,8 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
   
     if (AT_ERROR == GetAtStatus())
     {
-        GSM_LOG_P2("AT CMD ERROR: %s, Times: %d\r\n", cmd, temp - waitTimes);
+        GSM_LOG_E_P3("%s %d: Cmd %s Fail!",
+                    __FUNCTION__, __LINE__, cmd);
         SetAtStatus(AT_INVALID);
         return false;
     }
@@ -215,12 +236,17 @@ bool IsGsmRunning(void)
 void GsmPowerUpDownOpt(u8 type)
 {
     int tiemLen = type == GSM_POWER_UP ? 2000 : 3000;
+    
+    //GSMSetIRQ(false);
+    
     GsmStatusSet(GSM_FREE);
     GsmPowerDown();
     osDelay(tiemLen);
     GsmPowerUp();
     
-    osDelay(30000);
+    osDelay(20000);
+    //GSMSetIRQ(true);
+    //StartReceiveIRQ();
     
     GSM_LOG_P1("GSM POWER control: %d\r\n", type);
 }
@@ -245,7 +271,17 @@ bool GsmStartup(void)
         return true;
     }
     
+    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    {
+        return true;
+    }
+    
     GsmPowerUpDownOpt(GSM_POWER_UP);
+    
+    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    {
+        return true;
+    }
     
     if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
     {
@@ -279,11 +315,11 @@ bool GsmStartAndconect(void)
 
     if (!GsmStartup())
     {
-       AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM startup fail!");
+       GSM_LOG_P0("GSM startup fail!");
        return false;
     }
     
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM boot sucess!");
+    GSM_LOG_P0("GSM boot sucess!");
 
     /* 关闭链接 */
     /*
@@ -294,11 +330,11 @@ bool GsmStartAndconect(void)
     
     if (!GsmWaitForReg())
     {
-       AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM register fail!");
+       GSM_LOG_P0("GSM register fail!");
        return false;
     }
     
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM Reg success!");
+    GSM_LOG_P0("GSM Reg success!");
 
     if (false == AtCmdRun(s_testCGCLASS, 16, MAX_WAIT_TIMES, AT_WAIT_RSP))
     {
@@ -346,25 +382,36 @@ bool GsmStartAndconect(void)
     
     if (false == AtCmdRun(s_cmd, strlen((char const *)s_cmd), MAX_WAIT_TIMES + 100, AT_WAIT_CONNECT_RSP))
     {
-        return AtCmdRun(s_cmd, strlen((char const *)s_cmd), MAX_WAIT_TIMES + 100, AT_WAIT_CONNECT_RSP);
+        SendDtuHeadData();
+        return false;
+        /*
+        if (false == AtCmdRun(s_cmd, strlen((char const *)s_cmd), MAX_WAIT_TIMES + 100, AT_WAIT_CONNECT_RSP))
+        {
+            return false;
+        }*/
     }
     GsmStatusSet(GSM_TCP_CONNECTED);
-    AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "GSM connected to the server!");
+    GSM_LOG_E_P0("GSM connected to the server!");
     
+    SendDtuHeadData();
+
+    return true;   
+}
+
+bool SendDtuHeadData(void)
+{
     /* DTU head, 为了兼容单组分 */
     memcpy(s_cmd + 11, ConfigGetStrAddr(), 5);
     GSM_LOG_P1("Send Head: %s\r\n", s_cmd);
     GsmSendToUSART(s_cmd, 52);
     osDelay(100);
-    
-    return true;   
 }
 
 bool GsmSendData(u8 *data, u16 len, u8 respFlag)
 {
     /* 测试，直接发送 */ 
-    GsmSendToUSART(data, len);
-    /*
+    //GsmSendToUSART(data, len);
+
     if (!respFlag)
     {
         // 透传模式发送数据 /
@@ -380,8 +427,7 @@ bool GsmSendData(u8 *data, u16 len, u8 respFlag)
             return false;
         }
     }
-    */
-    
+  
     /* 透传模式下，等待服务器的响应, 出错则关闭GSM */
     /*
     if (false == AtCmdRun(data, len, MAX_WAIT_TIMES + 300, AT_WAIT_SEND_OK))
@@ -411,19 +457,33 @@ bool GsmSendData(u8 *data, u16 len, u8 respFlag)
 
 bool SendData(u8 *str, u16 len, u8 respflag)
 {
+    /* 可以不判断是否连接，直接发送，如果收到回应就是连接上，否则重发 */
     if (GSM_TCP_CONNECTED == GsmStatusGet())
         return GsmSendData(str, len, respflag);
       
     if (!IsTcpConnected())
     {
-        AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d: Send data, but error status! Try to Connect!",
+        
+        GSM_LOG_P2("%s %d: Send data, but error status! Try to Connect!",
                     __FUNCTION__, __LINE__);
         if (!GsmStartAndconect())
         {
-            AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d: Send data in error stu, and startup fail!",
-                    __FUNCTION__, __LINE__);
-            return false;
+            /* 连接后,发送数据,根据是否有响应判断是否真正连接上 */
+            if (false == GsmSendData(str, len, respflag))
+            {
+                resetCtrl++;
+                if (resetCtrl == RESET_CTRL_MAX_TIMES)
+                {
+                    resetCtrl = 0;
+                    HAL_NVIC_SystemReset();
+                }
+                GSM_LOG_E_P2("%s %d: Send data in error stu, and startup fail!",
+                        __FUNCTION__, __LINE__);
+                return false;
+            }
         }
+        
+        resetCtrl = 0;
     }
     
     return GsmSendData(str, len, respflag);

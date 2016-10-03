@@ -15,6 +15,7 @@ extern "C" {
 #include "osa_file.h"
 #include <stdbool.h>
 #include "feature_name.h"
+#include "rtc_dev.h"
 
 
 #define LOCAL_BIG_ENDIAN 在编译器中定义
@@ -35,7 +36,8 @@ extern "C" {
 #define NOK_3 -3
   
 #define LEN_REPORT_DATA         56
-#define LEN_REPORT_DATA_WO_HEAD 46 
+#define LEN_REPORT_DATA_WO_HEAD 46
+#define LEN_REPORT_DATA_ONLY    38
 #define LEN_HEAD                10
 #define LEN_PARM_LEN            2
 #define LEN_CRC                 2
@@ -49,33 +51,6 @@ extern "C" {
 #define OFFSET_CMD              15
 #define OFFSET_DATA             18
 
-#define DEBUG_DEBUG_GSM
-//#define DEBUG_NO_DEBUG_GSM
-//#define DEBUG_STD_GSM
-
-#ifdef DEBUG_DEBUG_GSM
-#define GSM_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
-#define GSM_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
-#define GSM_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
-#define GSM_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
-#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
-#endif
-  
-#ifdef DEBUG_STD_GSM
-#define GSM_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
-#define GSM_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
-#define GSM_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
-#define GSM_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
-#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
-#endif
- 
-#ifdef DEBUG_NO_DEBUG_GSM
-#define GSM_LOG_P0(fmt)
-#define GSM_LOG_P1(fmt, p1)
-#define GSM_LOG_P2(fmt, p1, p2)
-#define GSM_LOG_P3(fmt, p1, p2, p3)
-#define GSM_LOG_P4(fmt, p1, p2, p3, p4)
-#endif
 
 /*
 typedef unsigned char u8;
@@ -137,6 +112,145 @@ bool IsDirExit(u8 *path);
 
 u32 myPow(u32 val, u32 times);
 
+u16 getdayOfMon(u16 year, u16 month);
+u16 getFebDays(u16 year);
+
+
+
+
+
+#define DEBUG_DEBUG_GSM
+//#define DEBUG_NO_DEBUG_GSM
+//#define DEBUG_STD_GSM
+
+#ifdef DEBUG_DEBUG_GSM
+#define GSM_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+
+#define GSM_LOG_E_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_E_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_E_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_E_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_E_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_ERR, FeatureGsm, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+  
+#ifdef DEBUG_STD_GSM
+#define GSM_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+
+#define GSM_LOG_E_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GSM_LOG_E_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GSM_LOG_E_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GSM_LOG_E_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GSM_LOG_E_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+
+#endif
+ 
+#ifdef DEBUG_NO_DEBUG_GSM
+#define GSM_LOG_P0(fmt)
+#define GSM_LOG_P1(fmt, p1)
+#define GSM_LOG_P2(fmt, p1, p2)
+#define GSM_LOG_P3(fmt, p1, p2, p3)
+#define GSM_LOG_P4(fmt, p1, p2, p3, p4)
+
+#define GSM_LOG_E_P0(fmt)                     
+#define GSM_LOG_E_P1(fmt, p1)        
+#define GSM_LOG_E_P2(fmt, p1, p2)        
+#define GSM_LOG_E_P3(fmt, p1, p2, p3)     
+#define GSM_LOG_E_P4(fmt, p1, p2, p3, p4)
+#endif
+
+
+#define DEBUG_DEBUG_GPS
+//#define DEBUG_NO_DEBUG_GPS
+//#define DEBUG_STD_GPS
+
+#ifdef DEBUG_DEBUG_GPS
+#define GPS_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GPS_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GPS_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GPS_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GPS_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureGps, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+  
+#ifdef DEBUG_STD_GPS
+#define GPS_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define GPS_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define GPS_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define GPS_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define GPS_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+ 
+#ifdef DEBUG_NO_DEBUG_GPS
+#define GPS_LOG_P0(fmt)
+#define GPS_LOG_P1(fmt, p1)
+#define GPS_LOG_P2(fmt, p1, p2)
+#define GPS_LOG_P3(fmt, p1, p2, p3)
+#define GPS_LOG_P4(fmt, p1, p2, p3, p4)
+#endif
+
+
+#define DEBUG_DEBUG_CP15
+//#define DEBUG_NO_DEBUG_CP15
+//#define DEBUG_STD_CP15
+
+#ifdef DEBUG_DEBUG_CP15
+#define CP15_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define CP15_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define CP15_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define CP15_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define CP15_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureCP15, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+  
+#ifdef DEBUG_STD_CP15
+#define CP15_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define CP15_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define CP15_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define CP15_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define CP15_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+ 
+#ifdef DEBUG_NO_DEBUG_CP15
+#define CP15_LOG_P0(fmt)
+#define CP15_LOG_P1(fmt, p1)
+#define CP15_LOG_P2(fmt, p1, p2)
+#define CP15_LOG_P3(fmt, p1, p2, p3)
+#define CP15_LOG_P4(fmt, p1, p2, p3, p4)
+#endif
+
+#define DEBUG_DEBUG_AFS
+//#define DEBUG_NO_DEBUG_AFS
+//#define DEBUG_STD_AFS
+
+#ifdef DEBUG_DEBUG_AFS
+#define AFX_LOG_P0(fmt)                     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define AFX_LOG_P1(fmt, p1)                 AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define AFX_LOG_P2(fmt, p1, p2)             AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define AFX_LOG_P3(fmt, p1, p2, p3)         AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define AFX_LOG_P4(fmt, p1, p2, p3, p4)     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+  
+#ifdef DEBUG_STD_AFS
+#define AFX_LOG_P0(fmt)                     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__)
+#define AFX_LOG_P1(fmt, p1)                 printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1)
+#define AFX_LOG_P2(fmt, p1, p2)             printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2)
+#define AFX_LOG_P3(fmt, p1, p2, p3)         printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3)
+#define AFX_LOG_P4(fmt, p1, p2, p3, p4)     printf("%s %d:"fmt"\r\n",__FUNCTION__, __LINE__, p1, p2, p3, p4)
+#endif
+ 
+#ifdef DEBUG_NO_DEBUG_AFS
+#define AFX_LOG_P0(fmt)
+#define AFX_LOG_P1(fmt, p1)
+#define AFX_LOG_P2(fmt, p1, p2)
+#define AFX_LOG_P3(fmt, p1, p2, p3)
+#define AFX_LOG_P4(fmt, p1, p2, p3, p4)
+#endif
 
 #ifdef __cplusplus
 }

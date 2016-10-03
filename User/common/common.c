@@ -39,3 +39,37 @@ u32 myPow(u32 val, u32 times)
     
     return rst;
 }
+
+u16 getFebDays(u16 year)
+{
+    if ((year%4 == 0 && year % 100 != 0) || year % 400 == 0)
+    {
+        return 29;
+    }
+    
+    return 28;
+}
+
+u16 getdayOfMon(u16 year, u16 month)
+{
+    switch (month)
+    {
+    case 2:
+      return getFebDays(year);
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 8:
+    case 10:
+    case 12:
+      return 31;
+    case 4:
+    case 6:
+    case 9:
+      return 30;
+    default:
+      GSM_LOG_P1("ERROR Month: %02d", month);
+      return 30;   
+    }
+}

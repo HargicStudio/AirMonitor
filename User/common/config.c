@@ -3,20 +3,17 @@
 #include "gpsAnalyser.h"
 #include "common.h"
 #include "cfg.h"
-//#include "rtc.h"
+#include "rtc_dev.h"
 
 
-/* ”√”⁄º∆À„∫Õ±£¥Ê–≈œ¢ */
+/* Áî®‰∫éËÆ°ÁÆóÂíå‰øùÂ≠ò‰ø°ÊÅØ */
 extern gps_process_data gps;
 
 CONFIG_t g_config;
 
-RTC_DateTypeDef g_sdate;
-RTC_TimeTypeDef g_stime;
-
 char _cfgBuf[20];
 
-/* ∂¡»°≈‰÷√ «∑Ò∏ƒ±‰ */
+/* ËØªÂèñÈÖçÁΩÆÊòØÂê¶ÊîπÂèò */
 u8 IsConfigUpdated()
 {
     return g_config.updateFlag;
@@ -27,7 +24,7 @@ void ConfigSetUpdate(u8 flag)
     g_config.updateFlag = flag;
 }
 /*
-*  ≈‰÷√œÓ 80000 ◊˜Œ™±£¡Ùµÿ÷∑ 
+*  ÈÖçÁΩÆÈ°π 80000 ‰Ωú‰∏∫‰øùÁïôÂú∞ÂùÄ 
 *
 */
 void ConfigInit(void)
@@ -142,6 +139,33 @@ void ConfigInit(void)
         ConfigSetpm10B(1);
     }
     
+    if (-1 != ReadCfgInt(C_PM10BaseV, &temp32))
+    {
+        ConfigSetpm10BaseV(temp32);
+    }
+    else
+    {
+        ConfigSetpm10BaseV(1000);
+    }
+    
+    if (-1 != ReadCfgInt(C_PM10BaseC, &temp32))
+    {
+        ConfigSetpm10BaseC(temp32);
+    }
+    else
+    {
+        ConfigSetpm10BaseC(250);
+    }
+    
+    if (-1 != ReadCfgInt(C_PM10N, &temp32))
+    {
+        ConfigSetpm10N(temp32);
+    }
+    else
+    {
+        ConfigSetpm10N(60);
+    }
+    
     if (-1 != ReadCfgInt(C_COVw, &temp32))
     {
         ConfigSetcoVw(temp32);
@@ -250,7 +274,7 @@ void ConfigInit(void)
         ConfigSetno2S(400);
     }
     
-    /* ƒ¨»œµƒ ±º‰ */
+    /* ƒ¨ÔøΩœµÔøΩ ±ÔøΩÔøΩ */
     ConfigSetTime();
     
     ConfigPrint();
@@ -331,8 +355,8 @@ void ConfigPrint(void)
     GSM_LOG_P2("SIMPLE: %d, REPORT: %d\r\n", g_config.simpleInterval, g_config.reportInterval);
     GSM_LOG_P4("2.5 K,B : %d,%d; 10K,B : %d,%d\r\n", g_config.pm25K, g_config.pm25B,
                g_config.pm10K, g_config.pm10B);
-    GSM_LOG_P4("CO W,A : %d,%d; SO2 W,A : %d,%d\r\n", g_config.coVw, g_config.coVa,
-               g_config.so2Vw, g_config.so2Va);
+    GSM_LOG_P3("PM10: BaseV(mv): %d, BaseC(/10): %d, N(/100): %d",
+               g_config.pm10BaseV, g_config.pm10BaseC, g_config.pm10N);
     GSM_LOG_P4("O3 W,A : %d,%d; NO2 W,A : %d,%d\r\n", g_config.o3Vw, g_config.o3Va,
                g_config.no2Vw, g_config.no2Va);
     GSM_LOG_P4("COS: %d, SO2S: %d, O3S: %d, NO2S: %d", g_config.coS, g_config.so2S,
@@ -350,23 +374,18 @@ void ConfigSetTime()
     memcpy(gps.utc.strTime, "20160807161616", 15);
 }
 
-bool CpnfigSetRTCTime(u8 y, u8 m, u8 d, u8 h, u8 min, u8 s)
+u8 ConfigSetRTCTime(u16 y, u8 m, u8 d, u8 h, u8 min, u8 s)
 {
-    /* …Ë÷√ ±º‰µΩRTC */
-    g_sdate.Year = y;
-    g_sdate.Month = m;
-    g_sdate.Date = d;
-    //g_sdate.WeekDay = RTC_CaculateWeekDay(g_sdate.Year,g_sdate.Month, g_sdate.Date);
+    /* ÔøΩÔøΩÔøΩÔøΩ ±ÔøΩ‰µΩRTC */
+    gps.time.tm_year = y;
+    gps.time.tm_mon = m;
+    gps.time.tm_mday = d;
+    gps.time.tm_wday = 0;
+    gps.time.tm_hour = h;
+    gps.time.tm_min = min;
+    gps.time.tm_sec = s;
   
-    g_stime.Hours = h;
-    g_stime.Minutes = min;
-    g_stime.Seconds = s;
-    g_stime.TimeFormat = RTC_HOURFORMAT12_AM;
-    g_stime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    g_stime.StoreOperation = RTC_STOREOPERATION_RESET;
-    
-    //return RTC_CalendarConfig(&g_sdate, &g_stime);
-    return true;
+    return RTC_SetCalendar(gps.time);
 }
 
 void ConfigSetAddr(u32 addr)
@@ -509,7 +528,7 @@ s8 ConfigGetReportInterval(void)
     return g_config.reportInterval;
 }
 
-void ConfigSetpm25K(u16 val)
+void ConfigSetpm25K(s16 val)
 {
     g_config.pm25K = val;
 }
@@ -519,7 +538,7 @@ u16 ConfigGetpm25K(void)
     return g_config.pm25K;
 }
 
-void ConfigSetpm25B(u16 val)
+void ConfigSetpm25B(s16 val)
 {
     g_config.pm25B = val;
 }
@@ -529,7 +548,7 @@ u16 ConfigGetpm25B(void)
     return g_config.pm25B;
 }
 
-void ConfigSetpm10K(u16 val)
+void ConfigSetpm10K(s16 val)
 {
     g_config.pm10K = val;
 }
@@ -539,7 +558,7 @@ u16 ConfigGetpm10K(void)
     return g_config.pm10K;
 }
 
-void ConfigSetpm10B(u16 val)
+void ConfigSetpm10B(s16 val)
 {
     g_config.pm10B = val;
 }
@@ -549,7 +568,37 @@ u16 ConfigGetpm10B(void)
     return g_config.pm10B;
 }
 
-void ConfigSetcoVw(u16 val)
+void ConfigSetpm10BaseV(s16 val)
+{
+    g_config.pm10BaseV = val;
+}
+
+u16 ConfigGetpm10BaseV(void)
+{
+    return g_config.pm10BaseV;
+}
+
+void ConfigSetpm10BaseC(s16 val)
+{
+    g_config.pm10BaseC = val;
+}
+
+u16 ConfigGetpm10BaseC(void)
+{
+    return g_config.pm10BaseC;
+}
+
+void ConfigSetpm10N(s16 val)
+{
+    g_config.pm10N = val;
+}
+
+u16 ConfigGetpm10N(void)
+{
+    return g_config.pm10N;
+}
+
+void ConfigSetcoVw(s16 val)
 {
     g_config.coVw = val;
 }
@@ -559,7 +608,7 @@ u16 ConfigGetcoVw(void)
     return g_config.coVw;
 }
 
-void ConfigSetcoVa(u16 val)
+void ConfigSetcoVa(s16 val)
 {
     g_config.coVa = val;
 }
@@ -569,27 +618,27 @@ u16 ConfigGetcoVa(void)
     return g_config.coVa;
 }
 
-void ConfigSetcoS(u16 val)
+void ConfigSetcoS(s16 val)
 {
     g_config.coS = val;
 }
 
-void ConfigSetso2S(u16 val)
+void ConfigSetso2S(s16 val)
 {
     g_config.so2S = val;
 }
 
-void ConfigSeto3S(u16 val)
+void ConfigSeto3S(s16 val)
 {
     g_config.o3S = val;
 }
 
-void ConfigSetno2S(u16 val)
+void ConfigSetno2S(s16 val)
 {
     g_config.no2S = val;
 }
 
-void ConfigSetso2Va(u16 val)
+void ConfigSetso2Va(s16 val)
 {
     g_config.so2Va = val;
 }
@@ -599,7 +648,7 @@ u16 ConfigGetso2Va(void)
     return g_config.so2Va;
 }
 
-void ConfigSetso2Vw(u16 val)
+void ConfigSetso2Vw(s16 val)
 {
     g_config.so2Vw = val;
 }
@@ -609,7 +658,7 @@ u16 ConfigGetso2Vw(void)
     return g_config.so2Vw;
 }
 
-void ConfigSeto3Vw(u16 val)
+void ConfigSeto3Vw(s16 val)
 {
     g_config.o3Vw = val;
 }
@@ -619,7 +668,7 @@ u16 ConfigGeto3Vw(void)
     return g_config.o3Vw;
 }
 
-void ConfigSeto3Va(u16 val)
+void ConfigSeto3Va(s16 val)
 {
     g_config.o3Va = val;
 }
@@ -629,7 +678,7 @@ u16 ConfigGeto3Va(void)
     return g_config.o3Va;
 }
 
-void ConfigSetno2Vw(u16 val)
+void ConfigSetno2Vw(s16 val)
 {
     g_config.no2Vw = val;
 }
@@ -639,7 +688,7 @@ u16 ConfigGetno2Vw(void)
     return g_config.no2Vw;
 }
 
-void ConfigSetno2Va(u16 val)
+void ConfigSetno2Va(s16 val)
 {
     g_config.no2Va = val;
 }
@@ -663,14 +712,14 @@ void GetSo2Zero(s16 *Vw, s16 *Va, s16 *S)
     *S = g_config.so2S;
 }
 
-void Geto3Zero(s16 *Vw, s16 *Va, s16 *S)
+void GetO3Zero(s16 *Vw, s16 *Va, s16 *S)
 {
     *Vw = g_config.o3Vw;
     *Va = g_config.o3Va;
     *S = g_config.o3S;
 }
 
-void Getno2Zero(s16 *Vw, s16 *Va, s16 *S)
+void GetNo2Zero(s16 *Vw, s16 *Va, s16 *S)
 {
     *Vw = g_config.no2Vw;
     *Va = g_config.no2Va;
@@ -678,7 +727,7 @@ void Getno2Zero(s16 *Vw, s16 *Va, s16 *S)
 }
 
 
-/* ≈‰÷√∏ƒ±‰ ±£¨‘⁄–¥Œƒº˛µƒœﬂ≥Ã≤Ÿ◊˜Œƒº˛£¨“ÚŒ™¥Úø™Œƒº˛–Ë“™±»Ωœ¥Ûµƒ’ª */
+/* ÈÖçÁΩÆÊîπÂèòÊó∂ÔºåÂú®ÂÜôÊñá‰ª∂ÁöÑÁ∫øÁ®ãÊìç‰ΩúÊñá‰ª∂ÔºåÂõ†‰∏∫ÊâìÂºÄÊñá‰ª∂ÈúÄË¶ÅÊØîËæÉÂ§ßÁöÑÊ†à */
 /* END */
 
 

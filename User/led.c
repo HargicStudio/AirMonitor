@@ -36,10 +36,10 @@ static void HandleLedIndicationMsg(void* msg);
 static void RunLedThread(void const *argument)
 {
     (void) argument;
-    void* msg;
-    u8 cnt = 0;
+    //void* msg;
+    //u8 cnt = 0;
     struct tm rtc;
-    time_t tp = 1472971856;
+    //time_t tp = 1472971856;
 
     AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "%s started", __FUNCTION__);
 
@@ -62,7 +62,7 @@ static void RunLedThread(void const *argument)
         LedToggle();
         osDelay(1000);
 //        AaSysLogPrintF(LOGLEVEL_DBG, SystemStartup, "System running");
-
+/*
         msg = AaSysComCreate(API_MESSAGE_ID_LED_INDICATION, SysCom_RunLed1, SysCom_RunLed2, sizeof(SLedIndication));
         if(msg != NULL)
         {
@@ -79,6 +79,7 @@ static void RunLedThread(void const *argument)
         {
             RTC_SetTime(tp);
         }
+        */
     }
 }
 
@@ -132,7 +133,7 @@ static void RunLedThreadFork(void const *argument)
 static void HandleLedIndicationMsg(void* msg)
 {
     SLedIndication* pl = AaSysComGetPayload(msg);
-    AaSysLogPrintF( LOGLEVEL_DBG, SystemStartup, "%s %d: get led status %s", 
+    AaSysLogPrintF( LOGLEVEL_INF, SystemStartup, "%s %d: get led status %s", 
                     __FUNCTION__, __LINE__, pl->led_status ? "true" : "false");
 }
 
@@ -155,7 +156,7 @@ u8 StartRunLedTask()
     }
     AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "create RunLedThread success");
 
-
+/*
     osThreadDef(RunLedFork, RunLedThreadFork, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
     _runled_id_fork = AaThreadCreateStartup(osThread(RunLedFork), NULL);
     if(_runled_id_fork == NULL) {
@@ -164,7 +165,7 @@ u8 StartRunLedTask()
         return 1;
     }
     AaSysLogPrintF(LOGLEVEL_INF, SystemStartup, "create RunLedThreadFork success");
-
+*/
 
     return 0;
 }

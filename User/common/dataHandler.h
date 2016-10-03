@@ -8,6 +8,7 @@ extern "C" {
 
 #include "common.h"
 #include "format.h"
+#include "alpha_sense_if.h"
 	
 #define SAMPLE_TEMP_WET_NUM     20
 #define SAMPLE_GAS_NUM          20
@@ -87,7 +88,7 @@ typedef struct WIND_t
 *  gasType : 0: CO   1: SO2   2: NO2    3: O3
 *  return : -1 温度异常  正常单位  ppb
 */
-s32 CalGasVal(u32 Vw, u32 Va, u8 gasType);
+s32 CalGasVal(u32 Vw, u32 Va, EASType gasType);
 
 /* 存储温度湿度 */
 s8 StoreWetTempInfo(u16 wet, s16 temp, TEMP_WET_t *bag);
@@ -113,7 +114,9 @@ void ContructDataUp();
 /*
 *  构造回调数据
 */
-u8 ConstructRecordDataToSend(u8 *data, u8 *cmd);
+bool ConstructRecordDataToSend(u8 *data, u8 onoff, u16 cnt);
+
+void ConstructDataAndSend(u8 *cmd, u8* addr, u8 *opt, u8 optLen);
 
 /* 坐标纬度 */
 u32 GetCoordLati();
@@ -129,6 +132,8 @@ u32 GetNo2();
 u32 GetCo();
 /* PM10 */
 u16 GetPm10();
+/* PM10 from SHARP */
+u16 GetPm10Sharp();
 /* PM2.5 */
 u16 GetPm25();
 /* 获取箱内湿度 */
@@ -151,6 +156,8 @@ extern TEMP_WET_t g_tempWetOut;
 extern PM_t g_pm25;
 /* PM10 */
 extern PM_t g_pm10;
+/* 夏普传感器获得的PM10 */
+extern PM_t g_pm10sharp;
 /* CO */
 extern GAS_t g_co;
 /* NO2 */
@@ -165,6 +172,8 @@ extern COORD_t g_coord;
 extern WIND_t g_wind;
 /* 用于发送的头部 */
 extern MSG_HEAD_t g_head;
+
+extern SEND_BUF_t g_sendDirt;
 
 #ifdef __cplusplus
 }
