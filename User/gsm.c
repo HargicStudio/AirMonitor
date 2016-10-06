@@ -357,15 +357,15 @@ void GsmSendToUSART(u8 * data, u16 len)
 */
 void GsmRecvDataFromISR(UART_HandleTypeDef *huart)
 {
-    //GSM_LOG_P1("*********** %02x", recv_char_gsm);
-    
     /* 透明传输模式开启 */
     if (GSM_TCP_CONNECTED == GsmStatusGet())
     {
+        //GSM_LOG_P1("*********** %02x", recv_char_gsm);
         ReceiveTransparentData(recv_char_gsm);
     }
     else
     {
+        //GSM_LOG_P1("*********** %c", recv_char_gsm);
         ReceiveNormalData(recv_char_gsm);
     }
     
@@ -531,6 +531,7 @@ bool ProcessAtResponse(u8 *buf, u16 len)
       break;
     case AT_WAIT_REG:
       IsAtSuss(buf, "CHINA");
+      IsAtSuss(buf, "CHN-UNICOM");
       break;
     case AT_WAIT_CONNECT_STU:
       IsAtSuss(buf, "CONNECT OK");

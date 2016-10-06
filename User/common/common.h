@@ -224,8 +224,8 @@ u16 getFebDays(u16 year);
 #define CP15_LOG_P4(fmt, p1, p2, p3, p4)
 #endif
 
-#define DEBUG_DEBUG_AFS
-//#define DEBUG_NO_DEBUG_AFS
+//#define DEBUG_DEBUG_AFS
+#define DEBUG_NO_DEBUG_AFS
 //#define DEBUG_STD_AFS
 
 #ifdef DEBUG_DEBUG_AFS

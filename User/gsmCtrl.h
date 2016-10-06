@@ -12,6 +12,7 @@ extern osMutexId _gsm_ctrl_mutex_id;
 
 /* GSM Control */
 #define MAX_WAIT_TIMES          20
+#define MAX_WAIT_TIME_FOR_SENDING      100
   
 /* 关闭GSM计数，以50ms为单位, 现在是10s */
 #define MAX_WAIT_CLOSE_GSM      200

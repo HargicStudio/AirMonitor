@@ -28,6 +28,18 @@ static u8 s_testCLPORT[] = "AT+CLPORT=\"TCP\",\"2222\"\r\n";
 static u8 s_testCIPMODE[] = "AT+CIPMODE=1\r\n";
 static u8 s_testCIPSTART[] = "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\r\n";
 
+#define BASE_CHECK_TIME                     100           /* base is 100 ms */
+#define AT_MAX_RESP_TIME                     20           /* 10 s */          
+#define AT_COPS_QUERY_MAX_RESP_TIME         450           /* 45 s */
+#define AT_CGCLASS_MAX_RESP_TIME            100           /* no define */     
+#define AT_CGDCONT_MAX_RESP_TIME            100           /* no define */
+#define AT_CGATT_MAX_RESP_TIME              100           /* 10 s */
+#define AT_CIPCSGP_MAX_RESP_TIME            100           /* no define */
+#define AT_CLPORT_MAX_RESP_TIME             100           /* no define */
+#define AT_CIPMODE_MAX_RESP_TIME            100           /* no define */
+#define AT_CIPSTART_MAX_RESP_TIME           100           /* 160 s if IP INTIAL */
+
+
 #define RESET_CTRL_MAX_TIMES       5
 /* 多次无法建立连接，重启 */
 static u8 resetCtrl;
@@ -74,9 +86,9 @@ void SetAtStatus(s32 stu)
 s32 GetAtStatus(void)
 {
     s32 stu;
-    //osMutexWait(_gsm_ctrl_mutex_id, osWaitForever);
+    osMutexWait(_gsm_ctrl_mutex_id, osWaitForever);
     stu = _at_status;
-    //osMutexRelease(_gsm_ctrl_mutex_id);
+    osMutexRelease(_gsm_ctrl_mutex_id);
     return stu;
 }
 
@@ -166,7 +178,7 @@ bool AtCmdRun(u8 *cmd, u16 len, u16 waitTimes, u32 rspType)
     
     while (rspType == GetAtStatus())
     {
-        osDelay(100);
+        osDelay(BASE_CHECK_TIME);
     
         if (0 == waitTimes)
         {
@@ -224,7 +236,7 @@ bool IsTcpConnected(void)
 
 bool IsGsmRunning(void)
 {
-    if (true == AtCmdRun((u8 *)"AT\r\n", 3, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun((u8 *)"AT\r\n", 3, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     } 
@@ -259,31 +271,31 @@ void GsmPowerUpDownOpt(u8 type)
 bool GsmStartup(void)
 {
     osDelay(100);
-    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun(s_testBoot, 4, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     }
     
     GsmPowerUpDownOpt(GSM_POWER_UP);
     
-    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun(s_testBoot, 4, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     }
     
-    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun(s_testBoot, 4, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     }
     
     GsmPowerUpDownOpt(GSM_POWER_UP);
     
-    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun(s_testBoot, 4, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     }
     
-    if (true == AtCmdRun(s_testBoot, 4, 20, AT_WAIT_RSP))
+    if (true == AtCmdRun(s_testBoot, 4, AT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return true;
     }
@@ -295,10 +307,10 @@ bool GsmWaitForReg(void)
 {
     bool ret;
     /*  wait for 5S */
-    ret = AtCmdRun(s_testReg, 10, 100, AT_WAIT_REG);
+    ret = AtCmdRun(s_testReg, 10, AT_COPS_QUERY_MAX_RESP_TIME, AT_WAIT_REG);
     if (!ret)
     {
-        ret = AtCmdRun(s_testReg, 10, 100, AT_WAIT_REG);
+        ret = AtCmdRun(s_testReg, 10, AT_COPS_QUERY_MAX_RESP_TIME, AT_WAIT_REG);
     }
     
     return ret;
@@ -336,27 +348,27 @@ bool GsmStartAndconect(void)
     
     GSM_LOG_P0("GSM Reg success!");
 
-    if (false == AtCmdRun(s_testCGCLASS, 16, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCGCLASS, 16, AT_CGCLASS_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return false;
     }
 
-    if (false == AtCmdRun(s_testCGDCONT, 27, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCGDCONT, 27, AT_CGDCONT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return false;
     }
 
-    if (false == AtCmdRun(s_testCGATT, 12, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCGATT, 12, AT_CGATT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return false;
     }
 
-    if (false == AtCmdRun(s_testCIPCSGP, 22, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCIPCSGP, 22, AT_CIPCSGP_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         //return false;
     }
 
-    if (false == AtCmdRun(s_testCLPORT, 24, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCLPORT, 24, AT_CLPORT_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         return false;
     }
@@ -370,7 +382,7 @@ bool GsmStartAndconect(void)
     
     /* 设置透传模式 */
     
-    if (false == AtCmdRun(s_testCIPMODE, 14, MAX_WAIT_TIMES, AT_WAIT_RSP))
+    if (false == AtCmdRun(s_testCIPMODE, 14, AT_CIPMODE_MAX_RESP_TIME, AT_WAIT_RSP))
     {
         //return false;
     }
@@ -380,7 +392,7 @@ bool GsmStartAndconect(void)
     
     GSM_LOG_P1("CONNECT TO %s END!", s_cmd);
     
-    if (false == AtCmdRun(s_cmd, strlen((char const *)s_cmd), MAX_WAIT_TIMES + 100, AT_WAIT_CONNECT_RSP))
+    if (false == AtCmdRun(s_cmd, strlen((char const *)s_cmd), AT_CIPSTART_MAX_RESP_TIME, AT_WAIT_CONNECT_RSP))
     {
         SendDtuHeadData();
         return false;
@@ -420,7 +432,7 @@ bool GsmSendData(u8 *data, u16 len, u8 respFlag)
     else
     {
         // 需要服务器响应 
-        if (false == AtCmdRun(data, len, MAX_WAIT_TIMES + 30, AT_WAIT_SEND_OK))
+        if (false == AtCmdRun(data, len, MAX_WAIT_TIME_FOR_SENDING, AT_WAIT_SEND_OK))
         {
             GSM_LOG_P0("----Send failed, power down GSM!----\r\n");
             GsmPowerUpDownOpt(GSM_POWER_DOWN);

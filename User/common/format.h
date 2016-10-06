@@ -60,8 +60,9 @@ extern SEND_BIG_BUF_t g_sendRecallData;
 #define SEND_RESPONSE_RESP_FALG_GET()        (g_sendResponse.respFlag)
 #define IsSendResponseReady()                (g_sendResponse.sendFlag == SEND_FLAG_YES)
 #define IsSendRest()                         (g_sendResponse.resetFlag == SEND_FLAG_YES)
-#define SEDN_RESPONSE_SET_RESET_SYSTEM_FLAG()  (g_sendResponse.resetFlag = SEND_FLAG_YES)
+#define SEDN_RESPONSE_SET_RESET_SYSTEM_FLAG()    (g_sendResponse.resetFlag = SEND_FLAG_YES)
 #define SEDN_RESPONSE_CLEAR_RESET_SYSTEM_FLAG()  (g_sendResponse.resetFlag = SEND_FLAG_NO)
+#define IsSendResetSys()                         (g_sendResponse.resetFlag)
 
 
 #define SEND_BUF_OFFSET(x)              (g_sendBuf.buf + (x))
