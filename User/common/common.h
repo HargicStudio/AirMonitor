@@ -50,6 +50,42 @@ extern "C" {
 #define OFFSET_ADDR             10
 #define OFFSET_CMD              15
 #define OFFSET_DATA             18
+  
+  
+  
+#define CMD_SER_CHECK_ONLINE                "001"
+#define CMD_CLI_CHECK_ONLINE_RSP            "002"
+#define CMD_SER_CORRECT_TIME                "003"
+#define CMD_CLI_CORRECT_TIME_RSP            "004"
+#define CMD_SER_POWER_SAVE_MODE             "005"
+#define CMD_CLI_POWER_SAVE_MODE_RSP         "006"
+#define CMD_SER_STATION_INFO                "015"
+#define CMD_CLI_STATION_INFO_RSP            "016"
+#define CMD_SER_REPORT_DATA_RSP             "021"
+#define CMD_CLI_REPORT_DATA                 "022"
+#define CMD_SER_CFG_STATION                 "089"
+#define CMD_CLI_CFG_STATION_RSP             "090"
+#define CMD_SER_CFG_SENSOR                  "091"
+#define CMD_CLI_CFG_SERSOR_RSP              "092"
+#define CMD_SER_REBOOT                      "097"
+#define CMD_CLI_REBOOT_RSP                  "098"
+
+#define CMD_SER_CHECK_ONLINE_V                1
+#define CMD_CLI_CHECK_ONLINE_RSP_V            2
+#define CMD_SER_CORRECT_TIME_V                3
+#define CMD_CLI_CORRECT_TIME_RSP_V            4
+#define CMD_SER_POWER_SAVE_MODE_V             5
+#define CMD_CLI_POWER_SAVE_MODE_RSP_V         6
+#define CMD_SER_STATION_INFO_V                15
+#define CMD_CLI_STATION_INFO_RSP_V            16
+#define CMD_SER_REPORT_DATA_RSP_V             21
+#define CMD_CLI_REPORT_DATA_V                 22
+#define CMD_SER_CFG_STATION_V                 89
+#define CMD_CLI_CFG_STATION_RSP_V             90
+#define CMD_SER_CFG_SENSOR_V                  91
+#define CMD_CLI_CFG_SERSOR_RSP_V              92
+#define CMD_SER_REBOOT_V                      97
+#define CMD_CLI_REBOOT_RSP_V                  98
 
 
 /*

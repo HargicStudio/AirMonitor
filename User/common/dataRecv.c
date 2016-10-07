@@ -65,16 +65,20 @@ void ProcessRecvData(u8 *buf, int cmd)
 {
     switch (cmd)
     {
+      /* 服务器应答上报数据 */
+    case CMD_SER_REPORT_DATA_RSP_V:
+      ProcessServerResp(buf);
+      break;
       /* 服务器呼叫 */
-    case 1:
+    case CMD_SER_CHECK_ONLINE_V:
       ProcessServerCall(buf);
       break;
       /* 服务端校时 */
-    case 3:
+    case CMD_SER_CORRECT_TIME_V:
       ProcessServerTime(buf);
       break;
       /* 掉电模式 */
-    case 5:
+    case CMD_SER_POWER_SAVE_MODE_V:
       ProcessSavePower(buf);
       break;
       /* 修改站号 */
@@ -101,7 +105,7 @@ void ProcessRecvData(u8 *buf, int cmd)
     case 33:
       ProcessGetHardVersion(buf);
       break;
-    case 97:
+    case CMD_SER_REBOOT_V:
       ProcessReboot(buf);
       break;
       /* 应答处理 */
@@ -183,19 +187,19 @@ void ProcessServerTime(u8 *buf)
     
     GSM_LOG_P1("time synced with Server : %s", gps.utc.strTime);
     
-    ConstructResponse("004", buf, 0xff);
+    ConstructResponse(CMD_CLI_CORRECT_TIME_RSP, buf, 0xff);
 }
 
 void ProcessServerCall(u8 *buf)
 {
     GSM_LOG_P0("Recv Server Call!");
-    ConstructResponse("002", buf, 0xff);
+    ConstructResponse(CMD_CLI_CHECK_ONLINE_RSP, buf, 0xff);
 }
 
 void ProcessSavePower(u8 *buf)
 {
     GSM_LOG_P0("Recv Save Power!");
-    ConstructResponse("006", buf, 0xff);
+    ConstructResponse(CMD_CLI_POWER_SAVE_MODE_RSP, buf, 0xff);
     GsmWaitCloseFlagSet();
 }
 
@@ -355,7 +359,7 @@ void ProcessReboot(u8 *buf)
     memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), buf, MAX_ADDR_LEN);
     offset += MAX_ADDR_LEN;
     /* cmd */
-    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), "098", LEN_CMD);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), CMD_CLI_REBOOT_RSP, LEN_CMD);
     offset += LEN_CMD;
     
     /* HEAD */
@@ -383,19 +387,9 @@ void ProcessReboot(u8 *buf)
 */
 void ProcessServerResp(u8 *buf)
 {
-    u8 reason = buf[LEN_ADDR + LEN_CMD];
-    
-    switch(reason)
+    if (GetAtStatus() == AT_WAIT_SEND_OK)
     {
-    case REPLY_501:
-    case REPLY_502:
-      if (GetAtStatus() == AT_WAIT_SEND_OK)
-      {
-          SetAtStatus(AT_SUSS);
-      }
-      break;
-    default:
-      break;
+        SetAtStatus(AT_SUSS);
     }
 }
 
@@ -470,7 +464,7 @@ void ProcessAdjust(u8 *buf)
     /* 更新到配置文件 */
     ConfigSetUpdate(1);
     
-    ConstructResponse("502", buf, 0xff);
+    ConstructResponse(CMD_CLI_CFG_SERSOR_RSP, buf, 0xff);
 }
 
 void ProcessConfig(u8 *buf)
@@ -527,7 +521,7 @@ void ProcessConfig(u8 *buf)
     /* 更新到配置文件 */
     ConfigSetUpdate(1);
     
-    ConstructResponse("504", buf, 0xff);
+    ConstructResponse(CMD_CLI_CFG_STATION_RSP, buf, 0xff);
 }
 
 void ProcessGetPosition(u8 *buf)

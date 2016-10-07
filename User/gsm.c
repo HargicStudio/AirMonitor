@@ -162,7 +162,7 @@ static void GsmSendTestThread(void const *argument)
         }
         else
         {
-        gps.utc.min >= min ? (minIntval = gps.utc.min - min) : (minIntval = 60 - min + gps.utc.min);
+            gps.utc.min >= min ? (minIntval = gps.utc.min - min) : (minIntval = 60 - min + gps.utc.min);
         }
         
         
@@ -447,7 +447,7 @@ void ReceiveTransparentData(u8 data)
                 /* 不支持的命令，初始化 */
                 flag = 0xff;
                 pos = 0;
-                GSM_LOG_P0("TEST: Didn't support the cmd!");
+                GSM_LOG_P1("TEST: Didn't support the cmd: %d!", cmd);
                 return;
             }
             else

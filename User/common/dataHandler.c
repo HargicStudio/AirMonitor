@@ -505,7 +505,7 @@ void ContructDataUp()
     memcpy(SEND_BUF_OFFSET(offset), ConfigGetStrAddr(), MAX_ADDR_LEN);
     offset += MAX_ADDR_LEN;
     /* cmd */
-    memcpy(SEND_BUF_OFFSET(offset), "503", 3);
+    memcpy(SEND_BUF_OFFSET(offset), CMD_CLI_REPORT_DATA, 3);
     
     offset = LEN_HEAD + LEN_ADDR + LEN_CMD;
     
