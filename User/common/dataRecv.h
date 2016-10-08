@@ -44,6 +44,10 @@ void ConstructCommonResponse(u8 *cmd, u8* addr, u8 *opt, u8 optLen);
 
 void ProcessStopRecall(u8 *buf);
 
+void ProcessSerGetStationInfo(u8 *buf);
+
+void ProcessSerConfigStation(u8 *buf);
+
   
 #ifdef __cplusplus
 }

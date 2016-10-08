@@ -237,77 +237,89 @@ uint8_t AM2302_CH0_Read_TempAndHumidity(AM2302_Data_TypeDef *AM2302_Data)
 {  
     uint8_t temp;
     uint16_t humi_temp;
-    //u32 cnt = 0;
+    u32 cnt = 0;
   
-	/*输出模式*/
-	AM2302_Mode_Out_PP(AM2302_CH0);
-	/*主机拉低*/
-	AM2302_CH0_Dout_LOW();
-	/*延时18ms*/
-	Delay_ms(18);
-    
-        vTaskSuspendAll();  //关闭调度
- 
-	/*总线拉高 主机延时30us*/
-	AM2302_CH0_Dout_HIGH(); 
+    /*输出模式*/
+    AM2302_Mode_Out_PP(AM2302_CH0);
+    /*主机拉低*/
+    AM2302_CH0_Dout_LOW();
+    /*延时18ms*/
+    Delay_ms(18);
 
-	AM2302_Delay(30);   //延时30us
+    vTaskSuspendAll();  //关闭调度
 
-	/*主机设为输入 判断从机响应信号*/ 
-	AM2302_Mode_IPU(AM2302_CH0);
+    /*总线拉高 主机延时30us*/
+    AM2302_CH0_Dout_HIGH(); 
 
-	/*判断从机是否有低电平响应信号 如不响应则跳出，响应则向下运行*/   
-	if(AM2302_CH0_Data_IN()==GPIO_PIN_RESET)     
-	{
-            /*轮询直到从机发出 的80us 低电平 响应信号结束*/  
-            while(AM2302_CH0_Data_IN()==GPIO_PIN_RESET)
-            {
-                
-            }
+    AM2302_Delay(30);   //延时30us
 
-            /*轮询直到从机发出的 80us 高电平 标置信号结束*/
-            while(AM2302_CH0_Data_IN()==GPIO_PIN_SET)
-            {
-            }
+    /*主机设为输入 判断从机响应信号*/ 
+    AM2302_Mode_IPU(AM2302_CH0);
 
-            /*开始接收数据*/   
-            AM2302_Data->humi_high8bit= AM2302_ReadByte(AM2302_CH0);
-            AM2302_Data->humi_low8bit = AM2302_ReadByte(AM2302_CH0);
-            AM2302_Data->temp_high8bit= AM2302_ReadByte(AM2302_CH0);
-            AM2302_Data->temp_low8bit = AM2302_ReadByte(AM2302_CH0);
-            AM2302_Data->check_sum    = AM2302_ReadByte(AM2302_CH0);
-
-            /*读取结束，引脚改为输出模式*/
-            AM2302_Mode_Out_PP(AM2302_CH0);
-            /*主机拉高*/
-            AM2302_CH0_Dout_HIGH();
-            
-            /* 对数据进行处理 */
-            humi_temp=AM2302_Data->humi_high8bit*256+AM2302_Data->humi_low8bit;
-            AM2302_Data->humidity = humi_temp;   
-            humi_temp=AM2302_Data->temp_high8bit*256+AM2302_Data->temp_low8bit;
-            AM2302_Data->temperature= humi_temp; 
-            
-            xTaskResumeAll(); //重新开启调度
-            
-            /*检查读取的数据是否正确*/
-            temp = AM2302_Data->humi_high8bit + AM2302_Data->humi_low8bit + 
-                   AM2302_Data->temp_high8bit+ AM2302_Data->temp_low8bit;
-            
-            if(AM2302_Data->check_sum==temp)
-            { 
-              return SUCCESS;
-            }
-            else 
-            {
-              return ERROR;
-            }
-	}	
-	else
+    /*判断从机是否有低电平响应信号 如不响应则跳出，响应则向下运行*/   
+    if(AM2302_CH0_Data_IN()==GPIO_PIN_RESET)     
+    {
+        /*轮询直到从机发出 的80us 低电平 响应信号结束*/  
+        while(AM2302_CH0_Data_IN()==GPIO_PIN_RESET)
         {
-            xTaskResumeAll();
-            return ERROR;
+            /* 以 10 条指令计 12800 */
+            cnt++;
+            if (cnt > 15000)
+            {
+                return ERROR;
+            }
         }
+
+        /*轮询直到从机发出的 80us 高电平 标置信号结束*/
+        cnt = 0;
+        while(AM2302_CH0_Data_IN()==GPIO_PIN_SET)
+        {
+            /* 以 10 条指令计 12800 */
+            cnt++;
+            if (cnt > 15000)
+            {
+                return ERROR;
+            }
+        }
+
+        /*开始接收数据*/   
+        AM2302_Data->humi_high8bit= AM2302_ReadByte(AM2302_CH0);
+        AM2302_Data->humi_low8bit = AM2302_ReadByte(AM2302_CH0);
+        AM2302_Data->temp_high8bit= AM2302_ReadByte(AM2302_CH0);
+        AM2302_Data->temp_low8bit = AM2302_ReadByte(AM2302_CH0);
+        AM2302_Data->check_sum    = AM2302_ReadByte(AM2302_CH0);
+
+        /*读取结束，引脚改为输出模式*/
+        AM2302_Mode_Out_PP(AM2302_CH0);
+        /*主机拉高*/
+        AM2302_CH0_Dout_HIGH();
+        
+        /* 对数据进行处理 */
+        humi_temp=AM2302_Data->humi_high8bit*256+AM2302_Data->humi_low8bit;
+        AM2302_Data->humidity = humi_temp;   
+        humi_temp=AM2302_Data->temp_high8bit*256+AM2302_Data->temp_low8bit;
+        AM2302_Data->temperature= humi_temp; 
+        
+        xTaskResumeAll(); //重新开启调度
+        
+        /*检查读取的数据是否正确*/
+        temp = AM2302_Data->humi_high8bit + AM2302_Data->humi_low8bit + 
+               AM2302_Data->temp_high8bit+ AM2302_Data->temp_low8bit;
+        
+        if(AM2302_Data->check_sum==temp)
+        { 
+          return SUCCESS;
+        }
+        else 
+        {
+          return ERROR;
+        }
+    }	
+    else
+    {
+        xTaskResumeAll();
+        return ERROR;
+    }
 }
 
 
@@ -322,70 +334,88 @@ uint8_t AM2302_CH1_Read_TempAndHumidity(AM2302_Data_TypeDef *AM2302_Data)
 {  
     uint8_t temp;
     uint16_t humi_temp;
-  
-	/*输出模式*/
-	AM2302_Mode_Out_PP(AM2302_CH1);
-	/*主机拉低*/
-	AM2302_CH1_Dout_LOW();
-	/*延时18ms*/
-	Delay_ms(18);
-
-	/*总线拉高 主机延时30us*/
-	AM2302_CH1_Dout_HIGH(); 
+    u32 cnt = 0;
     
-        vTaskSuspendAll();  //关闭调度
-    
-	AM2302_Delay(30);   //延时30us
+    /*输出模式*/
+    AM2302_Mode_Out_PP(AM2302_CH1);
+    /*主机拉低*/
+    AM2302_CH1_Dout_LOW();
+    /*延时18ms*/
+    Delay_ms(18);
 
-	/*主机设为输入 判断从机响应信号*/ 
-	AM2302_Mode_IPU(AM2302_CH1);
- 
-	/*判断从机是否有低电平响应信号 如不响应则跳出，响应则向下运行*/   
-	if(AM2302_CH1_Data_IN()==GPIO_PIN_RESET)     
-	{
-        /*轮询直到从机发出 的80us 低电平 响应信号结束*/  
-        while(AM2302_CH1_Data_IN()==GPIO_PIN_RESET);
+    /*总线拉高 主机延时30us*/
+    AM2302_CH1_Dout_HIGH(); 
 
-        /*轮询直到从机发出的 80us 高电平 标置信号结束*/
-        while(AM2302_CH1_Data_IN()==GPIO_PIN_SET);
+    vTaskSuspendAll();  //关闭调度
 
-        /*开始接收数据*/   
-        AM2302_Data->humi_high8bit= AM2302_ReadByte(AM2302_CH1);
-        AM2302_Data->humi_low8bit = AM2302_ReadByte(AM2302_CH1);
-        AM2302_Data->temp_high8bit= AM2302_ReadByte(AM2302_CH1);
-        AM2302_Data->temp_low8bit = AM2302_ReadByte(AM2302_CH1);
-        AM2302_Data->check_sum    = AM2302_ReadByte(AM2302_CH1);
+    AM2302_Delay(30);   //延时30us
 
-        /*读取结束，引脚改为输出模式*/
-        AM2302_Mode_Out_PP(AM2302_CH1);
-        /*主机拉高*/
-        AM2302_CH1_Dout_HIGH();
-        
-        /* 对数据进行处理 */
-        humi_temp=AM2302_Data->humi_high8bit*256+AM2302_Data->humi_low8bit;
-        AM2302_Data->humidity = humi_temp;   
-        humi_temp=AM2302_Data->temp_high8bit*256+AM2302_Data->temp_low8bit;
-        AM2302_Data->temperature= humi_temp;    
-        
-        /*检查读取的数据是否正确*/
-        temp = AM2302_Data->humi_high8bit + AM2302_Data->humi_low8bit + 
-               AM2302_Data->temp_high8bit+ AM2302_Data->temp_low8bit;
-        
-        xTaskResumeAll(); //重新开启调度
-          
-        if(AM2302_Data->check_sum==temp)
-        { 
-          return SUCCESS;
-        }
-        else 
+    /*主机设为输入 判断从机响应信号*/ 
+    AM2302_Mode_IPU(AM2302_CH1);
+
+    /*判断从机是否有低电平响应信号 如不响应则跳出，响应则向下运行*/   
+    if(AM2302_CH1_Data_IN()==GPIO_PIN_RESET)     
+    {
+    /*轮询直到从机发出 的80us 低电平 响应信号结束*/  
+    while(AM2302_CH1_Data_IN()==GPIO_PIN_RESET)
+    {
+          /* 以 10 条指令计 12800 */
+          cnt++;
+          if (cnt > 15000)
+          {
+              return ERROR;
+          }
+     }
+
+    cnt = 0;
+    /*轮询直到从机发出的 80us 高电平 标置信号结束*/
+    while(AM2302_CH1_Data_IN()==GPIO_PIN_SET)
+    {
+        /* 以 10 条指令计 12800 */
+        cnt++;
+        if (cnt > 15000)
         {
-          return ERROR;
+            return ERROR;
         }
-	}	
-	else
+    }
+
+    /*开始接收数据*/   
+    AM2302_Data->humi_high8bit= AM2302_ReadByte(AM2302_CH1);
+    AM2302_Data->humi_low8bit = AM2302_ReadByte(AM2302_CH1);
+    AM2302_Data->temp_high8bit= AM2302_ReadByte(AM2302_CH1);
+    AM2302_Data->temp_low8bit = AM2302_ReadByte(AM2302_CH1);
+    AM2302_Data->check_sum    = AM2302_ReadByte(AM2302_CH1);
+
+    /*读取结束，引脚改为输出模式*/
+    AM2302_Mode_Out_PP(AM2302_CH1);
+    /*主机拉高*/
+    AM2302_CH1_Dout_HIGH();
+    
+    /* 对数据进行处理 */
+    humi_temp=AM2302_Data->humi_high8bit*256+AM2302_Data->humi_low8bit;
+    AM2302_Data->humidity = humi_temp;   
+    humi_temp=AM2302_Data->temp_high8bit*256+AM2302_Data->temp_low8bit;
+    AM2302_Data->temperature= humi_temp;    
+    
+    /*检查读取的数据是否正确*/
+    temp = AM2302_Data->humi_high8bit + AM2302_Data->humi_low8bit + 
+           AM2302_Data->temp_high8bit+ AM2302_Data->temp_low8bit;
+    
+    xTaskResumeAll(); //重新开启调度
+      
+    if(AM2302_Data->check_sum==temp)
+    { 
+        return SUCCESS;
+    }
+    else 
+    {
+        return ERROR;
+    }
+    }	
+    else
     {
         xTaskResumeAll();
-		return ERROR;
+	return ERROR;
     }
 }
 
@@ -412,7 +442,7 @@ uint8_t AM2302_Read_TempAndHumidity(uint8_t channel, AM2302_Data_TypeDef * AM230
     }
     else
     {
-		return ERROR;
+	return ERROR;
     }
 }
 
@@ -425,6 +455,8 @@ uint8_t AM2302_Read_TempAndHumidity(uint8_t channel, AM2302_Data_TypeDef * AM230
 static void RunAm2302Thread(void const *argument)
 {
   (void) argument;
+  u32 interval = 15000;
+  u8 sel = 0;
   
   AM2302_Data_TypeDef AM2302_Data;
   
@@ -435,38 +467,43 @@ static void RunAm2302Thread(void const *argument)
   AM2302_Init(AM2302_CH1);
   
   /* works after 10 seconds */
-  osDelay(10000);
+  osDelay(1000);
   
   for (;;)
   {
-      /* 每5s采集一次, 采集间隔不能低于 2s */
-      osDelay(5000);
+      /* 采集间隔不能低于 2s, 两个通道交替采集 */
+      osDelay(interval);
       
-       /* 通道0 */
-      if(AM2302_Read_TempAndHumidity(AM2302_CH0, &AM2302_Data)==SUCCESS)
+      if (sel++ % 2 )
       {
-        AaSysLogPrintF(LOGLEVEL_DBG, FeatureAm2303, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
-          AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
-        
-        StoreWetTempInfo(AM2302_Data.humidity, AM2302_Data.temperature, &g_tempWetIn);
+          /* 通道0 */
+          if(AM2302_Read_TempAndHumidity(AM2302_CH0, &AM2302_Data)==SUCCESS)
+          {
+            AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
+              AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
+            
+            StoreWetTempInfo(AM2302_Data.humidity, AM2302_Data.temperature, &g_tempWetIn);
+          }
+          else
+          {
+            AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 failed!\n");      
+          }
       }
       else
       {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 failed!\n");      
+          /* 通道1 */
+          if(AM2302_Read_TempAndHumidity(AM2302_CH1, &AM2302_Data)==SUCCESS)
+          {
+            AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
+               AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
+            
+            StoreWetTempInfo(AM2302_Data.humidity, AM2302_Data.temperature, &g_tempWetOut);
+          }
+          else
+          {
+            AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 failed!\n");      
+          }
       }
-      
-      /* 通道1 *//*
-      if(AM2302_Read_TempAndHumidity(AM2302_CH1, &AM2302_Data)==SUCCESS)
-      {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
-           AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
-      }
-      else
-      {
-        AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 failed!\n");      
-      }*/
-
-      
   }
 }
 

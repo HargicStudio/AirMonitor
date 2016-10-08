@@ -49,6 +49,8 @@ void ReceiveTransparentData(u8 data);
 bool SendRecallDataToServer(void);
 void GsmSendToUSART(u8 * data, u16 len);
 
+void CommonInit(void);
+
 
 
 #endif /* __Gsm_h */

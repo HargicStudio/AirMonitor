@@ -273,6 +273,8 @@ static void Ads1222Thread(void const *argument)
     u8 channel;
     //void* msg;
     SAirSamp pl = {0};
+    u32 interval = 20000;
+    u8 sel = 0;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s started", __FUNCTION__);
 
@@ -296,7 +298,16 @@ static void Ads1222Thread(void const *argument)
 
     for (;;)
     {
-        osDelay(5000);
+        
+        if ( (sel = sel%3) == 0)
+        {
+           osDelay(interval);
+        }
+        sel++;
+        
+        /* 采集原理，W电极和A电极交替，所以在一次完整的采集过程，要尽量快，然后才开始等待间隔 */
+        /* 采集间隔默认20s */
+        
         Ads1222_EnableExti(exit_sense);
         osSemaphoreWait(_ads1222_convcplt_sem_id, osWaitForever);
 

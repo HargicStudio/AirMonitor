@@ -76,10 +76,10 @@ void ConfigSetHardVer(u16 ver);
 u16 ConfigGetHardVer(void);
 
 void ConfigSetSimpleInterval(u8 interval);
-s8 ConfigGetSimpleInterval(void);
+u16 ConfigGetSimpleInterval(void);
 
 void ConfigSetReportInterval(u8 interval);
-s8 ConfigGetReportInterval(void);
+u16 ConfigGetReportInterval(void);
 
 u16 ConfigGetno2Va(void);
 void ConfigSetno2Va(s16 val);
@@ -129,6 +129,11 @@ void ConfigSetno2S(s16 val);
 void ConfigSeto3S(s16 val);
 void ConfigSetso2S(s16 val);
 void ConfigSetcoS(s16 val);
+
+s16 ConfigGetno2S(void);
+s16 ConfigGeto3S(void);
+s16 ConfigGetso2S(void);
+s16 ConfigGetcoS(void);
 
 void Getno2Zero(s16 *Vw, s16 *Va, s16 *S);
 void Geto3Zero(s16 *Vw, s16 *Va, s16 *S);

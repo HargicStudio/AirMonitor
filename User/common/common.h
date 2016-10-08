@@ -232,8 +232,8 @@ u16 getFebDays(u16 year);
 #endif
 
 
-#define DEBUG_DEBUG_CP15
-//#define DEBUG_NO_DEBUG_CP15
+//#define DEBUG_DEBUG_CP15
+#define DEBUG_NO_DEBUG_CP15
 //#define DEBUG_STD_CP15
 
 #ifdef DEBUG_DEBUG_CP15

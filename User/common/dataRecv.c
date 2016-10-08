@@ -81,6 +81,18 @@ void ProcessRecvData(u8 *buf, int cmd)
     case CMD_SER_POWER_SAVE_MODE_V:
       ProcessSavePower(buf);
       break;
+      /* 重启 */
+    case CMD_SER_REBOOT_V:
+      ProcessReboot(buf);
+      break;
+      /* 获取站端信息 */
+    case CMD_SER_STATION_INFO_V:
+      ProcessSerGetStationInfo(buf);
+      break;
+      /* 配置站端 */
+    case CMD_SER_CFG_STATION_V:
+      ProcessSerConfigStation(buf);
+      break;
       /* 修改站号 */
     case 7:
       ProcessChangeAddr(buf);
@@ -93,10 +105,6 @@ void ProcessRecvData(u8 *buf, int cmd)
     case 13:
       ProcessChangeReportInterval(buf);
       break;
-      /* 读取传感器状态 */
-    case 15:
-      ProcessChangeGetModuleStatus(buf);
-      break;
       /* 请求软件版本号 */
     case 19:
       ProcessGetSoftVersion(buf);
@@ -104,9 +112,6 @@ void ProcessRecvData(u8 *buf, int cmd)
       /* 请求硬件版本号 */
     case 33:
       ProcessGetHardVersion(buf);
-      break;
-    case CMD_SER_REBOOT_V:
-      ProcessReboot(buf);
       break;
       /* 应答处理 */
     case 500:
@@ -199,7 +204,8 @@ void ProcessServerCall(u8 *buf)
 void ProcessSavePower(u8 *buf)
 {
     GSM_LOG_P0("Recv Save Power!");
-    ConstructResponse(CMD_CLI_POWER_SAVE_MODE_RSP, buf, 0xff);
+    // 他们太菜了，做不到，我不给你们回应了
+    //ConstructResponse(CMD_CLI_POWER_SAVE_MODE_RSP, buf, 0xff);
     GsmWaitCloseFlagSet();
 }
 
@@ -252,6 +258,28 @@ void ProcessChangeReportInterval(u8 *buf)
     
     /* 回应 */
     ConstructResponse("014", buf, 0xff);
+}
+
+void ProcessSerConfigStation(u8 *buf)
+{
+    u8 timeLen = 0;
+    u8 timeLen1 = 0;
+    
+    /* 更新config变量 */
+    timeLen = (u8)stringToInt(buf + LEN_ADDR + LEN_CMD, 2);
+    ConfigSetSimpleInterval(timeLen);
+      
+    /* 更新config变量 */
+    timeLen1 = (u8)stringToInt(buf + LEN_ADDR + LEN_CMD + 2, 2);
+    ConfigSetReportInterval(timeLen1);
+    
+    GSM_LOG_P2("Recv change report and simple interval! new: %d, %d", timeLen, timeLen1);
+    
+    /* 更新到配置文件 */
+    ConfigSetUpdate(1);
+    
+    /* 回应 */
+    ConstructResponse(CMD_CLI_CFG_STATION_RSP, buf, 0xff);
 }
 
 void ProcessChangeGetModuleStatus(u8 *buf)
@@ -379,6 +407,9 @@ void ProcessReboot(u8 *buf)
     
     /* 需要回应 */
     SEND_RESPONSE_RESP_FALG_SET(0);
+    
+    /* 重启 */
+    SEDN_RESPONSE_SET_RESET_SYSTEM_FLAG();
 }
 
 /*
@@ -524,13 +555,194 @@ void ProcessConfig(u8 *buf)
     ConstructResponse(CMD_CLI_CFG_STATION_RSP, buf, 0xff);
 }
 
+void ProcessSerGetStationInfo(u8 *buf)
+{
+    u16 offset = 0;
+    u32 crc = 0;
+    s16 sVal = 0;
+    u16 uVal = 0;
+    
+    GSM_LOG_P0("Request station info!");
+    
+    SEND_RESPONSE_FLAG_CLEAR();
+    
+    offset = LEN_HEAD;
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), buf, MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), CMD_CLI_STATION_INFO_RSP, LEN_CMD);
+    offset += LEN_CMD;
+    
+    /* 采集间隔 */ 
+    uVal = ConfigGetSimpleInterval();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* 上报间隔 */
+    uVal = ConfigGetReportInterval();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* soft version */
+    uVal = ConfigGetSoftVer();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* hard version */
+    uVal = ConfigGetHardVer();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* PM2.5 K */
+    sVal = ConfigGetpm25K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM2.5 B */
+    sVal = ConfigGetpm25B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM10 k */
+    sVal = ConfigGetpm10K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM10 b */
+    sVal = ConfigGetpm10B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM10BaseV */
+    uVal = ConfigGetpm10BaseV();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* PM10BaseC */
+    uVal = ConfigGetpm10BaseC();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* PM10N */
+    uVal = ConfigGetpm10N();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* PM10N */
+    uVal = ConfigGetpm10N();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* coVw */
+    uVal = ConfigGetcoVw();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* coVa */
+    uVal = ConfigGetcoVa();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* so2Vw */
+    uVal = ConfigGetso2Vw();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* so2Va */
+    uVal = ConfigGetso2Va();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* o3Vw */
+    uVal = ConfigGeto3Vw();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* o3Va */
+    uVal = ConfigGeto3Va();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* no2Vw */
+    uVal = ConfigGetno2Vw();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* no2Va */
+    uVal = ConfigGetno2Va();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* coS */
+    sVal = ConfigGetcoS();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* so2S */
+    sVal = ConfigGetso2S();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* o3S */
+    sVal = ConfigGeto3S();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* no2S */
+    sVal = ConfigGetno2S();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* HEAD */
+    /* CRC */
+    crc = usMBCRC16( (u8 *)SEND_RESPONSE_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
+    
+    FormatHead(crc, offset - LEN_HEAD, (u8 *)SEND_RESPONSE_OFFSET(0));
+    
+    SEND_RESPONSE_SET_BYTE('\r', offset);
+    SEND_RESPONSE_SET_BYTE('\n', offset + 1);
+    
+    /* 设置包含回车的长度，用于发送 */
+    SEND_RESPONSE_SET_LEN(offset+2);
+    
+    /* 设置发送标志，发送程序开始发送 */
+    SEND_RESPONSE_FLAG_SET();
+    
+    /* 需要回应 */
+    SEND_RESPONSE_RESP_FALG_SET(0);
+}
+
 void ProcessGetPosition(u8 *buf)
 {
-    GSM_LOG_P0("Request Position!");
-    
     u16 offset = 0;
     u32 crc = 0;
     u32 val = 0;
+    
+    GSM_LOG_P0("Request Position!");
     
     SEND_RESPONSE_FLAG_CLEAR();
     

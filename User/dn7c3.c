@@ -76,11 +76,11 @@ void HandleDn7c3(double volt)
                    C, baseV, n);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "Dn7c3 CV:%lf, tempI:%lf, Vo: %lf",
                    curBaseV, tempIn, volt);*/
-    /*
+    
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "Dn7c3 C: %lf, BV:%lf, n:%lf, "
                    "CV:%lf, tempI:%lf, Vo=%lf",
                    C, baseV, n,
-                   curBaseV, tempIn, Vo);*/
+                   curBaseV, tempIn, Vo);
     
     StorePmInfo((u16) C, &g_pm10sharp);
 }
@@ -96,6 +96,7 @@ static void Dn7c3Thread(void const *argument)
     (void) argument;
     u16 adc = 0;
     double volt;
+    u32 interval = 5000;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "%s started", __FUNCTION__);
 
@@ -103,7 +104,7 @@ static void Dn7c3Thread(void const *argument)
 
     for (;;)
     {
-        osDelay(3000);
+        osDelay(interval);
         adc = AdcGet();
         volt = 2.5/pow(2, 12)*adc*2;
         AaSysLogPrintF(LOGLEVEL_DBG, FeatureDn7c3, "%s: get adc 0x%x, volt %lf", __FUNCTION__, adc, volt);

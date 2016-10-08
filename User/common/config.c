@@ -513,7 +513,7 @@ void ConfigSetSimpleInterval(u8 interval)
     g_config.simpleInterval = interval;
 }
 
-s8 ConfigGetSimpleInterval(void)
+u16 ConfigGetSimpleInterval(void)
 {
     return g_config.simpleInterval;
 }
@@ -523,7 +523,7 @@ void ConfigSetReportInterval(u8 interval)
     g_config.reportInterval = interval;
 }
 
-s8 ConfigGetReportInterval(void)
+u16 ConfigGetReportInterval(void)
 {
     return g_config.reportInterval;
 }
@@ -636,6 +636,26 @@ void ConfigSeto3S(s16 val)
 void ConfigSetno2S(s16 val)
 {
     g_config.no2S = val;
+}
+
+s16 ConfigGetcoS(void)
+{
+    return g_config.coS;
+}
+
+s16 ConfigGetso2S(void)
+{
+    return g_config.so2S;
+}
+
+s16 ConfigGeto3S(void)
+{
+    return g_config.o3S;
+}
+
+s16 ConfigGetno2S(void)
+{
+    return g_config.no2S;
 }
 
 void ConfigSetso2Va(s16 val)

@@ -141,17 +141,17 @@ static void GsmSendTestThread(void const *argument)
     osDelay(20000);
     for(;;)
     {
-        osDelay(500);
+        osDelay(100);
         times++;
 
         // As the interval will change, cal every time.
         if (ConfigGetReportInterval() != RepInt)
         {
             RepInt = ConfigGetReportInterval();
-            // Interval = 20 * 60 * RepInt;
+            // Interval = 10 * 60 * RepInt;
             // for test is 2 s
-            // Interval = 2 * 60 * RepInt;
-            Interval = 2 * RepInt;
+            //Interval = 2 * 60 * RepInt;
+            Interval = 2 * 60 * RepInt;
         }
 
         if (IsClockSynced())
@@ -169,7 +169,10 @@ static void GsmSendTestThread(void const *argument)
         /* 间隔时间到 */
         if (times >= Interval || minIntval >= RepInt)
         {
+            //GSM_LOG_P4("Time to send! %d, %d, %d, %d", times, Interval, minIntval, RepInt);
+            
             times = 0;
+            minIntval = 0;
             if (IsClockSynced())
             {
                 min = gps.time.tm_min;
@@ -198,6 +201,7 @@ static void GsmSendTestThread(void const *argument)
                 GsmPowerUpDownOpt(1);
                 HAL_NVIC_SystemReset();
             }
+            SEDN_RESPONSE_CLEAR_RESET_SYSTEM_FLAG();
             SEND_RESPONSE_FLAG_CLEAR();
         }
         

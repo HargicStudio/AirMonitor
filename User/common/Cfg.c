@@ -18,10 +18,10 @@ char * default_key[COUNT_KEY] ={
     "serverport",
     "simpleInt",
     "reportInt",
-    "k25",
-    "b25",
-    "k10",
-    "b10",
+    "k25",                               // PM2.5 K值（实际值/100）
+    "b25",                               // PM2.5 B值（实际值/100）
+    "k10",                               // PM10 K值（实际值/100）
+    "b10",                               // PM10 B值（实际值/100）
     "pm10baseV",                         // PM10 基准电压  单位 mv      default : 967
     "pm10baseC",                         // PM10 基准温度  基准温度精确到十分位，所以是实际值 * 10 default : 250
     "pm10N",                             // PM10 系数。 实际值 * 100， 默认 0.6， 即 60       default: 60

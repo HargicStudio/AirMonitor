@@ -101,14 +101,17 @@ u8 GetCmdDataLen(u16 cmd)
     {
     case CMD_SER_CHECK_ONLINE_V:  /* 服务器呼叫 */
     case CMD_SER_POWER_SAVE_MODE_V:  /* 掉电模式 */
-    case 19: /* 请求软件版本 */
     case CMD_SER_REPORT_DATA_RSP_V: /* 服务器回应上报数据 */
-    case 33: /* 请求硬件版本号 */
     case CMD_SER_REBOOT_V: /* 重启 */
+    case CMD_SER_STATION_INFO_V:    /* 获取站点信息 */
     case 217: /* 通知停止回调 */
+    case 33: /* 请求硬件版本号 */
+    case 19: /* 请求软件版本 */
       return 0;
     case CMD_SER_CORRECT_TIME_V:  /* 校时 */
       return 12;
+    case CMD_SER_CFG_STATION_V:     /* 配置站点消息 */
+      return 4;
     case 7:  /* 修改站号 */
       return 5;
     case 11: /* 修改采集间隔 */
