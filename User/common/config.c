@@ -118,7 +118,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetpm25B(1);
+        ConfigSetpm25B(0);
     }
     
     if (-1 != ReadCfgInt(C_K10, &temp32))
@@ -136,8 +136,100 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetpm10B(1);
+        ConfigSetpm10B(0);
     }
+    
+    // Add  /////
+    if (-1 != ReadCfgInt(C_Kco, &temp32))
+    {
+        ConfigSetCoK(temp32);
+    }
+    else
+    {
+        ConfigSetCoK(1);
+    }
+    
+    if (-1 != ReadCfgInt(C_Bco, &temp32))
+    {
+        ConfigSetCoB(temp32);
+    }
+    else
+    {
+        ConfigSetCoB(0);
+    }
+    
+    if (-1 != ReadCfgInt(C_Kso2, &temp32))
+    {
+        ConfigSetSo2K(temp32);
+    }
+    else
+    {
+        ConfigSetSo2K(1);
+    }
+    
+    if (-1 != ReadCfgInt(C_Bso2, &temp32))
+    {
+        ConfigSetSo2B(temp32);
+    }
+    else
+    {
+        ConfigSetSo2B(0);
+    }
+    
+    if (-1 != ReadCfgInt(C_Ko3, &temp32))
+    {
+        ConfigSetO3K(temp32);
+    }
+    else
+    {
+        ConfigSetO3K(1);
+    }
+    
+    if (-1 != ReadCfgInt(C_Bo3, &temp32))
+    {
+        ConfigSetO3B(temp32);
+    }
+    else
+    {
+        ConfigSetO3B(0);
+    }
+    
+    if (-1 != ReadCfgInt(C_Kno2, &temp32))
+    {
+        ConfigSetNo2K(temp32);
+    }
+    else
+    {
+        ConfigSetNo2K(1);
+    }
+    
+    if (-1 != ReadCfgInt(C_Bno2, &temp32))
+    {
+        ConfigSetNo2B(temp32);
+    }
+    else
+    {
+        ConfigSetNo2B(0);
+    }
+    
+    if (-1 != ReadCfgInt(C_Ktmp, &temp32))
+    {
+        ConfigSetTmpK(temp32);
+    }
+    else
+    {
+        ConfigSetTmpK(1);
+    }
+    
+    if (-1 != ReadCfgInt(C_Btmp, &temp32))
+    {
+        ConfigSetTmpB(temp32);
+    }
+    else
+    {
+        ConfigSetTmpB(0);
+    }
+    // Add end /////
     
     if (-1 != ReadCfgInt(C_PM10BaseV, &temp32))
     {
@@ -533,7 +625,7 @@ void ConfigSetpm25K(s16 val)
     g_config.pm25K = val;
 }
 
-u16 ConfigGetpm25K(void)
+s16 ConfigGetpm25K(void)
 {
     return g_config.pm25K;
 }
@@ -543,7 +635,7 @@ void ConfigSetpm25B(s16 val)
     g_config.pm25B = val;
 }
 
-u16 ConfigGetpm25B(void)
+s16 ConfigGetpm25B(void)
 {
     return g_config.pm25B;
 }
@@ -553,7 +645,7 @@ void ConfigSetpm10K(s16 val)
     g_config.pm10K = val;
 }
 
-u16 ConfigGetpm10K(void)
+s16 ConfigGetpm10K(void)
 {
     return g_config.pm10K;
 }
@@ -563,10 +655,113 @@ void ConfigSetpm10B(s16 val)
     g_config.pm10B = val;
 }
 
-u16 ConfigGetpm10B(void)
+s16 ConfigGetpm10B(void)
 {
     return g_config.pm10B;
 }
+
+// add //////////
+void ConfigSetCoB(s16 val)
+{
+    g_config.coB = val;
+}
+
+s16 ConfigGetCoB(void)
+{
+    return g_config.coB;
+}
+
+void ConfigSetCoK(s16 val)
+{
+    g_config.coK = val;
+}
+
+s16 ConfigGetCoK(void)
+{
+    return g_config.coK;
+}
+
+void ConfigSetSo2B(s16 val)
+{
+    g_config.so2B = val;
+}
+
+s16 ConfigGetSo2B(void)
+{
+    return g_config.so2B;
+}
+
+void ConfigSetSo2K(s16 val)
+{
+    g_config.so2K = val;
+}
+
+s16 ConfigGetSo2K(void)
+{
+    return g_config.so2K;
+}
+
+void ConfigSetO3B(s16 val)
+{
+    g_config.o3B = val;
+}
+
+s16 ConfigGetO3B(void)
+{
+    return g_config.o3B;
+}
+
+void ConfigSetO3K(s16 val)
+{
+    g_config.o3K = val;
+}
+
+s16 ConfigGetO3K(void)
+{
+    return g_config.o3K;
+}
+
+void ConfigSetNo2B(s16 val)
+{
+    g_config.no2B = val;
+}
+
+s16 ConfigGetNo2B(void)
+{
+    return g_config.no2B;
+}
+
+void ConfigSetNo2K(s16 val)
+{
+    g_config.no2K = val;
+}
+
+s16 ConfigGetNo2K(void)
+{
+    return g_config.no2K;
+}
+
+void ConfigSetTmpB(s16 val)
+{
+    g_config.tmpB = val;
+}
+
+s16 ConfigGetTmpB(void)
+{
+    return g_config.tmpB;
+}
+
+void ConfigSetTmpK(s16 val)
+{
+    g_config.tmpK = val;
+}
+
+s16 ConfigGetTmpK(void)
+{
+    return g_config.tmpK;
+}
+
+// add end ///////////
 
 void ConfigSetpm10BaseV(s16 val)
 {

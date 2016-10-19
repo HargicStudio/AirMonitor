@@ -262,7 +262,7 @@ void RecallExcuter(void)
     
     f_lseek(&fp, 0);
             
-    /* ��������ͷ�� */
+    /* 构造发送数据 */
     ConstructRecordDataToSend(NULL, 1, 0);
       
     while (FR_OK == f_read(&fp, _record_buf, RECORD_DATA_LEN, &readByte))

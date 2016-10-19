@@ -59,11 +59,16 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
      static ADs1222Rst gas[5];
      ADs1222Rst *tmp;
      s32 val = 0;
+     static s32 filterCo = -1;
+     static s32 filterNo2 = -1;
+     static s32 filterSo2 = -1;
+     static s32 filterO3 = -1;
      
+     /*
      if (!IsClockSynced())
      {
          return;
-     }
+     }*/
      
      tmp = &gas[type];
      
@@ -97,6 +102,17 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
          {
          case AS_TYPE_CO:
            AFX_LOG_P4("CO: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
+           if (filterCo == -1)
+           {
+               filterCo = val;
+           }
+           else if (filterCo * 5 < val  && val - filterCo > 1000000 && filterCo >= 0)
+           {
+               AFX_LOG_P1("Bad CO value, old: %d", filterCo);
+               return;
+           }
+           filterCo = val;
+           
            if (val > 2000000)
            {
                val = 2000000;
@@ -105,6 +121,18 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            break;
          case AS_TYPE_NO2:
            AFX_LOG_P4("NO2: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
+           if (filterNo2 == -1)
+           {
+               filterNo2 = val;
+           }
+           else if (filterNo2 * 5 < val  && val - filterNo2 > 25000 && filterNo2 >= 0)
+           {
+               AFX_LOG_P1("Bad No2 value, old: %d", filterNo2);
+               return;
+           }
+           
+           filterNo2 = val;
+           
            if (val > 50000)
            {
                val = 50000;
@@ -113,6 +141,18 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            break;
          case AS_TYPE_O3:
            AFX_LOG_P4("O3: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
+           if (filterO3 == -1)
+           {
+               filterO3 = val;
+           }
+           else if (filterO3 * 5 < val && val - filterO3 > 25000 && filterO3 >= 0)
+           {
+               AFX_LOG_P1("Bad O3 value, old: %d", filterO3);
+               return;
+           }
+           
+           filterO3 = val;
+           
            if (val > 50000)
            {
                val = 50000;
@@ -121,6 +161,18 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            break;
          case AS_TYPE_SO2:
            AFX_LOG_P4("SO2: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
+           if (filterSo2 == -1)
+           {
+               filterSo2 = val;
+           }
+           else if (filterSo2 * 5 < val && val - filterSo2 > 100000 && filterSo2 >= 0)
+           {
+               AFX_LOG_P1("Bad So2 value, old: %d", filterSo2);
+               return;
+           }
+           
+           filterSo2 = val;
+           
            if (val > 200000)
            {
                val = 200000;
@@ -273,7 +325,7 @@ static void Ads1222Thread(void const *argument)
     u8 channel;
     //void* msg;
     SAirSamp pl = {0};
-    u32 interval = 20000;
+    u32 interval = 10000;
     u8 sel = 0;
 
     AaSysLogPrintF(LOGLEVEL_INF, FeatureAlpha, "%s started", __FUNCTION__);

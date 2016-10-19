@@ -35,7 +35,8 @@ void HandleDn7c3(double volt)
     double n = 0;    // ÎÂ¶È²¹³¥ÏµÊý
     double C = 0;
     double Vo = volt;
-    
+    s16 k = 0;
+    s16 b = 0;
     if (tempIn >= -10.0 && tempIn < 40.0)
     {
         n = 6.0;
@@ -50,9 +51,24 @@ void HandleDn7c3(double volt)
         return;
     }
     
-    curBaseV = baseV - n * (tempIn - tempBase);
+    if (tempBase > tempIn)
+    {
+        curBaseV = baseV - n * (tempBase - tempIn);
+    }
+    else
+    {
+        curBaseV = baseV - n * (tempIn - tempBase);
+    }
     
-    C =  nValue * (volt * 1000 - curBaseV);
+    if (volt * 1000 > curBaseV)
+    {
+        C =  nValue * (volt * 1000 - curBaseV);
+    }
+    else
+    {
+        C =  nValue * (curBaseV - volt * 1000);
+    }
+    
     
     if (C < 0 || C > 1000)
     {
@@ -76,12 +92,17 @@ void HandleDn7c3(double volt)
                    C, baseV, n);
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "Dn7c3 CV:%lf, tempI:%lf, Vo: %lf",
                    curBaseV, tempIn, volt);*/
-    
+    /*
     AaSysLogPrintF(LOGLEVEL_INF, FeatureDn7c3, "Dn7c3 C: %lf, BV:%lf, n:%lf, "
                    "CV:%lf, tempI:%lf, Vo=%lf",
                    C, baseV, n,
-                   curBaseV, tempIn, Vo);
+                   curBaseV, tempIn, Vo);*/
     
+    k = ConfigGetpm10K();
+    b = ConfigGetpm10B();
+        
+    C = k * C + b;
+      
     StorePmInfo((u16) C, &g_pm10sharp);
 }
 

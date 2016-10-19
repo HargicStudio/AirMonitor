@@ -6,7 +6,7 @@
 
 #define CFG_FILE  "AirMonitor.txt"
 
-#define COUNT_KEY  26
+#define COUNT_KEY  36
 
 enum 
 {
@@ -21,6 +21,16 @@ enum
     C_B25,
     C_K10,
     C_B10,
+    C_Kco,
+    C_Bco,
+    C_Kso2,
+    C_Bso2,
+    C_Ko3,
+    C_Bo3,
+    C_Kno2,
+    C_Bno2,
+    C_Ktmp,
+    C_Btmp,
     C_PM10BaseV,
     C_PM10BaseC,
     C_PM10N,

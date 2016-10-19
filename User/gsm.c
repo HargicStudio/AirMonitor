@@ -214,7 +214,7 @@ static void GsmSendTestThread(void const *argument)
             if (g_recallInfo.continueFlag == 0)
             {
                 GSM_LOG_P0 ("##### Send Recall END! #####");
-                ConstructDataAndSend("216", ConfigGetStrAddr(), "02", 2);
+                ConstructDataAndSend(CMD_CLI_RECALL_DATA_RSP, ConfigGetStrAddr(), CODE_RECALL_END, 2);
                 
                 if ( !SendData(g_sendDirt.buf, g_sendDirt.useLen, 0) )
                 {
@@ -602,7 +602,7 @@ bool SendRecallDataToServer(void)
         GSM_LOG_P0("***** Send Recall start! *****");
         g_recallInfo.sendStartFlag = 1;
         
-        ConstructDataAndSend("216", ConfigGetStrAddr(), "01", 2);
+        ConstructDataAndSend(CMD_CLI_RECALL_DATA_RSP, ConfigGetStrAddr(), CODE_RECALL_START, 2);
         
         if ( !SendData(g_sendDirt.buf, g_sendDirt.useLen, 0) )
         {

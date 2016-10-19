@@ -108,6 +108,8 @@ u8 GetCmdDataLen(u16 cmd)
     case 33: /* 请求硬件版本号 */
     case 19: /* 请求软件版本 */
       return 0;
+    case CMD_SER_RECALL_DATA_REQ_V:
+      return 28; 
     case CMD_SER_CORRECT_TIME_V:  /* 校时 */
       return 12;
     case CMD_SER_CFG_STATION_V:     /* 配置站点消息 */
@@ -119,8 +121,8 @@ u8 GetCmdDataLen(u16 cmd)
       return 2;
     case 215: /* 新版回调请求 */
       return 28;
-    case 81: /* 回调数据1 */
-      return 10;
+    //case 81: /* 回调数据1 */
+      //return 10;
     case 83: /* 回调数据2 */
       return 8;
     case 85: /* 回调天的数据 */

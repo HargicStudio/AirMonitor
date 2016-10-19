@@ -233,7 +233,7 @@ double GetNoxValue(float temp)
 /*
 *  Vw : 工作电极     Va ：辅助电极
 *  gasType : 0: CO   1: SO2   2: NO2    3: O3
-*  return : -1 温度异常  正常单位  ppb
+*  return : -1 温度异常  正常单位  ppb 转换后的 ug/m3
 */
 s32 CalGasVal(u32 Vw, u32 Va, EASType gasType)
 {
@@ -243,6 +243,7 @@ s32 CalGasVal(u32 Vw, u32 Va, EASType gasType)
     s16 Va0;
     s16 S;
     float temp = 0;
+    s16 mWght = 0;   // 记录分子量
     
     if (Vw > 6000 || Va > 6000)
     {
@@ -260,21 +261,25 @@ s32 CalGasVal(u32 Vw, u32 Va, EASType gasType)
     case AS_TYPE_CO:
       GetCoZero(&Vw0, &Va0, &S);
       n = GetNcoValue(temp);
+      mWght = 28;
       AFX_LOG_P3("CalGasVal: CO  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
     case AS_TYPE_SO2:
       GetSo2Zero(&Vw0, &Va0, &S);
       n = GetNso2Value();
+      mWght = 64;
       AFX_LOG_P3("CalGasVal: SO2  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
     case AS_TYPE_NO2:
       GetNo2Zero(&Vw0, &Va0, &S);
       n = GetNno2Value();
+      mWght = 46;
       AFX_LOG_P3("CalGasVal: NO2  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
     case AS_TYPE_O3:
       GetO3Zero(&Vw0, &Va0, &S);
       n = GetNoxValue(temp);
+      mWght = 48;
       AFX_LOG_P3("CalGasVal: O3  W: %d, A:%d, N:%lf", Vw, Va, n);
       break;
     default:
@@ -287,13 +292,16 @@ s32 CalGasVal(u32 Vw, u32 Va, EASType gasType)
     /* PPM to PPB */
     rst = rst * 1000.0;
     
-    if (rst < 0.0)
-      rst = 0;
+    // 质量浓度mg/m3=M气体分子量/22.4*ppm数值*[273/(273+T气体温度)]*（Ba压力/101325）
+    rst = (mWght/22.4) * rst * (273.0/(273+temp)) * 1; 
     
     AFX_LOG_P4("CalGasVal: Vw0: %d, Va0: %d, S: %d, rst: %lf", 
                Vw0, Va0, S, rst);
     
-    return (u32)(rst+0.5);
+    if (rst < 0.0)
+      rst = 0;
+    
+    return (s32)(rst+0.5);
 }
 
 /* 存储气体浓度 */
@@ -858,7 +866,7 @@ bool ConstructRecordDataToSend(u8 *data, u8 onoff, u16 cnt)
         memcpy(buf+offset, ConfigGetStrAddr(), MAX_ADDR_LEN);
         offset += MAX_ADDR_LEN;
         /* cmd */
-        memcpy(buf+offset, "218", 3);
+        memcpy(buf+offset, CMD_CLI_RECALL_DATA, 3);
         offset += 3;
         
         sprintf(num, "%02d", cnt);

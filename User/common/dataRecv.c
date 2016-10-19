@@ -93,6 +93,14 @@ void ProcessRecvData(u8 *buf, int cmd)
     case CMD_SER_CFG_STATION_V:
       ProcessSerConfigStation(buf);
       break;
+      /* 传感器配置 */
+    case CMD_SER_CFG_SENSOR_V:
+      ProcessAdjust(buf);
+      break;
+      /* 回调请求 */
+    case CMD_SER_RECALL_DATA_REQ_V:
+      ProcessRecall(buf);
+      break;
       /* 修改站号 */
     case 7:
       ProcessChangeAddr(buf);
@@ -444,6 +452,61 @@ void ProcessAdjust(u8 *buf)
     offset += 2;
     ConfigSetpm10B(nhtons(temp));
     
+    /* Add */
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetCoK(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetCoB(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetSo2K(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetSo2B(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetO3K(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetO3B(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetNo2K(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetNo2B(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetTmpK(nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetTmpB(nhtons(temp));
+    /* Add End */
+    
+    /* pm10 基准电压 */
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetpm10BaseV(nhtons(temp));
+    /* pm10 基准温度 */
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetpm10BaseC(nhtons(temp));
+    /* pm10 N */
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetpm10N(nhtons(temp));
+    
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetcoVw(nhtons(temp));
@@ -620,6 +683,68 @@ void ProcessSerGetStationInfo(u8 *buf)
     sVal = nhtons(sVal);
     memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
     offset += 2;
+    
+    /* Add */
+    /* CO k */
+    sVal = ConfigGetCoK();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* CO b */
+    sVal = ConfigGetCoB();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* SO2 k */
+    sVal = ConfigGetSo2K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* SO2 b */
+    sVal = ConfigGetSo2B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* O3 k */
+    sVal = ConfigGetO3K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* O3 b */
+    sVal = ConfigGetO3B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* NO2 k */
+    sVal = ConfigGetNo2K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* NO2 b */
+    sVal = ConfigGetNo2B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* Tmp k */
+    sVal = ConfigGetTmpK();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* Tmp b */
+    sVal = ConfigGetTmpB();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    /* Add end */
     
     /* PM10BaseV */
     uVal = ConfigGetpm10BaseV();
@@ -877,7 +1002,7 @@ void ProcessRecall(u8 *buf)
     /* 只计算月，不计算天，实际会多于6个月数据 */
     if (cnt > 6)
     {
-        ConstructCommonResponse("216", buf, "04", 2);
+        ConstructCommonResponse(CMD_CLI_RECALL_DATA_RSP, buf, CODE_RECALL_ERR2, 2);
         return;
     }
     

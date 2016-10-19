@@ -74,6 +74,9 @@ static void CP15Thread(void const *argument)
     u16 len = 0;
     u16 val25 = 0;
     u16 val10 = 0;
+    s16 k = 0;
+    s16 b = 0;
+    
 
     CP15_LOG_P0("CP15Thread started");
 
@@ -92,10 +95,20 @@ static void CP15Thread(void const *argument)
         }
         val25 = _cp15_buf[6]<<8 | _cp15_buf[7];
         
+        k = ConfigGetpm25K();
+        b = ConfigGetpm25B();
+        
+        val25 = k * val25 + b;
+        
         StorePmInfo(val25, &g_pm25);
         
         /* ¼ÆËãÒæÉ¼µÂPM10*/
         val10 = _cp15_buf[8]<<8 | _cp15_buf[9];
+        
+        k = ConfigGetpm10K();
+        b = ConfigGetpm10B();
+        
+        val10 = k * val10 + b;
         
         StorePmInfo(val10, &g_pm10);
         

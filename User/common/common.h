@@ -63,6 +63,9 @@ extern "C" {
 #define CMD_CLI_STATION_INFO_RSP            "016"
 #define CMD_SER_REPORT_DATA_RSP             "021"
 #define CMD_CLI_REPORT_DATA                 "022"
+#define CMD_SER_RECALL_DATA_REQ             "081"
+#define CMD_CLI_RECALL_DATA_RSP             "082"
+#define CMD_CLI_RECALL_DATA                 "084"
 #define CMD_SER_CFG_STATION                 "089"
 #define CMD_CLI_CFG_STATION_RSP             "090"
 #define CMD_SER_CFG_SENSOR                  "091"
@@ -80,12 +83,36 @@ extern "C" {
 #define CMD_CLI_STATION_INFO_RSP_V            16
 #define CMD_SER_REPORT_DATA_RSP_V             21
 #define CMD_CLI_REPORT_DATA_V                 22
+#define CMD_SER_RECALL_DATA_REQ_V             81
+#define CMD_CLI_RECALL_DATA_RSP_V             82
+#define CMD_CLI_RECALL_DATA_v                 84
 #define CMD_SER_CFG_STATION_V                 89
 #define CMD_CLI_CFG_STATION_RSP_V             90
 #define CMD_SER_CFG_SENSOR_V                  91
 #define CMD_CLI_CFG_SERSOR_RSP_V              92
 #define CMD_SER_REBOOT_V                      97
 #define CMD_CLI_REBOOT_RSP_V                  98
+  
+
+/* 数据回调回应的消息码 */
+/*
+#define CODE_RECALL_NORMAL                   "00"
+#define CODE_RECALL_NO_DATA                  "01"
+#define CODE_RECALL_NO_FILE                  "02"
+#define CODE_RECALL_CARD_ERR                 "03"
+#define CODE_RECALL_CMD_ERR                  "04" 
+  
+#define CODE_RECALL_NORMAL_V                  0
+#define CODE_RECALL_NO_DATA_V                 1
+#define CODE_RECALL_NO_FILE_V                 2
+#define CODE_RECALL_CARD_ERR_V                3
+#define CODE_RECALL_CMD_ERR_V                 4
+*/
+  
+#define CODE_RECALL_START                      "01"
+#define CODE_RECALL_END                        "02"
+#define CODE_RECALL_ERR1                       "03"
+#define CODE_RECALL_ERR2                       "04"
 
 
 /*
@@ -232,8 +259,8 @@ u16 getFebDays(u16 year);
 #endif
 
 
-//#define DEBUG_DEBUG_CP15
-#define DEBUG_NO_DEBUG_CP15
+#define DEBUG_DEBUG_CP15
+//#define DEBUG_NO_DEBUG_CP15
 //#define DEBUG_STD_CP15
 
 #ifdef DEBUG_DEBUG_CP15
@@ -260,8 +287,8 @@ u16 getFebDays(u16 year);
 #define CP15_LOG_P4(fmt, p1, p2, p3, p4)
 #endif
 
-//#define DEBUG_DEBUG_AFS
-#define DEBUG_NO_DEBUG_AFS
+#define DEBUG_DEBUG_AFS
+//#define DEBUG_NO_DEBUG_AFS
 //#define DEBUG_STD_AFS
 
 #ifdef DEBUG_DEBUG_AFS

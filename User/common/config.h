@@ -26,6 +26,16 @@ typedef struct CONFIG_t
     s16 pm25B;
     s16 pm10K;
     s16 pm10B;
+    s16 coK;    /* 以下是校准参数, 用于最终计算的类型可能变化 */
+    s16 coB;
+    s16 so2K;
+    s16 so2B;
+    s16 o3K;    /* 以下是校准参数, 用于最终计算的类型可能变化 */
+    s16 o3B;
+    s16 no2K;
+    s16 no2B;
+    s16 tmpK;   /* 外部温度校准 */
+    s16 tmpB;   
     s16 pm10BaseV;
     s16 pm10BaseC;
     s16 pm10N;
@@ -105,16 +115,16 @@ void ConfigSetcoVa(s16 val);
 u16 ConfigGetcoVw(void);
 void ConfigSetcoVw(s16 val);
 
-u16 ConfigGetpm10B(void);
+s16 ConfigGetpm10B(void);
 void ConfigSetpm10B(s16 val);
 
-u16 ConfigGetpm10K(void);
+s16 ConfigGetpm10K(void);
 void ConfigSetpm10K(s16 val);
 
-u16 ConfigGetpm25B(void);
+s16 ConfigGetpm25B(void);
 void ConfigSetpm25B(s16 val);
 
-u16 ConfigGetpm25K(void);
+s16 ConfigGetpm25K(void);
 void ConfigSetpm25K(s16 val);
     
 void ConfigSetpm10BaseV(s16 val);
@@ -144,6 +154,27 @@ void ConfigSetTime();
 u8 ConfigSetRTCTime(u16 y, u8 m, u8 d, u8 h, u8 min, u8 s);
 
 void ConfigPrint();
+
+s16 ConfigGetTmpK(void);
+void ConfigSetTmpK(s16 val);
+s16 ConfigGetTmpB(void);
+void ConfigSetTmpB(s16 val);
+s16 ConfigGetNo2K(void);
+void ConfigSetNo2K(s16 val);
+s16 ConfigGetNo2B(void);
+void ConfigSetNo2B(s16 val);
+s16 ConfigGetO3K(void);
+void ConfigSetO3K(s16 val);
+s16 ConfigGetO3B(void);
+void ConfigSetO3B(s16 val);
+s16 ConfigGetSo2K(void);
+void ConfigSetSo2K(s16 val);
+s16 ConfigGetSo2B(void);
+void ConfigSetSo2B(s16 val);
+s16 ConfigGetCoK(void);
+void ConfigSetCoK(s16 val);
+s16 ConfigGetCoB(void);
+void ConfigSetCoB(s16 val);
 
   
 #ifdef __cplusplus

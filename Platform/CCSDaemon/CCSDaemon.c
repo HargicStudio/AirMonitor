@@ -88,6 +88,7 @@ u8 CCSDeamonCEInit()
 
     //CCSDaemonCreateThread();     // for test
     AaSysLogCreateDeamon();
+
     //AaTagCreateDeamon();         // no need
     ////StartTFCardTask();           // This task for test
     // start application task
@@ -103,7 +104,7 @@ u8 CCSDeamonCEInit()
     /* Init Fan */
     FanStart();
     
-    //StartRunAm2302Task();
+    StartRunAm2302Task();
 
     // create global tag
     //AaTagCreate(AATAG_CCS_DAEMON_ONLINE, 0);
