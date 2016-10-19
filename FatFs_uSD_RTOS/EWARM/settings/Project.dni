@@ -37,7 +37,7 @@ ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
 [DebugChecksum]
-Checksum=-1231422264
+Checksum=2065012382
 [CodeCoverage]
 Enabled=_ 0
 [CallStack]
@@ -128,11 +128,6 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Bp0=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Src\stm32f4xx_it.c}.112.3" 0 0 1 "" 0 "" 0
-Count=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -140,9 +135,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Aliases]
-Count=0
-SuppressDialog=0
 [DriverProfiling]
 Enabled=0
 Mode=3
@@ -157,3 +149,10 @@ ShowTiming=1
 Frequency=10000
 Probe0=I0
 ProbeSetup0=2 1 1 2 0 0
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Count=0
+[Aliases]
+Count=0
+SuppressDialog=0
