@@ -148,10 +148,12 @@ static void GsmSendTestThread(void const *argument)
         if (ConfigGetReportInterval() != RepInt)
         {
             RepInt = ConfigGetReportInterval();
-            // Interval = 10 * 60 * RepInt;
+            Interval = 10 * 60 * RepInt;
             // for test is 2 s
             //Interval = 2 * 60 * RepInt;
-            Interval = 2 * 60 * RepInt;
+            // for test
+            //Interval = 2 * 60 * RepInt;
+            // for test end
         }
 
         if (IsClockSynced())
@@ -165,30 +167,7 @@ static void GsmSendTestThread(void const *argument)
             gps.utc.min >= min ? (minIntval = gps.utc.min - min) : (minIntval = 60 - min + gps.utc.min);
         }
         
-        
-        /* 间隔时间到 */
-        if (times >= Interval || minIntval >= RepInt)
-        {
-            //GSM_LOG_P4("Time to send! %d, %d, %d, %d", times, Interval, minIntval, RepInt);
-            
-            times = 0;
-            minIntval = 0;
-            if (IsClockSynced())
-            {
-                min = gps.time.tm_min;
-            }
-            else
-            {
-                min = gps.utc.min;
-            }
-            
-            ContructDataUp();
-            if (IsSendBufReady())
-            {
-                SendDataToServer();
-            }
-        }
-
+        ////////////////////////////////// need to be send right now////////////////////////////////
         /* 发送应答服务器的数据 */
         if (IsSendResponseReady())
         {
@@ -232,6 +211,32 @@ static void GsmSendTestThread(void const *argument)
             GsmPowerUpDownOpt(GSM_POWER_DOWN);
             GsmStatusSet(GSM_CLOSED);
         }
+        ////////////////////////////////// need to be send right now////////////////////////////////
+        
+        /* 间隔时间到 */
+        if (times >= Interval || minIntval >= RepInt)
+        {
+            //GSM_LOG_P4("Time to send! %d, %d, %d, %d", times, Interval, minIntval, RepInt);
+            
+            times = 0;
+            minIntval = 0;
+            if (IsClockSynced())
+            {
+                min = gps.time.tm_min;
+            }
+            else
+            {
+                min = gps.utc.min;
+            }
+            
+            ContructDataUp();
+            if (IsSendBufReady())
+            {
+                SendDataToServer();
+            }
+        }
+
+        
         /*
         GsmWaitCloseCountAdd();
         if (IsGsmWaitCloseCountReach() && GsmStatusGet() != GSM_CLOSED)
@@ -463,7 +468,7 @@ void ReceiveTransparentData(u8 data)
                     /* 数据长度错误, 初始化*/
                     flag = 0xff;
                     pos = 0;
-                    GSM_LOG_P2("TEST: Wrong length! Len in cmd: %d, len: %d", dataLen, more_len + LEN_ADDR_CMD);
+                    GSM_LOG_P3("TEST: Wrong length! cmd: %d, Len in msg: %d, len: %d", cmd, dataLen, more_len + LEN_ADDR_CMD);
                     return;
                 }
                 

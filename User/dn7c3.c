@@ -35,7 +35,7 @@ void HandleDn7c3(double volt)
     double n = 0;    // ÎÂ¶È²¹³¥ÏµÊý
     double C = 0;
     double Vo = volt;
-    s16 k = 0;
+    float k = 0;
     s16 b = 0;
     if (tempIn >= -10.0 && tempIn < 40.0)
     {
@@ -98,7 +98,7 @@ void HandleDn7c3(double volt)
                    C, baseV, n,
                    curBaseV, tempIn, Vo);*/
     
-    k = ConfigGetpm10K();
+    k = ConfigGetpm10K()/100.0;
     b = ConfigGetpm10B();
         
     C = k * C + b;

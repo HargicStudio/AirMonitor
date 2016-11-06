@@ -109,7 +109,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetpm25K(1);
+        ConfigSetpm25K(100);
     }
     
     if (-1 != ReadCfgInt(C_B25, &temp32))
@@ -127,7 +127,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetpm10K(1);
+        ConfigSetpm10K(100);
     }
     
     if (-1 != ReadCfgInt(C_B10, &temp32))
@@ -146,7 +146,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetCoK(1);
+        ConfigSetCoK(100);
     }
     
     if (-1 != ReadCfgInt(C_Bco, &temp32))
@@ -164,7 +164,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetSo2K(1);
+        ConfigSetSo2K(100);
     }
     
     if (-1 != ReadCfgInt(C_Bso2, &temp32))
@@ -182,7 +182,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetO3K(1);
+        ConfigSetO3K(100);
     }
     
     if (-1 != ReadCfgInt(C_Bo3, &temp32))
@@ -200,7 +200,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetNo2K(1);
+        ConfigSetNo2K(100);
     }
     
     if (-1 != ReadCfgInt(C_Bno2, &temp32))
@@ -218,7 +218,7 @@ void ConfigInit(void)
     }
     else
     {
-        ConfigSetTmpK(1);
+        ConfigSetTmpK(100);
     }
     
     if (-1 != ReadCfgInt(C_Btmp, &temp32))
@@ -407,12 +407,36 @@ void ConfigUpdate(void)
     
     f_printf(&pf, "%s=%d\r\n", default_key[C_B10], g_config.pm10B);
     
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Kco], g_config.coK);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Bco], g_config.coB);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Kso2], g_config.so2K);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Bso2], g_config.so2B);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Ko3], g_config.o3K);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Bo3], g_config.o3B);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Kno2], g_config.no2K);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Bno2], g_config.no2B);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Ktmp], g_config.tmpK);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_Btmp], g_config.tmpB);
+    
+    f_printf(&pf, "%s=%d\r\n", default_key[C_PM10BaseV], g_config.pm10BaseV);
+    f_printf(&pf, "%s=%d\r\n", default_key[C_PM10BaseC], g_config.pm10BaseC);
+    f_printf(&pf, "%s=%d\r\n", default_key[C_PM10N], g_config.pm10N);
+    
     f_printf(&pf, "%s=%d\r\n", default_key[C_COVw], g_config.coVw);
     
     f_printf(&pf, "%s=%d\r\n", default_key[C_COVa], g_config.coVa);
     
     f_printf(&pf, "%s=%d\r\n", default_key[C_coS], g_config.coS);
-    
+
     f_printf(&pf, "%s=%d\r\n", default_key[C_SO2Vw], g_config.so2Vw);
     
     f_printf(&pf, "%s=%d\r\n", default_key[C_SO2Va], g_config.so2Va);
@@ -447,6 +471,10 @@ void ConfigPrint(void)
     GSM_LOG_P2("SIMPLE: %d, REPORT: %d\r\n", g_config.simpleInterval, g_config.reportInterval);
     GSM_LOG_P4("2.5 K,B : %d,%d; 10K,B : %d,%d\r\n", g_config.pm25K, g_config.pm25B,
                g_config.pm10K, g_config.pm10B);
+    GSM_LOG_P4("CO K,B : %d,%d; SO2 K,B : %d,%d\r\n", g_config.coK, g_config.coB,
+               g_config.so2K, g_config.so2B);
+    GSM_LOG_P4("O3 K,B : %d,%d; NO2 K,B : %d,%d\r\n", g_config.o3K, g_config.o3B,
+               g_config.no2K, g_config.no2B);
     GSM_LOG_P3("PM10: BaseV(mv): %d, BaseC(/10): %d, N(/100): %d",
                g_config.pm10BaseV, g_config.pm10BaseC, g_config.pm10N);
     GSM_LOG_P4("O3 W,A : %d,%d; NO2 W,A : %d,%d\r\n", g_config.o3Vw, g_config.o3Va,
@@ -627,6 +655,8 @@ void ConfigSetpm25K(s16 val)
 
 s16 ConfigGetpm25K(void)
 {
+    if (g_config.pm25K > 1000)
+      g_config.pm25K = 100;
     return g_config.pm25K;
 }
 
@@ -647,6 +677,8 @@ void ConfigSetpm10K(s16 val)
 
 s16 ConfigGetpm10K(void)
 {
+    if (g_config.pm10K > 1000)
+      g_config.pm10K = 100;
     return g_config.pm10K;
 }
 
@@ -678,6 +710,9 @@ void ConfigSetCoK(s16 val)
 
 s16 ConfigGetCoK(void)
 {
+    if (g_config.coK > 1000)
+      g_config.coK = 100;
+    
     return g_config.coK;
 }
 
@@ -698,6 +733,9 @@ void ConfigSetSo2K(s16 val)
 
 s16 ConfigGetSo2K(void)
 {
+    if (g_config.so2K > 1000)
+      g_config.so2K = 100;
+    
     return g_config.so2K;
 }
 
@@ -718,6 +756,9 @@ void ConfigSetO3K(s16 val)
 
 s16 ConfigGetO3K(void)
 {
+    if (g_config.o3K > 1000)
+      g_config.o3K = 100;
+    
     return g_config.o3K;
 }
 
@@ -738,6 +779,9 @@ void ConfigSetNo2K(s16 val)
 
 s16 ConfigGetNo2K(void)
 {
+    if (g_config.no2K > 1000)
+      g_config.no2K = 100;
+    
     return g_config.no2K;
 }
 
@@ -757,7 +801,9 @@ void ConfigSetTmpK(s16 val)
 }
 
 s16 ConfigGetTmpK(void)
-{
+{ 
+    if (g_config.tmpK > 1000)
+      g_config.tmpK = 100;
     return g_config.tmpK;
 }
 

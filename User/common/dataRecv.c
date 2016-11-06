@@ -440,60 +440,90 @@ void ProcessAdjust(u8 *buf)
     offset += 2;
     ConfigSetpm25K(nhtons(temp));
     
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetpm25B(nhtons(temp));
+    GSM_LOG_P1("ProcessAdjust: PM25K:%d", nhtons(temp));
     
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetpm10K(nhtons(temp));
     
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetpm10B(nhtons(temp));
+    GSM_LOG_P1("ProcessAdjust: PM10K:%d", nhtons(temp));
     
-    /* Add */
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetCoK(nhtons(temp));
     
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetCoB(nhtons(temp));
+    GSM_LOG_P1("ProcessAdjust: COK:%d", nhtons(temp));
     
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetSo2K(nhtons(temp));
     
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetSo2B(nhtons(temp));
-    
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetO3K(nhtons(temp));
-    
-    memcpy(&temp, buf + offset, 2);
-    offset += 2;
-    ConfigSetO3B(nhtons(temp));
+    GSM_LOG_P1("ProcessAdjust: SO2K:%d", nhtons(temp));
     
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetNo2K(nhtons(temp));
     
+    GSM_LOG_P1("ProcessAdjust: NO2K:%d", nhtons(temp));
+    
     memcpy(&temp, buf + offset, 2);
     offset += 2;
-    ConfigSetNo2B(nhtons(temp));
+    ConfigSetO3K(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: O3K:%d", nhtons(temp));
     
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetTmpK(nhtons(temp));
     
+    GSM_LOG_P1("ProcessAdjust: TMPK:%d", nhtons(temp));
+    
+    // B value
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetpm25B(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: PM25B:%d", nhtons(temp));
+
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetpm10B(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: PM10B:%d", nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetCoB(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: COB:%d", nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetSo2B(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: SO2B:%d", nhtons(temp));
+    
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetNo2B(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: NO2B:%d", nhtons(temp));
+
+    memcpy(&temp, buf + offset, 2);
+    offset += 2;
+    ConfigSetO3B(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: O3B:%d", nhtons(temp));
+    
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetTmpB(nhtons(temp));
+    
+    GSM_LOG_P1("ProcessAdjust: TMPB:%d", nhtons(temp));
     /* Add End */
     
+    
+#if 0
     /* pm10 基准电压 */
     memcpy(&temp, buf + offset, 2);
     offset += 2;
@@ -554,6 +584,7 @@ void ProcessAdjust(u8 *buf)
     memcpy(&temp, buf + offset, 2);
     offset += 2;
     ConfigSetno2S(nhtons(temp));
+#endif
     
     /* 更新到配置文件 */
     ConfigSetUpdate(1);
@@ -617,7 +648,8 @@ void ProcessConfig(u8 *buf)
     
     ConstructResponse(CMD_CLI_CFG_STATION_RSP, buf, 0xff);
 }
-
+#if 0
+// version of own
 void ProcessSerGetStationInfo(u8 *buf)
 {
     u16 offset = 0;
@@ -841,6 +873,154 @@ void ProcessSerGetStationInfo(u8 *buf)
     sVal = nhtons(sVal);
     memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
     offset += 2;
+    
+    /* HEAD */
+    /* CRC */
+    crc = usMBCRC16( (u8 *)SEND_RESPONSE_OFFSET(LEN_HEAD) , offset - LEN_HEAD );
+    
+    FormatHead(crc, offset - LEN_HEAD, (u8 *)SEND_RESPONSE_OFFSET(0));
+    
+    SEND_RESPONSE_SET_BYTE('\r', offset);
+    SEND_RESPONSE_SET_BYTE('\n', offset + 1);
+    
+    /* 设置包含回车的长度，用于发送 */
+    SEND_RESPONSE_SET_LEN(offset+2);
+    
+    /* 设置发送标志，发送程序开始发送 */
+    SEND_RESPONSE_FLAG_SET();
+    
+    /* 需要回应 */
+    SEND_RESPONSE_RESP_FALG_SET(0);
+}
+#endif
+
+void ProcessSerGetStationInfo(u8 *buf)
+{
+    u16 offset = 0;
+    u32 crc = 0;
+    s16 sVal = 0;
+    u16 uVal = 0;
+    
+    GSM_LOG_P0("Request station info!");
+    
+    SEND_RESPONSE_FLAG_CLEAR();
+    
+    offset = LEN_HEAD;
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), buf, MAX_ADDR_LEN);
+    offset += MAX_ADDR_LEN;
+    /* cmd */
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), CMD_CLI_STATION_INFO_RSP, LEN_CMD);
+    offset += LEN_CMD;
+    
+    /* 采集间隔 */ 
+    uVal = ConfigGetSimpleInterval();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* 上报间隔 */
+    uVal = ConfigGetReportInterval();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* soft version */
+    uVal = ConfigGetSoftVer();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* hard version */
+    uVal = ConfigGetHardVer();
+    uVal = nhtons(uVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &uVal, 2);
+    offset += 2;
+    
+    /* PM2.5 K */
+    sVal = ConfigGetpm25K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM10 k */
+    sVal = ConfigGetpm10K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* Add */
+    /* CO k */
+    sVal = ConfigGetCoK();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* SO2 k */
+    sVal = ConfigGetSo2K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* NO2 k */
+    sVal = ConfigGetNo2K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* O3 k */
+    sVal = ConfigGetO3K();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* Tmp k */
+    sVal = ConfigGetTmpK();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM2.5 B */
+    sVal = ConfigGetpm25B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* PM10 b */
+    sVal = ConfigGetpm10B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+
+    /* CO b */
+    sVal = ConfigGetCoB();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* SO2 b */
+    sVal = ConfigGetSo2B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* NO2 b */
+    sVal = ConfigGetNo2B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* O3 b */
+    sVal = ConfigGetO3B();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    
+    /* Tmp b */
+    sVal = ConfigGetTmpB();
+    sVal = nhtons(sVal);
+    memcpy((s8 *)SEND_RESPONSE_OFFSET(offset), &sVal, 2);
+    offset += 2;
+    /* Add end */
     
     /* HEAD */
     /* CRC */

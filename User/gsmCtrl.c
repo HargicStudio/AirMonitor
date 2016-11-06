@@ -114,6 +114,8 @@ u8 GetCmdDataLen(u16 cmd)
       return 12;
     case CMD_SER_CFG_STATION_V:     /* 配置站点消息 */
       return 4;
+    case CMD_SER_CFG_SENSOR_V:           /* 配置传感器信息 */
+      return 28; 
     case 7:  /* 修改站号 */
       return 5;
     case 11: /* 修改采集间隔 */

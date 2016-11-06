@@ -63,6 +63,8 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
      static s32 filterNo2 = -1;
      static s32 filterSo2 = -1;
      static s32 filterO3 = -1;
+     float k = 0;
+     s16 b = 0;
      
      /*
      if (!IsClockSynced())
@@ -101,6 +103,9 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
          switch(type)
          {
          case AS_TYPE_CO:
+           k = ConfigGetCoK()/100.0;
+           b = ConfigGetCoB();
+           val = k * val + b;
            AFX_LOG_P4("CO: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
            if (filterCo == -1)
            {
@@ -117,9 +122,13 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            {
                val = 2000000;
            }
+           
            StoreGasInfo(val, &g_co);
            break;
          case AS_TYPE_NO2:
+           k = ConfigGetNo2K()/100.0;
+           b = ConfigGetNo2B();
+           val = k * val + b;
            AFX_LOG_P4("NO2: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
            if (filterNo2 == -1)
            {
@@ -140,6 +149,9 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            StoreGasInfo(val, &g_no2);
            break;
          case AS_TYPE_O3:
+           k = ConfigGetO3K()/100.0;
+           b = ConfigGetO3B();
+           val = k * val + b;
            AFX_LOG_P4("O3: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
            if (filterO3 == -1)
            {
@@ -160,6 +172,9 @@ void Ads1222_StoreResult(EASType type, EASElec sel, double volt)
            StoreGasInfo(val, &g_o3);
            break;
          case AS_TYPE_SO2:
+           k = ConfigGetSo2K()/100.0;
+           b = ConfigGetSo2B();
+           val = k * val + b;
            AFX_LOG_P4("SO2: w:%d, a: %d, vol:%lf, rst: %d", tmp->w, tmp->a, volt, val);
            if (filterSo2 == -1)
            {

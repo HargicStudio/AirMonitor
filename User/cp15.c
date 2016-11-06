@@ -68,14 +68,14 @@ static u8 CP15SendSerialData(u8* data, u32 len);
  * @par History
  *      2016-6-26 Huang Shengda
  */  
+float k = 100;
+float b = 0;
 static void CP15Thread(void const *argument)
 {
     (void) argument;
     u16 len = 0;
     u16 val25 = 0;
     u16 val10 = 0;
-    s16 k = 0;
-    s16 b = 0;
     
 
     CP15_LOG_P0("CP15Thread started");
@@ -95,7 +95,7 @@ static void CP15Thread(void const *argument)
         }
         val25 = _cp15_buf[6]<<8 | _cp15_buf[7];
         
-        k = ConfigGetpm25K();
+        k = ConfigGetpm25K() / 100.0;
         b = ConfigGetpm25B();
         
         val25 = k * val25 + b;
@@ -105,7 +105,7 @@ static void CP15Thread(void const *argument)
         /* ¼ÆËãÒæÉ¼µÂPM10*/
         val10 = _cp15_buf[8]<<8 | _cp15_buf[9];
         
-        k = ConfigGetpm10K();
+        k = ConfigGetpm10K() / 100.0;
         b = ConfigGetpm10B();
         
         val10 = k * val10 + b;
@@ -172,14 +172,14 @@ u8 StartCP15Task()
         return 3;
     }
 
-    osThreadDef(CP15, CP15Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+    osThreadDef(CP15, CP15Thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE+20);
     _cp15_id = AaThreadCreateStartup(osThread(CP15), NULL);
     CP15_LOG_P0("create CP15Thread success");
 
-
-    osThreadDef(CP15Test, CP15SendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
+/*
+    osThreadDef(CP15Test, CP15SendTestThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE-20);
     _cp15_send_test_id = AaThreadCreateStartup(osThread(CP15Test), NULL);
-    CP15_LOG_P0("create CP15SendTestThread success");
+    CP15_LOG_P0("create CP15SendTestThread success");*/
 
 
     return 0;

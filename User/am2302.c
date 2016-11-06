@@ -457,6 +457,8 @@ static void RunAm2302Thread(void const *argument)
   (void) argument;
   u32 interval = 15000;
   u8 sel = 0;
+  float k = 0;
+  s16 b = 0;
   
   AM2302_Data_TypeDef AM2302_Data;
   
@@ -476,9 +478,13 @@ static void RunAm2302Thread(void const *argument)
       
       if (sel++ % 2 )
       {
-          /* 通道0 */
+          /* 通道0 用于检测内部温度 */
           if(AM2302_Read_TempAndHumidity(AM2302_CH0, &AM2302_Data)==SUCCESS)
           {
+            k = ConfigGetTmpK()/100.0;
+            b = ConfigGetTmpB();
+            AM2302_Data.temperature = k * AM2302_Data.temperature + b;
+            
             AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH0]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
               AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
             
@@ -491,9 +497,13 @@ static void RunAm2302Thread(void const *argument)
       }
       else
       {
-          /* 通道1 */
+          /* 通道1 用于检测外部温度 */ 
           if(AM2302_Read_TempAndHumidity(AM2302_CH1, &AM2302_Data)==SUCCESS)
           {
+            k = ConfigGetTmpK()/100.0;
+            b = ConfigGetTmpB();
+            AM2302_Data.temperature = k * AM2302_Data.temperature + b;
+            
             AaSysLogPrintF(LOGLEVEL_INF, FeatureAm2303, "[CH1]read AM2302 successful!-->hum=%d.%d RH, temp=%d.%d C\n",
                AM2302_Data.humidity/10, AM2302_Data.humidity%10, AM2302_Data.temperature/10, AM2302_Data.temperature%10);
             

@@ -157,22 +157,31 @@ void ConfigPrint();
 
 s16 ConfigGetTmpK(void);
 void ConfigSetTmpK(s16 val);
+
 s16 ConfigGetTmpB(void);
 void ConfigSetTmpB(s16 val);
+
 s16 ConfigGetNo2K(void);
 void ConfigSetNo2K(s16 val);
+
 s16 ConfigGetNo2B(void);
 void ConfigSetNo2B(s16 val);
+
 s16 ConfigGetO3K(void);
 void ConfigSetO3K(s16 val);
+
 s16 ConfigGetO3B(void);
 void ConfigSetO3B(s16 val);
+
 s16 ConfigGetSo2K(void);
 void ConfigSetSo2K(s16 val);
+
 s16 ConfigGetSo2B(void);
 void ConfigSetSo2B(s16 val);
+
 s16 ConfigGetCoK(void);
 void ConfigSetCoK(s16 val);
+
 s16 ConfigGetCoB(void);
 void ConfigSetCoB(s16 val);
 
